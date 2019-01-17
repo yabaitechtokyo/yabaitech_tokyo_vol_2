@@ -1,7 +1,7 @@
 @import: bib
 @import: ../main/book-class
 
-let maswag-article = '<
+let wasabiz-article = '<
   +chapter ?:(`pohe-article`) (|
     bibliography = maswag-bibliography;
     title = {MasWag Chapter};
