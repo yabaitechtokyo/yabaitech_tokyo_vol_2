@@ -1,6 +1,5 @@
 % -*- coding: utf-8 -*-
-@import: local
-@import: bib
+@import: book-class
 @import: ../MasWag/article
 @import: ../wasabiz/article
 @import: ../censored/article
