@@ -1,0 +1,12 @@
+@import: bib
+@import: ../main/book-class
+
+let maswag-article = '<
+  +chapter ?:(`maswag-article`) (|
+    bibliography = maswag-bibliography;
+    title = {maswag Chapter};
+    author = {maswag};
+    |) <
+    +p {Hello}
+  >
+>

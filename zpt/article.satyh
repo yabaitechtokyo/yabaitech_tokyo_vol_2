@@ -1,0 +1,12 @@
+@import: bib
+@import: ../main/book-class
+
+let zpt-article = '<
+  +chapter ?:(`zpt-article`) (|
+    bibliography = zpt-bibliography;
+    title = {zpt Chapter};
+    author = {zpt};
+    |) <
+    +p {Hello}
+  >
+>

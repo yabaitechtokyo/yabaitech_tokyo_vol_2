@@ -1,0 +1,12 @@
+@import: bib
+@import: ../main/book-class
+
+let censored-article = '<
+  +chapter ?:(`censored-article`) (|
+    bibliography = censored-bibliography;
+    title = {censored Chapter};
+    author = {censored};
+    |) <
+    +p {Hello}
+  >
+>

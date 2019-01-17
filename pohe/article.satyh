@@ -1,0 +1,12 @@
+@import: bib
+@import: ../main/book-class
+
+let pohe-article = '<
+  +chapter ?:(`pohe-article`) (|
+    bibliography = pohe-bibliography;
+    title = {pohe Chapter};
+    author = {pohe};
+    |) <
+    +p {Hello}
+  >
+>

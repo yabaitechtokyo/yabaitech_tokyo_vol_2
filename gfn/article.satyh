@@ -1,0 +1,12 @@
+@import: bib
+@import: ../main/book-class
+
+let gfn-article = '<
+  +chapter ?:(`gfn-article`) (|
+    bibliography = gfn-bibliography;
+    title = {gfn Chapter};
+    author = {gfn};
+    |) <
+    +p {Hello}
+  >
+>

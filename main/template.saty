@@ -1,0 +1,22 @@
+% -*- coding: utf-8 -*-
+@import: local
+@import: bib
+@import: ../MasWag/article
+@import: ../wasabiz/article
+@import: ../censored/article
+@import: ../zpt/article
+@import: ../pohe/article
+@import: ../gfn/article
+
+document (|
+  title = `yabaitech.tokyo vol.1`;
+  venue = `技術書典5`;
+  date = `2018.10.08`;
+  |) '<
+  #gfn-article;
+  #censored-article;
+  #maswag-article;
+  #wasabiz-article;
+  #zpt-article;
+  #pohe-article;
+>
