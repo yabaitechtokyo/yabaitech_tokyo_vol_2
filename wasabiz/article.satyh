@@ -2,10 +2,10 @@
 @import: ../main/book-class
 
 let wasabiz-article = '<
-  +chapter ?:(`pohe-article`) (|
-    bibliography = maswag-bibliography;
-    title = {MasWag Chapter};
-    author = {maswag};
+  +chapter ?:(`wasabiz-article`) (|
+    bibliography = wasabiz-bibliography;
+    title = {Wasabiz Chapter};
+    author = {wasabiz};
     |) <
     +p {Hello}
   >
