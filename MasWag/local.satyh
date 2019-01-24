@@ -1,0 +1,53 @@
+@import: ../main/book-class
+@import: maswag-math
+
+let path-to-root = `../MasWag/`
+
+let-inline ctx \sample-command it =
+  read-inline (ctx |> set-text-color Color.red) it
+
+let-math \bowtie = ${\Join}
+let-math \alphabet = ${\mathrm{\Sigma}}
+let-math \powerset set = ${\app{\mathcal{P}}{#set}}
+let-math \Autom = ${\mathcal{A}}
+let-math \Loc = ${Q}
+let-math \InitLoc = ${Q_0}
+let-math \AccLoc = ${Q_F}
+let-math \clock = ${c}
+let-math \Clock = ${C}
+let-math \Transition = ${\mathrm{\Delta}}
+let-math \Guard = ${\app{\Phi}{\Clock}}
+let-math \colon = ${:}
+let-math \iff = ${\Leftrightarrow}
+
+let-block ctx +frame content =
+  let pads = (10pt, 10pt, 10pt, 10pt) in
+  let decoset = VDecoSet.simple-frame-stroke 1pt (Color.gray 0.75) in
+    block-frame-breakable ctx pads decoset (fun ctx -> read-block ctx content)
+
+let-block ctx +centering it =
+  line-break true true ctx (inline-fil ++ read-inline ctx it ++ inline-fil)
+
+let-block ctx +image-frame content =
+  let pads = (10pt, 10pt, 10pt, 10pt) in
+    block-frame-breakable ctx pads VDecoSet.empty (fun ctx -> read-block ctx '<+centering{#content;}>)
+
+let-block ctx +image-frame-with-line content =
+  let pads = (10pt, 10pt, 10pt, 10pt) in
+  let decoset = VDecoSet.simple-frame-stroke 1pt Color.black in          
+    block-frame-breakable ctx pads decoset (fun ctx -> read-block ctx '<+centering{#content;}>)
+
+let-inline ctx \insert-image w path =
+  let img = load-image path in
+    use-image-by-width img w
+
+let-inline ctx \insert-pdf-image w path page =
+  let img = load-pdf-image path page in
+    use-image-by-width img w
+
+let-inline ctx \skip length =
+    inline-skip length
+let-inline ctx \promote-linebreak ib0 ib1 ib2 =
+    discretionary (0-100000) (read-inline ctx ib0) (read-inline ctx ib1) (read-inline ctx ib2)
+let-inline ctx \promote-linebreak =
+    discretionary (0-100000) inline-nil inline-nil inline-nil

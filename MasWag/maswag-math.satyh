@@ -1,0 +1,12 @@
+@require: math
+
+module MasWagMath : sig
+  direct \cdot : [] math-cmd
+  direct \triangle : [] math-cmd
+
+end = struct
+  let bin = math-char MathBin
+
+  let-math \cdot = bin `⋅`
+  let-math \triangle = bin `△`
+end

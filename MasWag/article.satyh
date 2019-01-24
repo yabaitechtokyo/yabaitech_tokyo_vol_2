@@ -1,12 +1,15 @@
 @import: bib
 @import: ../main/book-class
+@import: introduction
+@import: timedAutomata
 
 let maswag-article = '<
   +chapter ?:(`maswag-article`) (|
     bibliography = maswag-bibliography;
-    title = {maswag Chapter};
-    author = {maswag};
+    title = {時間オートマトン入門 vol.1 ---所属性判定---};
+    author = {MasWag};
     |) <
-    +p {Hello}
+    #introduction;
+    #timedAutomata;
   >
 >

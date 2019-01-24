@@ -1,0 +1,30 @@
+@require: itemize
+@import: local
+@import: bib
+
+let timedAutomata = '<+section{時間オートマトン} <
++definition ?:({timed word}) ?:(`def:timedWord`)
+{
+  ${\alphabet}を有限の文字集合とする。
+  各 ${i \in \set{1,2,\ldots,n-1}}について${\tau_i < \tau_{i+1}}を満たす様な
+  有限列${w = \paren{\sigma_1,\tau_1},\paren{\sigma_2,\tau_2},\ldots,\paren{\sigma_n,\tau_n} \in \paren{\alphabet \times \mathbb{R}}}
+  を\dfn{timed word}と言う。
+}
++p {クロック変数の集合${\Clock}について、以下のBNFで定義される制約の集合を${\Guard}で表わす。
+   但し${\clock \in \Clock}、${\bowtie \in \set{\geq, >, <, \leq}}、${k \in\mathbb{Z}}である。
+}
++math(${
+        \phi ::= \clock \bowtie k \mid \phi \land \phi
+});
++definition ?:({時間オートマトン}) ?:(`def:TA`)
+{
+  有限の文字集合${\alphabet}とについて、時間オートマトン${\Autom}は6つ組${\paren{\alphabet,\Loc,\InitLoc,\AccLoc,\Clock,\Transition}}である。
+  但し${\alphabet}は有限の文字集合、
+  ${\Loc}は有限の状態集合、
+  ${\InitLoc\subseteq \Loc}は初期状態の集合、
+  ${\AccLoc \subseteq \Loc}は受理状態の集合、
+  ${\Clock}は有限のクロック変数の集合、
+  ${\Transition \subseteq \Loc\times\alphabet\times\Guard\times \powerset{\Clock} \times \Loc}は状態遷移関係である。
+}
+>
+>

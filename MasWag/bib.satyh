@@ -1,2 +1,61 @@
+@import: local
+
 let maswag-bibliography = [
+  
+
+  (`conf/rtss/AlurKV98`, InProceedings(|
+    author = {|Rajeev Alur, Robert P. Kurshan, Mahesh Viswanathan|};
+    title = {Membership Questions for Timed and Hybrid Automata.};
+    booktitle = {RTSS};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (254,263);
+    year = 1998;
+  |));
+
+
+  (`journals/tcs/AlurD94`, Article(|
+    author = {|Rajeev Alur, David L. Dill|};
+    title = {A Theory of Timed Automata.};
+    journal = {Theor. Comput. Sci.};
+    volume = Some(126);
+    number = Some({2});
+    pages = (183,235);
+    year = 1994;
+  |));
+
+
+  (`conf/qest/BehrmannDLHPYH06`, InProceedings(|
+    author = {|Gerd Behrmann, Alexandre David, Kim Guldstrand Larsen, John Håkansson, Paul Pettersson, Wang Yi, Martijn Hendriks|};
+    title = {UPPAAL 4.0.};
+    booktitle = {QEST};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (125,126);
+    year = 2006;
+  |));
+
+
+  (`conf/ac/BengtssonY03`, InProceedings(|
+    author = {|Johan Bengtsson, Wang Yi|};
+    title = {Timed Automata: Semantics, Algorithms and Tools.};
+    booktitle = {Lectures on Concurrency and Petri Nets};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (87,124);
+    year = 2003;
+  |));
+
+
+  (`HopcroftMU2003`, Book(|
+    author = {|J. ホップクロフト, R. モトワニ, J. ウルマン|};
+    title = {オートマトン言語理論計算論 I};
+    publisher = {サイエンス社};
+    year = 2003;
+  |));
+
+
 ]

@@ -1,0 +1,8 @@
+@require: itemize
+@import: local
+@import: bib
+
+let introduction = '<+section{はじめに} <
++p {
+}>
+>

@@ -1,0 +1,69 @@
+<dblp>
+<inproceedings key="conf/rtss/AlurKV98" mdate="2017-05-21">
+<author>Rajeev Alur</author>
+<author>Robert P. Kurshan</author>
+<author>Mahesh Viswanathan</author>
+<title>
+Membership Questions for Timed and Hybrid Automata.
+</title>
+<pages>254-263</pages>
+<year>1998</year>
+<crossref>conf/rtss/1998</crossref>
+<booktitle>RTSS</booktitle>
+<ee>https://doi.org/10.1109/REAL.1998.739751</ee>
+<ee>
+http://doi.ieeecomputersociety.org/10.1109/REAL.1998.739751
+</ee>
+<url>db/conf/rtss/rtss1998.html#AlurKV98</url>
+</inproceedings>
+<article key="journals/tcs/AlurD94" mdate="2017-05-28">
+<author>Rajeev Alur</author>
+<author>David L. Dill</author>
+<title>A Theory of Timed Automata.</title>
+<pages>183-235</pages>
+<year>1994</year>
+<volume>126</volume>
+<journal>Theor. Comput. Sci.</journal>
+<number>2</number>
+<url>db/journals/tcs/tcs126.html#AlurD94</url>
+<ee>https://doi.org/10.1016/0304-3975(94)90010-8</ee>
+</article>
+<inproceedings key="conf/qest/BehrmannDLHPYH06" mdate="2017-05-26">
+<author>Gerd Behrmann</author>
+<author>Alexandre David</author>
+<author>Kim Guldstrand Larsen</author>
+<author>John Håkansson</author>
+<author>Paul Pettersson</author>
+<author>Wang Yi</author>
+<author>Martijn Hendriks</author>
+<title>UPPAAL 4.0.</title>
+<pages>125-126</pages>
+<year>2006</year>
+<crossref>conf/qest/2006</crossref>
+<booktitle>QEST</booktitle>
+<ee>https://doi.org/10.1109/QEST.2006.59</ee>
+<ee>
+http://doi.ieeecomputersociety.org/10.1109/QEST.2006.59
+</ee>
+<url>db/conf/qest/qest2006.html#BehrmannDLHPYH06</url>
+</inproceedings>
+<inproceedings key="conf/ac/BengtssonY03" mdate="2017-05-23">
+<author>Johan Bengtsson</author>
+<author>Wang Yi</author>
+<title>Timed Automata: Semantics, Algorithms and Tools.</title>
+<pages>87-124</pages>
+<ee>https://doi.org/10.1007/978-3-540-27755-2_3</ee>
+<year>2003</year>
+<crossref>conf/ac/2003pn</crossref>
+<booktitle>Lectures on Concurrency and Petri Nets</booktitle>
+<url>db/conf/ac/acpn2003.html#BengtssonY03</url>
+</inproceedings>
+<book key="HopcroftMU2003">
+<author>J. ホップクロフト</author>
+<author>R. モトワニ</author>
+<author>J. ウルマン</author>
+<title>オートマトン言語理論計算論 I</title>
+<publisher>サイエンス社</publisher>
+<year>2003</year>
+</book>
+</dblp>
