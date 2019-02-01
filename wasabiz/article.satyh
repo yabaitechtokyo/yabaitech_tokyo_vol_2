@@ -1,12 +1,339 @@
 @import: bib
 @import: ../main/book-class
+@require: itemize
+@require: code
+@require: hdecoset
+
+let code-background = Gray(0.875)
+
+let display-code-decoset =
+  let deco (x, y) w h d =
+    [
+      fill code-background (Gr.rectangle (x, y -' d) (x +' w, y +' h));
+    ]
+  in
+    (deco, deco, deco, deco)
+
+
+let display-code-scheme ctx s =
+  Code.scheme display-code-decoset Color.black ctx s
+
+let-inline ctx \code s =
+  let bb =
+    display-code-scheme
+      (ctx |> set-font-size 10pt
+           |> set-leading 13pt) s
+  in
+    inline-fil ++ embed-block-breakable ctx bb
+
+let strut h d =
+  inline-graphics 0pt h d (fun _ -> [])
+
+let set-mono-font ctx =
+  ctx |> set-font Latin (`lmmono`, 1., 0.)
+      |> set-hyphen-penalty 100000
+
+let-inline ctx \codem it =
+  let ib-strut = strut 8pt 3pt in
+  let ib =
+    let ctx =
+      ctx |> set-mono-font
+          |> set-every-word-break inline-nil ib-strut
+    in
+      ib-strut ++ read-inline ctx (embed-string it)
+  in
+  let pads = (2pt, 2pt, 2pt, 2pt) in
+  let decoset = HDecoSet.rectangle-round-fill 4pt 2pt (Color.gray 0.9) in
+    script-guard Latin (inline-frame-breakable pads decoset ib)
 
 let wasabiz-article = '<
   +chapter ?:(`wasabiz-article`) (|
     bibliography = wasabiz-bibliography;
-    title = {Wasabiz Chapter};
+    title = {定理証明支援系を作ろう！};
     author = {wasabiz};
     |) <
-    +p {Hello}
-  >
++p {
+この記事では可能な限り省エネ・省コードで定理証明支援系を作ります．
+
+% 小節ごとに最初にまとめをかく
+% 表とかつかって一覧性を高くする
+}
+
++section{目標} <
++p{
+可能な限り省エネ・省コードで定理証明支援系を作成することを目標にします．
+
+\listing{
+* パーサー
+* 束縛関係の管理
+* 型検査
+* 型推論
+* 効率的な評価器
+* tactic言語
+}%
+
+これらを全て実装せずに定理証明支援系をつくります．
+}
+
++p {
+\listing{
+* パーサー: DSL
+* 束縛関係の管理, 型検査, 型推論: HOAS
+* 効率的な評価器: NbE
+* tactic言語: Lean
+}%
+
+言語はLeanを使用します．
+Haskellの型システムにはdependencyがなく，論理の推論規則が満たすべき性質を証明するのが難しかったのと，型レベルのラムダ抽象がないせいでコードが不必要に複雑化してしまうため使用をやめてしまいました．
+}
+
+% HaskHOL
+% HOLlight
+>
+
++section{ラムダ計算}<
++subsection{型無しラムダ計算 (Untyped lambda calculus)} <
++p {
+型無しラムダ計算について復習します．
+まず，変数の無限集合 ${\mathcal{Var}}が定まっているとします．
+${Var}の要素は以下で${x,y,z,...}で表すことにします．
+型無しラムダ計算の\dfn{項 (ラムダ項, lambda term)} は以下のBNFで帰納的に定義されます．
+
+\code(```
+M, N ::= x | M N | \lambda x. M
+```);%
+
+型無しラムダ計算の項は型付きラムダ計算の項と対比して\dfn{preterm}と呼ばれることもあります．
+ある${\lambda}項${M}が発散するとは...
+開いた，閉じた
+}
+>
+
++subsection{高階抽象構文木 ((Plain) HOAS)} <
++p{
+メタ言語(今回の場合はLean(の処理系))に束縛関係の管理を外注してしまう．
+DSLとして記述するのでパーサーも不要になる．
+ある意味，パース自体もメタ言語に外注している．
+
+\code(```
+inductive preterm₀ : Type
+| lam : (preterm₀ → preterm₀) → preterm₀
+| app : preterm₀ → preterm₀ → preterm₀
+```);%
+
+エラーが出ます．
+
+\code(```
+hol.lean:1:0: error
+arg #1 of 'preterm₀.lam' has a non positive occurrence of the datatypes being declared
+```);%
+
+集合論的モデルではこのような不動点(解)であって非自明なものが存在しないためです．(集合${X}に関する方程式${X \cong \[X, X\]}の解は一点集合のみです．)
+Leanの仕様では一般的にどのような帰納的データ型の定義が許されているかがもう少しわかりやすく定められています．(Lean Reference Manual 3.3.0の4.4節)
+また，これらの数学的基礎付けについては\dfn{Domain Theory(領域理論)}の教科書が良い導入になるかも知れません．(たとえば[横内,1994])
+
+一方でHaskellの型システムはLeanよりも寛容なので \codem(`preterm₀`); のような型が実際に定義できます．
+しかし，(Plain) HOASにはいくつかの問題があることが知られてます．
+
+問題1.
+一つ目の問題は一旦構築した項の中身を読み出せないということです．
+% write-only
+
+問題2.
+もう一つの問題はHOASではλ-definableではない項も表現できてしまうということです．
+% is_app
+
+% Normalization by Evaluation with Typed Abstract Syntax  
+}
+>
+
++subsection{Parametric HOAS (PHOAS)} <
++p{
+先にあげたHOASの欠点を克服する手法が\dfn{Parametric HOAS (PHOAS)}と呼ばれる手法です．
+先ほど定義したpretermを表す型をPHOASで定義すると以下のようになります．
+
+\code(```
+inductive preterm₁ (α : Type) : Type
+| var : α → preterm₁
+| lam : (α → preterm₁) → preterm₁
+| app : preterm₁ → preterm₁ → preterm₁
+```);%
+
+このようにpretermの型が型変数\codem(`α`);によってパラメータ化されています．
+各コンストラクタの型シグネチャに現れている\codem(`preterm₁`);はゼロ引数に見えますが，暗黙に\codem(`α`);が適用されています．(これはLeanの仕様で，帰納的定義を行う際は\codem(`:`);の前の引数は再帰の中で常に固定されていると解釈されます．この場合は，\codem(`inductive preterm₁ (α : Type) : Type`);という行の\codem(`:`);の前に\codem(`(α : Type)`);があるのでこの\codem(`α`);は定義中で固定されています．)
+さて，このデータ型はこの\codem(`α`);は通常全称量化された状態で使われます．
+
+\code(```
+def Preterm₁ : Type 1 := Π (α : Type), preterm₁ α
+```);%
+
+すると，\codem(`Preterm₁`);はすべての閉じたλ項を表す型となります．
+\footnote{ただしこれをLeanの中で証明することは不可能だと思われます．Coqの有名な教科書であるCPDT [Chlipala,  http://adam.chlipala.net/cpdt/html/Hoas.html] の著者であるChlipalaはPHOASの研究者でもありますが，彼はCPDTの中でこの問題に対して「おそらく不可能だろう」と述べています．}
+\footnote{定義された変数の先頭文字が大文字になっていますが，これはLeanでは特別な意味を持ちません．}
+
+直観的には以下のように説明されます．
+まず\codem(`var`);の引数と\codem(`lam`);の引数の引数が型変数\codem(`α`);になっていることに注目してください．
+\codem(`α`);が全称量化されている場合，\codem(`var`);の引数として取れる\codem(`α`);型の値は\codem(`lam`);で束縛したものに限られます．よって閉項のみが表現されます．
+さらに，\codem(`α`);が全称量化されていることにより，\codem(`preterm₁ α`);型の値は\codem(`var`);,\codem(`lam`);,\codem(`app`);のいずれかで生成されたものに限られます．
+よって，\codem(`Preterm₁`);はすべての閉じたλ項を忠実に表現する型と言えます．
+
+ちなみに，細かい点ですが，Leanの型システムではTypeはpredicativeなので\codem(`Preterm₁`);のようなdependent productは通常の型の宇宙(\codem(`Type`);あるいは\codem(`Type 0`);で表される)には収まらない程度に大きくなります．
+そのため\codem(`Preterm₁`);自体の型を\codem(`Type 1`);というひとつ大きな宇宙にしています．
+
+ではこの\codem(`Preterm₁`);を用いて型無しラムダ計算が実現できるか確認します．
+\codem(`Preterm₁`);は閉項しか表現できませんが，しばらくは開いた項を扱わないので問題ありません．
+\codem(`Preterm₁`);は型が量化されているので，\codem(`Preterm₁`);型の項の中身を取り出す場合は，まずどのような型で実体化するかを考える必要があります．
+たとえばdeBrujin level (有名なdeBrujin indexの変種で，束縛変数の数字が項の内側にいくにつれて増えていくようにしたもの)を使って項を文字列に変換する場合はこの\codem(`α`);として自然数の型\codem(`ℕ`);を採用します．
+
+\code(```
+def preterm₁.to_string : preterm₁ ℕ → ℕ → string
+| (var n) _ := to_string n
+| (lam f) lv := "(λ" ++ to_string lv ++ "." ++ preterm₁.to_string (f lv) (lv + 1) ++ ")"
+| (app m₁ m₂) lv := "(" ++ preterm₁.to_string m₁ lv ++ " " ++ preterm₁.to_string m₂ lv ++ ")"
+
+def Preterm₁.to_string (m : Preterm₁) : string :=
+preterm₁.to_string (m ℕ) 0
+```);%
+
+LeanにはHaskellやCoqと同じく型クラスが用意されています．
+この定義を用いて\codem(`has_to_string`);型クラスのインスタンスを宣言して，値の文字列化を行う汎用関数\codem(`to_string`);が適用できるようにします．
+
+\code(```
+instance Preterm₁_to_string : has_to_string Preterm₁ :=
+⟨preterm₁.to_string⟩
+```);%
+
+それでは実際にλ項を作成してみます．
+最も簡単な例は引数をひとつとってそれをそのまま返すλ項${\lambda x.x}です．
+この項はよく${i}という名前で呼ばれます．
+${i}を\codem(`Preterm₁`);の値として記述すると以下のようになります．
+
+\code(```
+def i : Preterm₁ := λ α, lam (λ x, var x)
+```);%
+
+先ほどインスタンスを定義した\codem(`to_string`);を用いてこれを表示してみます．
+
+\code(```
+#eval to_string i    -- "(λ0.0)"
+```);%
+
+\codem(`--`);はLeanの一行コメントです．\codem(`--`);以降に書いた文字列\codem(`"(λ0.0)"`);が\codem(`to_string i`);の結果です．
+正しく表示できているようです．
+同様に\codem(`s`);や\codem(`k`);と呼ばれる以下の項も定義してみます．
+
+\align[
+${| s |= \lambda x. \lambda y. \lambda z. \paren{x z} \paren{y z} |};
+${| k |=  \lambda x. \lambda y. x |};
+];%
+
+\code(```
+def s : Preterm₁ := λ α, lam (λ x, lam (λ y, lam (λ z, app (app (var x) (var z)) (app (var y) (var z)))))
+def k : Preterm₁ := λ α, lam (λ x, lam (λ y, var x))
+```);%
+
+やはり\codem(`to_string`);を使って表示してみます．
+うまく動作しているようです．
+
+\code(```
+#eval to_string s -- "(λ0.(λ1.(λ2.((0 2) (1 2)))))"
+#eval to_string k -- "(λ0.(λ1.0))"
+```);%
+
+次に自然数のChurch encodingを試してみます．
+
+\align[
+${| 0 |= \lambda f. \lambda x. x |}; 
+${| 1 |= \lambda f. \lambda x. f x |};
+${| 2 |= \lambda f. \lambda x. f \paren{f x} |};
+${| 3 |= \lambda f. \lambda x. f \paren{f \paren{f x}} |};
+];%
+
+\code(```
+def n₀ : Preterm₁ := λ α, lam (λ f, lam (λ x, var x))
+def n₁ : Preterm₁ := λ α, lam (λ f, lam (λ x, app (var f) (var x)))
+def n₂ : Preterm₁ := λ α, lam (λ f, lam (λ x, app (var f) (app (var f) (var x))))
+def n₃ : Preterm₁ := λ α, lam (λ f, lam (λ x, app (var f) (app (var f) (app (var f) (var x)))))
+```);%
+
+\code(```
+#eval to_string n₀ -- "(λ0.(λ1.1))"
+#eval to_string n₁ -- "(λ0.(λ1.(0 1)))"
+#eval to_string n₂ -- "(λ0.(λ1.(0 (0 1))))"
+#eval to_string n₃ -- "(λ0.(λ1.(0 (0 (0 1)))))"
+```);%
+
+自然数を受け取って次の自然数を返す\codem(`succ`);を定義します．
+
+\code(```
+def  succ : Preterm₁ := λ α, lam (λ n, lam (λ f, lam (λ x, app (var f) (app (app (var n) (var f)) (var x)))))
+```);%
+
+\codem(`succ`);を使う時には2つ注意点があります．
+ひとつ目は，\codem(`Preterm₁`);型の二つの値を受け取って適用する場合は型変数を適切に分配してやる必要があるということです．
+二つ目は，(当然ですが)単に適用した項を定義しただけでは項の簡約は行われないということです．
+そのため，\codem(`succ_n₀`);の結果は\codem(`n₁`);とは異なります．
+
+\code(```
+def  succ_n₀ : Preterm₁ := λ α, app (succ α) (n₀ α)
+#eval to_string succ_n₀ -- "((λ0.(λ1.(λ2.(1 ((0 1) 2))))) (λ0.(λ1.1)))"
+```);%
+
+それでは項の簡約を定義してみます．
+ここでは簡単に定義できる並列最外簡約を実装します．
+ざっくりとした簡約ですが，これ以上細かく実装すると今回の記事の趣旨から逸脱してしまうのでこれで良しとします．
+
+\code(```
+def subst' {α} : preterm₁ (preterm₁ α) → preterm₁ α
+| (var x) := x
+| (lam f) := lam (λ x, subst' (f (var x))) -- terminates!
+| (app m₁ m₂) := app (subst' m₁) (subst' m₂)
+
+def pbeta' {α} : preterm₁ (preterm₁ α) → preterm₁ α -- parallel outermost reduction
+| (var x) := x
+| (lam f) := lam (λ x, pbeta' (f (var x)))
+| (app (lam f) m) := subst' (f (subst' m))
+| (app n m) := app (pbeta' n) (pbeta' m)
+
+def pbeta : Preterm₁ → Preterm₁ :=
+λ m α, pbeta' (m _)
+```);%
+
+まず，Leanの構文について説明します．\codem(`subst'`);と\codem(`pbeta'`);の定義の先頭に現れている\codem(`{α}`);は\codem(`{α : Type}`);の略で，これは引数\codem(`α`);がimplicit argumentであることを指定しています．また，\codem(`pbeta`);の定義の中に現れている\codem(`_`);はプレースホルダで，Leanの処理系が適切な項を推論して補完してくれます．ここでは\codem(`preterm₁ α`);という項が自動的に補完されます．
+
+それではそれぞれの定義について説明します．\codem(`subst'`);は置換を完了させるための手続きです．(Parametric) HOASでは変数の置換は単なるメタレベルの適用で実現されます．(\codem(`pbeta'`);の下から二行目を見るとわかる通り置換はLeanの関数適用です．) ただし適用を行うには項の型が\codem(`preterm₁ (preterm₁ α)`);という形をしている必要があります．\codem(`subst'`);は適用を完了させ，型を\codem(`preterm₁ α`);に平坦化します．細かい点ですが，Leanは\codem(`subst'`);が停止することを自動で検出してくれます．これは実は自明ではないので，場合によっては手動で証明を書く必要があるかも知れません．
+\codem(`pbeta'`);は${\paren{\lambda x. M}N}という形の項を探し，置換を行います．先ほど説明した通り並列最外簡約です．\codem(`pbeta`);は型を合わせるために\codem(`pbeta'`);とは別に定義しました．
+
+それでは先ほどの\codem(`succ_n₀`);を簡約してみます．
+
+\code(```
+#eval to_string succ_n₀ -- "((λ0.(λ1.(λ2.(1 ((0 1) 2))))) (λ0.(λ1.1)))"
+#eval to_string $ pbeta succ_n₀ -- "(λ0.(λ1.(0 (((λ2.(λ3.3)) 0) 1))))"
+#eval to_string $ pbeta $ pbeta succ_n₀ -- "(λ0.(λ1.(0 ((λ2.2) 1))))"
+#eval to_string $ pbeta $ pbeta $ pbeta succ_n₀ -- "(λ0.(λ1.(0 1)))"
+#eval to_string $ pbeta $ pbeta $ pbeta $ succ_n₀ -- "(λ0.(λ1.(0 1)))"
+```);%
+
+うまく動いていますね．
+これだけでも十分遊べますが，今回の趣旨から逸れてしまうのでほどほどにしておきます．
+
+最後に発散する項が記述できることを確認しておわります．
+
+\code(```
+def ω : Preterm₁ := λ α, lam (λ x, app (var x) (var x))
+def Ω : Preterm₁ := λ α, app (ω α) (ω α)
+```);%
+
+\codem(`Ω`);は${\paren{\lambda x. x x} \paren{\lambda x. x x}}という項を表しています．
+この項は簡約しても結果が自分自身となるクワインと呼ばれる種類の項の一つです．
+実際に簡約して結果が\codem(`Ω`);となることを確認します．
+
+\code(```
+#eval to_string Ω -- "((λ0.(0 0)) (λ0.(0 0)))"
+#eval to_string $ pbeta Ω -- "((λ0.(0 0)) (λ0.(0 0)))"
+```);
+}
+>
+>
+>
 >
