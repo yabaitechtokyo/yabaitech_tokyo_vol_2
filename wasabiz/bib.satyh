@@ -1,2 +1,31 @@
+@import: ../main/book-class
+
 let wasabiz-bibliography = [
+
+  (`Barendregt93`, Article(|
+    author = {|H. P. Barendregt|};
+    title = {Lambda calculi with types};
+    journal = {Handbook of logic in computer science};
+    volume = Some(2);
+    number = None;
+    pages = (117,309);
+    year = 1993;
+  |));
+
+  (`GabbayP02`, Article(|
+    author = {|Murdoch Gabbay, Andrew M. Pitts|};
+    title = {A New Approach to Abstract Syntax with Variable Binding};
+    journal = {Formal Asp. Comput.};
+    volume = Some(13); 
+    number = None; 
+    pages = (341,363);
+    year = 2002;
+  |));
+
+  (`Pitts13`, Book(|
+    author = {|Andrew M. Pitts|};
+    title = {Nominal sets};
+    publisher = {Cambridge University Press};
+    year = 2013;
+  |));
 ]

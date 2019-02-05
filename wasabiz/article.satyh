@@ -3,6 +3,7 @@
 @require: itemize
 @require: code
 @require: hdecoset
+@require: proof
 
 let code-background = Gray(0.875)
 
@@ -18,13 +19,13 @@ let display-code-decoset =
 let display-code-scheme ctx s =
   Code.scheme display-code-decoset Color.black ctx s
 
-let-inline ctx \code s =
-  let bb =
-    display-code-scheme
-      (ctx |> set-font-size 10pt
-           |> set-leading 13pt) s
-  in
-    inline-fil ++ embed-block-breakable ctx bb
+% let-inline ctx \code s =
+%   let bb =
+%     display-code-scheme
+%       (ctx |> set-font-size 10pt
+%            |> set-leading 13pt) s
+%   in
+%     inline-fil ++ embed-block-breakable ctx bb
 
 let strut h d =
   inline-graphics 0pt h d (fun _ -> [])
@@ -45,6 +46,11 @@ let-inline ctx \codem it =
   let pads = (2pt, 2pt, 2pt, 2pt) in
   let decoset = HDecoSet.rectangle-round-fill 4pt 2pt (Color.gray 0.9) in
     script-guard Latin (inline-frame-breakable pads decoset ib)
+
+let-math \fv m = ${\app{\mathop{\mathrm{fv}}}{#m}}
+let-math \var m = ${\app{\mathop{\mathrm{var}}}{#m}}
+let-math \fresh = math-char MathOrd `И`
+let-math \iff = math-char MathRel `⟺`
 
 let wasabiz-article = '<
   +chapter ?:(`wasabiz-article`) (|
@@ -73,9 +79,7 @@ let wasabiz-article = '<
 }%
 
 これらを全て実装せずに定理証明支援系をつくります．
-}
 
-+p {
 \listing{
 * パーサー: DSL
 * 束縛関係の管理, 型検査, 型推論: HOAS
@@ -94,39 +98,193 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 +section{ラムダ計算}<
 +subsection{型無しラムダ計算 (Untyped lambda calculus)} <
 +p {
-型無しラムダ計算について復習します．
-まず，変数の無限集合 ${\mathcal{Var}}が定まっているとします．
-${Var}の要素は以下で${x,y,z,...}で表すことにします．
-型無しラムダ計算の\dfn{項 (ラムダ項, lambda term)} は以下のBNFで帰納的に定義されます．
+  この小節では型無しラムダ計算について復習します．
+  まず，変数の無限集合${\mathcal{Var}}が定まっているとします．
+  ${\mathcal{Var}}の要素は以下で${x,y,z,\cdots}で表すことにします．
+  型無しラムダ計算の\dfn{項 (ラムダ項, lambda term)}は以下のBNFで帰納的に定義されます．
 
-\code(```
-M, N ::= x | M N | \lambda x. M
-```);%
+  \eqn(${
+  M, N \mathrel{::=} x \mid \lambda x. M \mid M N 
+  });%
 
-型無しラムダ計算の項は型付きラムダ計算の項と対比して\dfn{preterm}と呼ばれることもあります．
-ある${\lambda}項${M}が発散するとは...
-開いた，閉じた
+  すべてのラムダ項からなる集合を${\mathcal{Tm}}と書きます．
+  型無しラムダ計算の項は型付きラムダ計算の項と対比して\dfn{前項 (preterm)}と呼ばれることもあります．
+}
++p{
+  型無しラムダ計算でもっとも重要な概念が変数の束縛です．
+  まず，ラムダ項${M}の\dfn{自由変数}の集合${\fv{M} \subseteq \mathcal{Var}}を以下のように構造に関する帰納法により定義します．
+
+  \align[
+  ${| \fv{x} |= \set{x} |};
+  ${| \fv{\lambda x.M} |= \fv{M} \setminus \set{x} |};
+  ${| \fv{MN} |= \fv{M} \cup \fv{N} |};
+  ];%
+
+  変数${x}が${\fv{M}}に属するとき，${x}は${M}について\dfn{自由である (free)}と言います．
+  変数${x}が${\fv{M}}に属さない時，${x}は${M}について\dfn{自由でない (non-free)}とか\dfn{新鮮である (fresh)}と言い，${x \mathrel{\#} M}と書きます．
+  また，${\fv{M} = \emptyset}であるとき，${M}を\dfn{閉じている (closed)}といい，閉じていない項を\dfn{開いている (open)}といいます．
+  閉じた項は\dfn{閉項}とも呼ばれます．
+}
++p{
+  つぎに集合${\mathcal{Tm}}の上に\dfn{${\alpha}同値 (${\alpha}-equivalence)}と呼ばれる同値関係を導入します．
+  多くの標準的な教科書(たとえば，\cite[`Barendregt93`];)では${\alpha}同値を厳密には定義せず，いくつかの例を示して定義に代えています．
+  ここでは正確な記述のために，\dfn{Nominal set theory}\cite[`GabbayP02`;`Pitts13`]; で用いられている${\alpha}同値の定義を簡単に紹介します．
+  \cite[`Pitts13`];では圏論の言葉を用いてNominal set theoryが展開されていますが，ここではラムダ計算を定義するのに必要な部分だけを初等的な言葉のみで説明します．
+}
++p{
+  変数${x,y \in \mathcal{Var}}に対して写像${\paren{x\ y} : \mathcal{Var} \to \mathcal{Var}}を，${x}を${y}に，${y}を${x}に写し，それ以外の場合は入力をそのまま返すものと定義します．
+  このような写像を\dfn{互換 (transposition)}と呼びます．
+  互換${\pi}について，${\mathcal{Tm}}から${\mathcal{Tm}}への写像${\pi\cdot\paren{-}}を構造に関する帰納法により定義します．
+
+  \align[
+  ${| \pi\cdot x |= \app{\pi}{x} |};
+  ${| \pi\cdot\paren{\lambda z.M} |= \lambda \app{\pi}{x}.\pi\cdot M |};
+  ${| \pi\cdot\paren{MN} |= \paren{\pi\cdot M} \paren{\pi\cdot N} |};
+  ];
+
+  また，${\app{\pi}{x}}のことも${\pi\cdot x}と書きます．
+  ${\alpha}同値性を定義するために新しい量化子${\fresh}を導入します．
+
+  \eqn(${
+    \fresh x \in X.\ \app{\phi}{x} \mathrel{:\iff} X \setminus \setsep{x \in X}{\app{\phi}{x}} \ \text!{is finite}
+  });
+
+  ${\fresh x \in X.\ \app{\phi}{x}}は数学的には「有限個を除く全ての${x \in X}について${\app{\phi}{x}}が成立する (${\app{\phi}{x}} holds for all but finitely many ${x \in X})」という意味になります．
+  以下では特に${X}として${\mathcal{Var}}を取り，${\phi}としてラムダ項についての命題を取ります．
+  その場合，実は${\fresh x.\ \app{\phi}{x}}は「新鮮な変数xについて${\app{\phi}{x}}が成り立つ」ことと同値になります．
+  より正確には「${\phi}に出現する全ての項に対して新鮮な${x}について${\app{\phi}{x}}が成り立つ」ことと同値になります．
+  \footnote{ここでは「『全ての』新鮮な変数xについて」なのか「『ある』新鮮な変数xについて」なのかを明示しませんでしたが，実はどちらと思って読んでも同値になることが知られています．詳しくは\cite[`Pitts13`];の定理3.9を参照してください．}
+}
++p{
+  最後に${\alpha}同値性を定義します．
+  % 以下の条件で生成される最小の二項関係を${\mathord{=}_\alpha \subseteq \mathcal{Tm} \times \mathcal{Tm}}と書きます．
+  % \listing{
+  %   * 任意の元${x \in \mathcal{Var}}について，${x =_\alpha x}．
+  %   * ${x,y \in \mathcal{Var}}と${M,N \in \mathcal{Tm}}を任意にとる．任意の${z \in \mathcal{Var}}に対して${b \nin \set{x,y} \cup \var{M N}}ならば${\paren{x\ z}\cdot M =_\alpha \paren{y\ z}\cdot N}が成り立つ時，${\lambda x.M =_\alpha \lambda y.N}．
+  %   * ${M_1 =_\alpha M_2}と${N_1 =_\alpha N_2}が成り立つ時，${M_1 N_1 =_\alpha M_2 N_2}．
+  % }
+  % ただし，${\var{M}}は以下のように構造に関する帰納法で定義される写像です．
+  % \align[
+  % ${| \var{x} |= \set{x} |};
+  % ${| \var{\lambda x.M} |= \set{x} \cup \var{M} |};
+  % ${| \var{M N} |= \var{M} \cup \var{N} |};
+  % ];
+  以下の規則に基づく帰納的定義により二項関係${\mathord{=_\alpha} \subseteq \mathcal{Tm} \times \mathcal{Tm}}を定義します．
+
+  \math-list(${
+  | \derive{| |}{ x =_\alpha x }
+  | \derive{| \fresh y.\ \paren{x\ y} \cdot M =_\alpha \paren{x'\ y} \cdot M' |}{ \lambda x.M =_\alpha \lambda x'.M' }
+  | \derive{| M_1 =_\alpha M_2 | N_1 =_\alpha N_2 |}{ M_1 N_1 =_\alpha M_2 N_2 }
+  |});
+
+  実はこのような定義を採用することで${=_\alpha}は同値関係になります．
+  ${M =_\alpha N}が成り立つ時，${M}と${N}は\dfn{${\alpha}同値}であると言います．
+  直観的には，二つのラムダ項が${\alpha}同値であるとはそれらが同じ束縛構造を持つことを意味します．
+}
++p{
+  ${\alpha}同値なラムダ項はすべて同一視したほうが都合が良いので，以下ではそのようにします．
+  そのために，まず${\Lambda}を商集合${\mathcal{Tm}/\mathord{=_\alpha}}として定義し，${\Lambda}の元${\[M\]_{=_\alpha}}を(記法を乱用して)適当な代表元${M}で表します．
+  さて，この定義によれば${\Lambda}は${\mathcal{Tm}}と違い帰納的に定義された集合ではないので，${\Lambda}の元に対して構造に関する帰納法を回すことができません．
+  しかし，${\Lambda}にはある同値な定義が存在し，それを用いれば${\Lambda}を帰納的に定義された集合と見做すことができます．\footnote{Nominal setの圏${\mathbb{Nom}}の上の始代数になります．}
+  よって，${\Lambda}の元に対する帰納法が存在します．(言い換えると，${\mathcal{Tm}}の上の帰納法であって${\alpha}同値なものを同一視する変種が存在します．)
+}
++p{
+  ${\Lambda}の帰納法を説明するために\dfn{写像の自由変数}について説明します．
+  ${f_1 : \mathcal{Var} \to \Lambda}を写像とします．
+  ${f_1}が\dfn{${\fv{f_1}}を持つ}とは
+
+  \eqn(${
+    \fresh x,x'.\ \forall y.\ \paren{x\ x'} \cdot \app{f_1}{y} = \app{f_1}{\paren{x\ x'}\cdot y}
+  });
+
+  が成り立つことであるとします．${f_1}は変数を受け取り，なんらかの加工を施してラムダ項を出力します．その際もともと入力として受け取った変数に加えていくつかの自由変数が出力結果に現れる可能性があります．(元々の入力が出力されないこともあります．)
+  そのように${f_1}が追加で出力する自由変数のことを${f_1}自身の自由変数だと考えることにします．
+  そして，そのような変数の集合を${\fv{f_1}}と書きます．
+  つまり，${f_1}が${\fv{f_1}}を持つとは，${f_1}が有限個の自由変数しかもたないということに他なりません．(任意のラムダ項が有限個の自由変数しかもたないことと対応しています．)
+  \footnote{より正確な定義は教科書を参照してください．${\fv{f_1}}は${\app{\mathrm{supp}}{f_1}}と呼ばれています．また，${\fv{f_1}}を持つことはfinitely supportedであると呼ばれています．}
+  ${f_1}と同様に，${f_2 : \mathcal{Var} \times \Lambda \to \Lambda}，${f_3 : \Lambda \times \Lambda \to \Lambda}のような型の写像に対しても${\fv{f_2},\fv{f_3}}とそれらを持つかどうかを定義することができます．
+}
++theorem{
+  写像${f_1 : \mathcal{Var} \to \Lambda}，${f_2 : \mathcal{Var} \times \Lambda \to \Lambda}，${f_3 : \Lambda \times \Lambda \to \Lambda}をとる．
+  ${f_1,f_2,f_3}がそれぞれ${\fv{f_1},\fv{f_2},\fv{f_3}}を持つとする．
+  さらに，以下の条件を満たすとする．
+
+  \eqn(${
+    x \nin \fv{f_1},\fv{f_2},\fv{f_3} \Longrightarrow \forall M.\ x \mathrel{\#} \app{f_3}{x,M}
+  });
+
+  すると写像${f : \Lambda \to \Lambda}であって，
+  \listing{
+  * ${\app{f}{x} = \app{f_1}{x}}
+  * ${\app{f}{\lambda x.M} = \app{f_2}{x, \app{f}{M}}} (ただし，${x \nin \fv{f_1},\fv{f_2},\fv{f_3}})
+  * ${\app{f}{M_1 M_2} = \app{f_3}{\app{f}{M_1}, \app{f}{M_2}}}
+  * ${f}は${\fv{f}}を持つ．
+  }
+  であるようなものがただ一つ存在する．
+}
++p{
+  この定理は${\Lambda}の帰納法の特殊な場合です．この定理を用いることで，ラムダ項の\dfn{置換}を定義することができます．
+  変数${x}とラムダ項${M}について，以下の写像${f_1,f_2,f_3}で定理により誘導される写像を${\app{\sqbracket{M/x}}{-} : \Lambda \to \Lambda}と書きます．
+  ${\app{\sqbracket{M/x}}{-}}を適用することを${x}を${M}で\dfn{置換する}と言います．
+
+  \listing{
+    * ${\app{f_1}{y} = \cases![
+      (${M}, {x = y});
+      (${y}, {otherwise})
+    ]}
+    * ${\app{f_2}{x,M} = \lambda x.M}
+    * ${\app{f_3}{M_1,M_2} = M_1 M_2}
+  }
+
+  いずれもwell-definedであり，定理の条件を満たすことが簡単に確認できます．
+}
++p{
+  置換を用いてラムダ項の\dfn{${\beta}簡約}を定義します．二項関係${\to_\beta \subseteq \Lambda \times \Lambda}を以下の規則で帰納的に定義します．
+
+  \math-list(${
+  | \derive{| |}{ \paren{\lambda x.M}N \to_\beta \sqbracket{N/x}M }
+  | \derive{| M \to_\beta M' |}{ \lambda x.M \to_\beta \lambda x.M' }
+  | \derive{| M \to_\beta M' |}{ M N \to_\beta M' N }
+  | \derive{| M \to_\beta M' |}{ N M \to_\beta N M' }
+  |});
+
+  ${M \to_\beta N}であるとき，${M}が${N}に(${\beta})簡約されると言います．
+  単に簡約と言った場合，${\beta}簡約のことを指します．
+  一度簡約された項が再度簡約されることもあり得ます．
+  ラムダ項の長さ1以上の加算列${\paren{M_i}_{i}}が全ての(有効な)${i}について${M_i \to_\beta M_{i+1}}を満たす時，その列を\dfn{簡約列}と言います．
+  特に${M_0}を明示して，\dfn{${M_0}の簡約列}とも言います．
+  ある簡約列が無限列であることを\dfn{発散する}と言います．
+  ${M}の長さ2以上の簡約列が存在しない時，${M}を\dfn{正規形}と言います．
+  また，${M}の無限簡約列が存在しない時，${M}は\dfn{強正規化可能である}と言います．
+  ${\to_\beta}の反射推移対称閉包を${=_\beta}を書きます．定義より，${=_\beta}は${\Lambda}上の同値関係です．
+}
++p{
+  最後に${\eta}展開を定義します．${\eta}展開は以下の規則に加えて${\beta}簡約のときと同様の追加規則により定義されます．
+
+  \eqn(${\derive{| x \mathrel{\#} M |}{ M \to_\eta \lambda x.M x }});
+
+  ${\mathord{\to_\eta} \cup \mathord{\to_\beta}}の反射推移対称閉包を${=_{\beta\eta}}と書きます．
 }
 >
 
-+subsection{高階抽象構文木 ((Plain) HOAS)} <
++subsection{高階抽象構文木 (Higher-order abstract syntax\; HOAS)} <
 +p{
 メタ言語(今回の場合はLean(の処理系))に束縛関係の管理を外注してしまう．
 DSLとして記述するのでパーサーも不要になる．
 ある意味，パース自体もメタ言語に外注している．
 
-\code(```
+\d-code(`
 inductive preterm₀ : Type
 | lam : (preterm₀ → preterm₀) → preterm₀
 | app : preterm₀ → preterm₀ → preterm₀
-```);%
+`);%
 
 エラーが出ます．
 
-\code(```
+\d-code(`
 hol.lean:1:0: error
 arg #1 of 'preterm₀.lam' has a non positive occurrence of the datatypes being declared
-```);%
+`);%
 
 集合論的モデルではこのような不動点(解)であって非自明なものが存在しないためです．(集合${X}に関する方程式${X \cong \[X, X\]}の解は一点集合のみです．)
 Leanの仕様では一般的にどのような帰納的データ型の定義が許されているかがもう少しわかりやすく定められています．(Lean Reference Manual 3.3.0の4.4節)
