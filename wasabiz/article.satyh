@@ -5,51 +5,11 @@
 @require: hdecoset
 @require: proof
 
-let code-background = Gray(0.875)
-
-let display-code-decoset =
-  let deco (x, y) w h d =
-    [
-      fill code-background (Gr.rectangle (x, y -' d) (x +' w, y +' h));
-    ]
-  in
-    (deco, deco, deco, deco)
-
-
-let display-code-scheme ctx s =
-  Code.scheme display-code-decoset Color.black ctx s
-
-% let-inline ctx \code s =
-%   let bb =
-%     display-code-scheme
-%       (ctx |> set-font-size 10pt
-%            |> set-leading 13pt) s
-%   in
-%     inline-fil ++ embed-block-breakable ctx bb
-
-let strut h d =
-  inline-graphics 0pt h d (fun _ -> [])
-
-let set-mono-font ctx =
-  ctx |> set-font Latin (`lmmono`, 1., 0.)
-      |> set-hyphen-penalty 100000
-
-let-inline ctx \codem it =
-  let ib-strut = strut 8pt 3pt in
-  let ib =
-    let ctx =
-      ctx |> set-mono-font
-          |> set-every-word-break inline-nil ib-strut
-    in
-      ib-strut ++ read-inline ctx (embed-string it)
-  in
-  let pads = (2pt, 2pt, 2pt, 2pt) in
-  let decoset = HDecoSet.rectangle-round-fill 4pt 2pt (Color.gray 0.9) in
-    script-guard Latin (inline-frame-breakable pads decoset ib)
-
 let-math \fv m = ${\app{\mathop{\mathrm{fv}}}{#m}}
 let-math \var m = ${\app{\mathop{\mathrm{var}}}{#m}}
-let-math \fresh = math-char MathOrd `И`
+let cyr it ctx =
+  read-inline (ctx |> set-font OtherScript (`CambriaMath` , 1., 0.)) it % FIXME
+let-math \fresh = text-in-math MathOrd (cyr (embed-string `И`))
 let-math \iff = math-char MathRel `⟺`
 
 let wasabiz-article = '<
@@ -107,6 +67,8 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   M, N \mathrel{::=} x \mid \lambda x. M \mid M N 
   });%
 
+  ${\lambda x.M}の形のラムダ項を\dfn{ラムダ抽象}と呼び，${MN}の形のラムダ項を\dfn{適用}と呼びます．
+  適用は左結合とし，${\lambda x_1.\cdots \lambda x_n.M}を略記して${\lambda x_1,\cdots,x_n.M}と書きます．
   すべてのラムダ項からなる集合を${\mathcal{Tm}}と書きます．
   型無しラムダ計算の項は型付きラムダ計算の項と対比して\dfn{前項 (preterm)}と呼ばれることもあります．
 }
@@ -157,18 +119,6 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 }
 +p{
   最後に${\alpha}同値性を定義します．
-  % 以下の条件で生成される最小の二項関係を${\mathord{=}_\alpha \subseteq \mathcal{Tm} \times \mathcal{Tm}}と書きます．
-  % \listing{
-  %   * 任意の元${x \in \mathcal{Var}}について，${x =_\alpha x}．
-  %   * ${x,y \in \mathcal{Var}}と${M,N \in \mathcal{Tm}}を任意にとる．任意の${z \in \mathcal{Var}}に対して${b \nin \set{x,y} \cup \var{M N}}ならば${\paren{x\ z}\cdot M =_\alpha \paren{y\ z}\cdot N}が成り立つ時，${\lambda x.M =_\alpha \lambda y.N}．
-  %   * ${M_1 =_\alpha M_2}と${N_1 =_\alpha N_2}が成り立つ時，${M_1 N_1 =_\alpha M_2 N_2}．
-  % }
-  % ただし，${\var{M}}は以下のように構造に関する帰納法で定義される写像です．
-  % \align[
-  % ${| \var{x} |= \set{x} |};
-  % ${| \var{\lambda x.M} |= \set{x} \cup \var{M} |};
-  % ${| \var{M N} |= \var{M} \cup \var{N} |};
-  % ];
   以下の規則に基づく帰納的定義により二項関係${\mathord{=_\alpha} \subseteq \mathcal{Tm} \times \mathcal{Tm}}を定義します．
 
   \math-list(${
@@ -197,11 +147,12 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
     \fresh x,x'.\ \forall y.\ \paren{x\ x'} \cdot \app{f_1}{y} = \app{f_1}{\paren{x\ x'}\cdot y}
   });
 
-  が成り立つことであるとします．${f_1}は変数を受け取り，なんらかの加工を施してラムダ項を出力します．その際もともと入力として受け取った変数に加えていくつかの自由変数が出力結果に現れる可能性があります．(元々の入力が出力されないこともあります．)
-  そのように${f_1}が追加で出力する自由変数のことを${f_1}自身の自由変数だと考えることにします．
+  が成り立つことであるとします．
+  ${f_1}は入力に対して条件分岐を行ったり，何らかの定数ラムダ項を用いるなどして定義されます．
+  そのようにして${f_1}の定義中に現れるラムダ項の自由変数のことを${f_1}自身の自由変数だと考えることにします．
   そして，そのような変数の集合を${\fv{f_1}}と書きます．
   つまり，${f_1}が${\fv{f_1}}を持つとは，${f_1}が有限個の自由変数しかもたないということに他なりません．(任意のラムダ項が有限個の自由変数しかもたないことと対応しています．)
-  \footnote{より正確な定義は教科書を参照してください．${\fv{f_1}}は${\app{\mathrm{supp}}{f_1}}と呼ばれています．また，${\fv{f_1}}を持つことはfinitely supportedであると呼ばれています．}
+  \footnote{より正確な定義は教科書を参照してください．${\fv{f_1}}は${\app{\mathrm{supp}}{f_1}}と呼ばれています．また，${\fv{f_1}}を持つことは\dfn{finitely supported}であると呼ばれています．}
   ${f_1}と同様に，${f_2 : \mathcal{Var} \times \Lambda \to \Lambda}，${f_3 : \Lambda \times \Lambda \to \Lambda}のような型の写像に対しても${\fv{f_2},\fv{f_3}}とそれらを持つかどうかを定義することができます．
 }
 +theorem{
@@ -267,229 +218,905 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 }
 >
 
-+subsection{高階抽象構文木 (Higher-order abstract syntax\; HOAS)} <
++subsection{高階抽象構文 (Higher-order abstract syntax, HOAS)} <
 +p{
-メタ言語(今回の場合はLean(の処理系))に束縛関係の管理を外注してしまう．
-DSLとして記述するのでパーサーも不要になる．
-ある意味，パース自体もメタ言語に外注している．
+  前節でラムダ計算の形式的定義を行う際に${\alpha}変換を定義するのに苦労しました．
+  これはラムダ計算をコンピュータ上で実装する場合でも同様で，束縛の構造を正しく表現するためには(特に効率よく実装するためには)それなりの量と複雑さを持つコードを書かなければなりません．
+  そこでこの記事では\dfn{高階抽象構文(HOAS)}と呼ばれる手法を用いてラムダ計算を実装し，\emph{束縛の構造に関するコードをほとんど記述しないまま実装します}．
+  直観的には，HOASはメタ言語(今回の場合はLean(の処理系))に束縛関係の管理を外注してしまうという手法です．
+  この手法ではオブジェクト言語(今回の場合はラムダ計算)は必然的にメタ言語の中でDSLとして実装されます．
+  そのため，ある意味ではパーサーもメタ言語の処理系に外注していると言えます．
+  結果的にですが，HOASを採用することによりオブジェクト言語のパーサーを実装する必要もなくなったことになります．
+}
++p{
+  さて，LeanでHOASを用いてラムダ計算を定義してみます．
+  ラムダ項を表す型\code(`preterm₀`);は以下のように定義できます．
+  \code(`inductive`); はLeanで代数的データ型を定義するための構文です．
+  Leanの代数的データ型は常にHaskellでいうところのGADTの流儀で定義されます．
 
-\d-code(`
-inductive preterm₀ : Type
-| lam : (preterm₀ → preterm₀) → preterm₀
-| app : preterm₀ → preterm₀ → preterm₀
-`);%
+  \d-code(`
+  inductive preterm₀ : Type
+  | lam : (preterm₀ → preterm₀) → preterm₀
+  | app : preterm₀ → preterm₀ → preterm₀
+  `);
 
-エラーが出ます．
+  例えば，ラムダ項${\lambda x.\lambda y. y x}は\code(`preterm₀`);では\code(`lam (λ x, lam (λ y, app y x))`);として表現されます．
+  つまり，高階関数をうまく用いることで，メタ言語の束縛構造を利用してオブジェクト言語の束縛構造を定義しています．
+  これにより，オブジェクト言語の${\alpha}同値な項はすべて同一視されます．(メタ言語の処理系が${\alpha}同値な(メタ言語の)項を同一視する機能を実装しているからです．)
+  しかし，実は上に挙げたコードはLeanに与えるとエラーが出ます．
 
-\d-code(`
-hol.lean:1:0: error
-arg #1 of 'preterm₀.lam' has a non positive occurrence of the datatypes being declared
-`);%
+  \d-code(`
+  hol.lean:1:0: error
+  arg #1 of 'preterm₀.lam' has a non positive occurrence of the datatypes being declared
+  `);
 
-集合論的モデルではこのような不動点(解)であって非自明なものが存在しないためです．(集合${X}に関する方程式${X \cong \[X, X\]}の解は一点集合のみです．)
-Leanの仕様では一般的にどのような帰納的データ型の定義が許されているかがもう少しわかりやすく定められています．(Lean Reference Manual 3.3.0の4.4節)
-また，これらの数学的基礎付けについては\dfn{Domain Theory(領域理論)}の教科書が良い導入になるかも知れません．(たとえば[横内,1994])
+  これは，Leanでは停止するコードにしか型がつかないという制約によるものです．
+  \code(`inductive`);を用いてデータ型を定義すると帰納法を行うためのコードが自動で生成されます．
+  しかし\code(`preterm₀`);に対しては停止する帰納法が定義されないのです．
+  これは直観的には，集合論的モデルではこのような不動点(解)であって非自明なものが存在しないためです．
+  (集合${X}に関する方程式${X \cong \[X, X\]}の解は一点集合のみです．
+   これの数学的基礎付けについては\dfn{領域理論 (Domain theory)}の教科書が良い導入になるかも知れません．
+   \footnote{たとえば\cite[`Yokouchi94`];など})
+  Leanの仕様では一般的にどのような帰納的データ型の定義が許されているかがもう少しわかりやすく定められています．(たとえば\cite[`LeanRef`];の4.4節)
+  一方でHaskellの型システムはLeanよりも寛容なので \code(`preterm₀`); のような型が実際に定義できます．
+  そのため，この問題はLeanのような定理証明支援系固有の問題と言えます．
+}
++p{
+  さて，ここまでHOASをLeanで直接は定義できないという話をしてきましたが，実は仮に直接定義できたとしても，HOASには実用上の問題があります．
+  一つ目の問題は一旦構築した項の中身を読み出せないということです．
+  もう一つの問題は\code(`preterm₀`);型の値の中に対応するラムダ項が存在しないものがあるということです．
+  まず，一つ目の問題は，例えば\code(`preterm₀`);型の値を通常の表記に変換する\code(`to_string`);に相当する関数が定義できないということを指します．
+  \footnote{なお，この問題はメタ言語が型付きの場合にのみ起こります．}
+  この問題は古くから知られている問題で，\cite[`DanvyRR01`];ではこのような構文木を指して「write-only syntax」と呼んでいます．
+  Write-only syntaxをreadableにするためには自由変数を表すコンストラクタを\code(`preterm₀`);を追加する方法が知られています．
+  しかし，この方法を用いると自由変数の束縛を自前で管理する必要があり，HOASの良さであった束縛関係に関する処理を全く書く必要がないという点が失われてしまいます．
+  二個目の問題も古くから知られている問題で，\cite[`Hofmann99`];などでも指摘されています．
+  たとえば，${\mathrm{isapp}}なる(メタ言語の)関数を以下のように定義します
 
-一方でHaskellの型システムはLeanよりも寛容なので \codem(`preterm₀`); のような型が実際に定義できます．
-しかし，(Plain) HOASにはいくつかの問題があることが知られてます．
+  \align[
+    ${| \app{\mathrm{isapp}}{\app{\mathrm{app}}{M,N}} |= t |};
+    ${| \app{\mathrm{isapp}}{\app{\mathrm{lam}}{f}} |= f |};
+  ];
 
-問題1.
-一つ目の問題は一旦構築した項の中身を読み出せないということです．
-% write-only
-
-問題2.
-もう一つの問題はHOASではλ-definableではない項も表現できてしまうということです．
-% is_app
-
-% Normalization by Evaluation with Typed Abstract Syntax  
+  ただし，${t,f}はそれぞれ真と偽をChurch encodingで表したラムダ項とします．
+  このとき，${\app{\mathrm{lam}}{\mathrm{isapp}}}は\code(`preterm₀`);型をもちかつ(メタレベルで)閉じた項であるので，
+  なんらかのラムダ項を表していることが期待されますが，実際には対応するラムダ項は存在しません．
 }
 >
 
 +subsection{Parametric HOAS (PHOAS)} <
 +p{
-先にあげたHOASの欠点を克服する手法が\dfn{Parametric HOAS (PHOAS)}と呼ばれる手法です．
-先ほど定義したpretermを表す型をPHOASで定義すると以下のようになります．
+  先にあげたHOASの欠点を克服する手法が\dfn{Parametric HOAS (PHOAS)}と呼ばれる手法です．
+  先ほど定義したpretermを表す型をPHOASで定義すると以下のようになります．
 
-\code(```
-inductive preterm₁ (α : Type) : Type
-| var : α → preterm₁
-| lam : (α → preterm₁) → preterm₁
-| app : preterm₁ → preterm₁ → preterm₁
-```);%
+  \d-code(`
+  inductive preterm₁ (α : Type) : Type
+  | var : α → preterm₁
+  | lam : (α → preterm₁) → preterm₁
+  | app : preterm₁ → preterm₁ → preterm₁
+  `);%
 
-このようにpretermの型が型変数\codem(`α`);によってパラメータ化されています．
-各コンストラクタの型シグネチャに現れている\codem(`preterm₁`);はゼロ引数に見えますが，暗黙に\codem(`α`);が適用されています．(これはLeanの仕様で，帰納的定義を行う際は\codem(`:`);の前の引数は再帰の中で常に固定されていると解釈されます．この場合は，\codem(`inductive preterm₁ (α : Type) : Type`);という行の\codem(`:`);の前に\codem(`(α : Type)`);があるのでこの\codem(`α`);は定義中で固定されています．)
-さて，このデータ型はこの\codem(`α`);は通常全称量化された状態で使われます．
+  このようにpretermの型が型変数\code(`α`);によってパラメータ化されています．
+  各コンストラクタの型シグネチャに現れている\code(`preterm₁`);はゼロ引数に見えますが，暗黙に\code(`α`);が適用されています．(これはLeanの仕様で，帰納的定義を行う際は\code(`:`);の前の引数は再帰の中で常に固定されていると解釈されます．この場合は，\code(`inductive preterm₁ (α : Type) : Type`);という行の\code(`:`);の前に\code(`(α : Type)`);があるのでこの\code(`α`);は定義中で固定されています．)
+  さて，このデータ型はこの\code(`α`);は通常全称量化された状態で使われます．
 
-\code(```
-def Preterm₁ : Type 1 := Π (α : Type), preterm₁ α
-```);%
+  \d-code(`
+  def Preterm₁ : Type 1 := Π (α : Type), preterm₁ α
+  `);%
 
-すると，\codem(`Preterm₁`);はすべての閉じたλ項を表す型となります．
-\footnote{ただしこれをLeanの中で証明することは不可能だと思われます．Coqの有名な教科書であるCPDT [Chlipala,  http://adam.chlipala.net/cpdt/html/Hoas.html] の著者であるChlipalaはPHOASの研究者でもありますが，彼はCPDTの中でこの問題に対して「おそらく不可能だろう」と述べています．}
-\footnote{定義された変数の先頭文字が大文字になっていますが，これはLeanでは特別な意味を持ちません．}
+  すると，\code(`Preterm₁`);はすべての閉じたλ項を表す型となります．
+  \footnote{ただしこれをLeanの中で証明することは不可能だと思われます．
+  Coqの有名な教科書であるCPDT\cite[`CPDT`];の著者であるChlipalaはPHOASの研究者でもありますが，彼はCPDTの中でこの問題に対して「おそらく不可能だろう」と述べています．}
+  \footnote{定義された変数の先頭文字が大文字になっていますが，これはLeanでは特別な意味を持ちません．}
+  直観的には以下のように説明されます．
+  まず\code(`var`);の引数と\code(`lam`);の引数の引数が型変数\code(`α`);になっていることに注目してください．
+  \code(`α`);が全称量化されている場合，\code(`var`);の引数として取れる\code(`α`);型の値は\code(`lam`);で束縛したものに限られます．よって閉項のみが表現されます．
+  さらに，\code(`α`);が全称量化されていることにより，\code(`preterm₁ α`);型の値は\code(`var`);,\code(`lam`);,\code(`app`);のいずれかで生成されたものに限られます．
+  よって，\code(`Preterm₁`);はすべての閉じたλ項を忠実に表現する型と言えます．
+}
++p{
+  ちなみに，細かい点ですが，Leanの型システムではTypeはpredicativeなので\code(`Preterm₁`);のようなdependent productは通常の型の宇宙(\code(`Type`);あるいは\code(`Type 0`);で表される)には収まらない程度に大きくなります．
+  そのため\code(`Preterm₁`);自体の型を\code(`Type 1`);というひとつ大きな宇宙にしています．
+}
++p{
+  ではこの\code(`Preterm₁`);を用いて型無しラムダ計算が実現できるか確認します．
+  \code(`Preterm₁`);は閉項しか表現できませんが，しばらくは開いた項を扱わないので問題ありません．
+  \code(`Preterm₁`);は型が量化されているので，\code(`Preterm₁`);型の項の中身を取り出す場合は，まずどのような型で実体化するかを考える必要があります．
+  たとえばdeBrujin level (有名なdeBrujin indexの変種で，束縛変数の数字が項の内側にいくにつれて増えていくようにしたもの)を使って項を文字列に変換する場合はこの\code(`α`);として自然数の型\code(`ℕ`);を採用します．
 
-直観的には以下のように説明されます．
-まず\codem(`var`);の引数と\codem(`lam`);の引数の引数が型変数\codem(`α`);になっていることに注目してください．
-\codem(`α`);が全称量化されている場合，\codem(`var`);の引数として取れる\codem(`α`);型の値は\codem(`lam`);で束縛したものに限られます．よって閉項のみが表現されます．
-さらに，\codem(`α`);が全称量化されていることにより，\codem(`preterm₁ α`);型の値は\codem(`var`);,\codem(`lam`);,\codem(`app`);のいずれかで生成されたものに限られます．
-よって，\codem(`Preterm₁`);はすべての閉じたλ項を忠実に表現する型と言えます．
+  \d-code(`
+  def preterm₁.to_string : preterm₁ ℕ → ℕ → string
+  | (var n) _ := to_string n
+  | (lam f) lv := "(λ" ++ to_string lv ++ "." ++ preterm₁.to_string (f lv) (lv + 1) ++ ")"
+  | (app m₁ m₂) lv := "(" ++ preterm₁.to_string m₁ lv ++ " " ++ preterm₁.to_string m₂ lv ++ ")"
 
-ちなみに，細かい点ですが，Leanの型システムではTypeはpredicativeなので\codem(`Preterm₁`);のようなdependent productは通常の型の宇宙(\codem(`Type`);あるいは\codem(`Type 0`);で表される)には収まらない程度に大きくなります．
-そのため\codem(`Preterm₁`);自体の型を\codem(`Type 1`);というひとつ大きな宇宙にしています．
+  def Preterm₁.to_string (m : Preterm₁) : string :=
+  preterm₁.to_string (m ℕ) 0
+  `);%
 
-ではこの\codem(`Preterm₁`);を用いて型無しラムダ計算が実現できるか確認します．
-\codem(`Preterm₁`);は閉項しか表現できませんが，しばらくは開いた項を扱わないので問題ありません．
-\codem(`Preterm₁`);は型が量化されているので，\codem(`Preterm₁`);型の項の中身を取り出す場合は，まずどのような型で実体化するかを考える必要があります．
-たとえばdeBrujin level (有名なdeBrujin indexの変種で，束縛変数の数字が項の内側にいくにつれて増えていくようにしたもの)を使って項を文字列に変換する場合はこの\codem(`α`);として自然数の型\codem(`ℕ`);を採用します．
+  LeanにはHaskellやCoqと同じく型クラスが用意されています．
+  この定義を用いて\code(`has_to_string`);型クラスのインスタンスを宣言して，値の文字列化を行う汎用関数\code(`to_string`);が適用できるようにします．
 
-\code(```
-def preterm₁.to_string : preterm₁ ℕ → ℕ → string
-| (var n) _ := to_string n
-| (lam f) lv := "(λ" ++ to_string lv ++ "." ++ preterm₁.to_string (f lv) (lv + 1) ++ ")"
-| (app m₁ m₂) lv := "(" ++ preterm₁.to_string m₁ lv ++ " " ++ preterm₁.to_string m₂ lv ++ ")"
+  \d-code(`
+  instance Preterm₁_to_string : has_to_string Preterm₁ :=
+  ⟨preterm₁.to_string⟩
+  `);%
 
-def Preterm₁.to_string (m : Preterm₁) : string :=
-preterm₁.to_string (m ℕ) 0
-```);%
+  ParametricでないHOASでは実現できなかった\code(`to_string`);を記述することができました．
+}
++p{
+  それでは実際にλ項を作成してみます．
+  最も簡単な例は引数をひとつとってそれをそのまま返すλ項${\lambda x.x}です．
+  この項はよく${i}という名前で呼ばれます．
+  ${i}を\code(`Preterm₁`);の値として記述すると以下のようになります．
 
-LeanにはHaskellやCoqと同じく型クラスが用意されています．
-この定義を用いて\codem(`has_to_string`);型クラスのインスタンスを宣言して，値の文字列化を行う汎用関数\codem(`to_string`);が適用できるようにします．
+  \d-code(`
+  def i : Preterm₁ := λ α, lam (λ x, var x)
+  `);%
 
-\code(```
-instance Preterm₁_to_string : has_to_string Preterm₁ :=
-⟨preterm₁.to_string⟩
-```);%
+  先ほどインスタンスを定義した\code(`to_string`);を用いてこれを表示してみます．
 
-それでは実際にλ項を作成してみます．
-最も簡単な例は引数をひとつとってそれをそのまま返すλ項${\lambda x.x}です．
-この項はよく${i}という名前で呼ばれます．
-${i}を\codem(`Preterm₁`);の値として記述すると以下のようになります．
+  \d-code(`
+  #eval to_string i    -- "(λ0.0)"
+  `);%
 
-\code(```
-def i : Preterm₁ := λ α, lam (λ x, var x)
-```);%
+  \code(`--`);はLeanの一行コメントです．\code(`--`);以降に書いた文字列\code(`"(λ0.0)"`);が\code(`to_string i`);の結果です．
+  正しく表示できているようです．
+  同様に${s}や${k}と呼ばれる以下の項も定義してみます．
 
-先ほどインスタンスを定義した\codem(`to_string`);を用いてこれを表示してみます．
+  \align[
+  ${| s |= \lambda x. \lambda y. \lambda z. \paren{x z} \paren{y z} |};
+  ${| k |=  \lambda x. \lambda y. x |};
+  ];%
 
-\code(```
-#eval to_string i    -- "(λ0.0)"
-```);%
+  \d-code(`
+  def s : Preterm₁ := λ α, lam (λ x, lam (λ y, lam (λ z, app (app (var x) (var z)) (app (var y) (var z)))))
+  def k : Preterm₁ := λ α, lam (λ x, lam (λ y, var x))
+  `);%
 
-\codem(`--`);はLeanの一行コメントです．\codem(`--`);以降に書いた文字列\codem(`"(λ0.0)"`);が\codem(`to_string i`);の結果です．
-正しく表示できているようです．
-同様に\codem(`s`);や\codem(`k`);と呼ばれる以下の項も定義してみます．
+  やはり\code(`to_string`);を使って表示してみます．
+  うまく動作しているようです．
 
-\align[
-${| s |= \lambda x. \lambda y. \lambda z. \paren{x z} \paren{y z} |};
-${| k |=  \lambda x. \lambda y. x |};
-];%
+  \d-code(`
+  #eval to_string s -- "(λ0.(λ1.(λ2.((0 2) (1 2)))))"
+  #eval to_string k -- "(λ0.(λ1.0))"
+  `);%
+}
++p{
+  次に自然数のChurch encodingを試してみます．
 
-\code(```
-def s : Preterm₁ := λ α, lam (λ x, lam (λ y, lam (λ z, app (app (var x) (var z)) (app (var y) (var z)))))
-def k : Preterm₁ := λ α, lam (λ x, lam (λ y, var x))
-```);%
+  \align[
+  ${| 0 |= \lambda f. \lambda x. x |}; 
+  ${| 1 |= \lambda f. \lambda x. f x |};
+  ${| 2 |= \lambda f. \lambda x. f \paren{f x} |};
+  ${| 3 |= \lambda f. \lambda x. f \paren{f \paren{f x}} |};
+  ];%
 
-やはり\codem(`to_string`);を使って表示してみます．
-うまく動作しているようです．
+  \d-code(`
+  def n₀ : Preterm₁ := λ α, lam (λ f, lam (λ x, var x))
+  def n₁ : Preterm₁ := λ α, lam (λ f, lam (λ x, app (var f) (var x)))
+  def n₂ : Preterm₁ := λ α, lam (λ f, lam (λ x, app (var f) (app (var f) (var x))))
+  def n₃ : Preterm₁ := λ α, lam (λ f, lam (λ x, app (var f) (app (var f) (app (var f) (var x)))))
+  `);%
 
-\code(```
-#eval to_string s -- "(λ0.(λ1.(λ2.((0 2) (1 2)))))"
-#eval to_string k -- "(λ0.(λ1.0))"
-```);%
+  \d-code(`
+  #eval to_string n₀ -- "(λ0.(λ1.1))"
+  #eval to_string n₁ -- "(λ0.(λ1.(0 1)))"
+  #eval to_string n₂ -- "(λ0.(λ1.(0 (0 1))))"
+  #eval to_string n₃ -- "(λ0.(λ1.(0 (0 (0 1)))))"
+  `);%
 
-次に自然数のChurch encodingを試してみます．
+  自然数を受け取って次の自然数を返す\code(`succ`);を定義します．
 
-\align[
-${| 0 |= \lambda f. \lambda x. x |}; 
-${| 1 |= \lambda f. \lambda x. f x |};
-${| 2 |= \lambda f. \lambda x. f \paren{f x} |};
-${| 3 |= \lambda f. \lambda x. f \paren{f \paren{f x}} |};
-];%
+  \d-code(`
+  def  succ : Preterm₁ := λ α, lam (λ n, lam (λ f, lam (λ x, app (var f) (app (app (var n) (var f)) (var x)))))
+  `);%
 
-\code(```
-def n₀ : Preterm₁ := λ α, lam (λ f, lam (λ x, var x))
-def n₁ : Preterm₁ := λ α, lam (λ f, lam (λ x, app (var f) (var x)))
-def n₂ : Preterm₁ := λ α, lam (λ f, lam (λ x, app (var f) (app (var f) (var x))))
-def n₃ : Preterm₁ := λ α, lam (λ f, lam (λ x, app (var f) (app (var f) (app (var f) (var x)))))
-```);%
+  \code(`succ`);を使う時には2つ注意点があります．
+  ひとつ目は，\code(`Preterm₁`);型の二つの値を受け取って適用する場合は型変数を適切に分配してやる必要があるということです．
+  二つ目は，(当然ですが)単に適用した項を定義しただけでは項の簡約は行われないということです．
+  そのため，\code(`succ_n₀`);の結果は\code(`n₁`);とは異なります．
 
-\code(```
-#eval to_string n₀ -- "(λ0.(λ1.1))"
-#eval to_string n₁ -- "(λ0.(λ1.(0 1)))"
-#eval to_string n₂ -- "(λ0.(λ1.(0 (0 1))))"
-#eval to_string n₃ -- "(λ0.(λ1.(0 (0 (0 1)))))"
-```);%
+  \d-code(`
+  def  succ_n₀ : Preterm₁ := λ α, app (succ α) (n₀ α)
+  #eval to_string succ_n₀ -- "((λ0.(λ1.(λ2.(1 ((0 1) 2))))) (λ0.(λ1.1)))"
+  `);%
+}
++p{
+  それでは項の簡約を定義してみます．
+  ここでは簡単に定義できる並列最外簡約を実装します．
+  ざっくりとした簡約ですが，これ以上細かく実装すると今回の記事の趣旨から逸脱してしまうのでこれで良しとします．
 
-自然数を受け取って次の自然数を返す\codem(`succ`);を定義します．
+  \d-code(`
+  def subst' {α} : preterm₁ (preterm₁ α) → preterm₁ α
+  | (var x) := x
+  | (lam f) := lam (λ x, subst' (f (var x))) -- terminates!
+  | (app m₁ m₂) := app (subst' m₁) (subst' m₂)
 
-\code(```
-def  succ : Preterm₁ := λ α, lam (λ n, lam (λ f, lam (λ x, app (var f) (app (app (var n) (var f)) (var x)))))
-```);%
+  def pbeta' {α} : preterm₁ (preterm₁ α) → preterm₁ α -- parallel outermost reduction
+  | (var x) := x
+  | (lam f) := lam (λ x, pbeta' (f (var x)))
+  | (app (lam f) m) := subst' (f (subst' m))
+  | (app n m) := app (pbeta' n) (pbeta' m)
 
-\codem(`succ`);を使う時には2つ注意点があります．
-ひとつ目は，\codem(`Preterm₁`);型の二つの値を受け取って適用する場合は型変数を適切に分配してやる必要があるということです．
-二つ目は，(当然ですが)単に適用した項を定義しただけでは項の簡約は行われないということです．
-そのため，\codem(`succ_n₀`);の結果は\codem(`n₁`);とは異なります．
+  def pbeta : Preterm₁ → Preterm₁ :=
+  λ m α, pbeta' (m _)
+  `);%
 
-\code(```
-def  succ_n₀ : Preterm₁ := λ α, app (succ α) (n₀ α)
-#eval to_string succ_n₀ -- "((λ0.(λ1.(λ2.(1 ((0 1) 2))))) (λ0.(λ1.1)))"
-```);%
+  まず，Leanの構文について説明します．\code(`subst'`);と\code(`pbeta'`);の定義の先頭に現れている\code(`{α}`);は\code(`{α : Type}`);の略で，これは引数\code(`α`);がimplicit argumentであることを指定しています．また，\code(`pbeta`);の定義の中に現れている\code(`_`);はプレースホルダで，Leanの処理系が適切な項を推論して補完してくれます．ここでは\code(`preterm₁ α`);という項が自動的に補完されます．
 
-それでは項の簡約を定義してみます．
-ここでは簡単に定義できる並列最外簡約を実装します．
-ざっくりとした簡約ですが，これ以上細かく実装すると今回の記事の趣旨から逸脱してしまうのでこれで良しとします．
+  それではそれぞれの定義について説明します．\code(`subst'`);は置換を完了させるための手続きです．(Parametric) HOASでは変数の置換は単なるメタレベルの適用で実現されます．(\code(`pbeta'`);の下から二行目を見るとわかる通り置換はLeanの関数適用です．) ただし適用を行うには項の型が\code(`preterm₁ (preterm₁ α)`);という形をしている必要があります．\code(`subst'`);は適用を完了させ，型を\code(`preterm₁ α`);に平坦化します．細かい点ですが，Leanは\code(`subst'`);が停止することを自動で検出してくれます．これは実は自明ではないので，場合によっては手動で証明を書く必要があるかも知れません．
+  \code(`pbeta'`);は${\paren{\lambda x. M}N}という形の項を探し，置換を行います．先ほど説明した通り並列最外簡約です．\code(`pbeta`);は型を合わせるために\code(`pbeta'`);とは別に定義しました．
+}
++p{
+  それでは先ほどの\code(`succ_n₀`);を簡約してみます．
 
-\code(```
-def subst' {α} : preterm₁ (preterm₁ α) → preterm₁ α
-| (var x) := x
-| (lam f) := lam (λ x, subst' (f (var x))) -- terminates!
-| (app m₁ m₂) := app (subst' m₁) (subst' m₂)
+  \d-code(`
+  #eval to_string succ_n₀ -- "((λ0.(λ1.(λ2.(1 ((0 1) 2))))) (λ0.(λ1.1)))"
+  #eval to_string $ pbeta succ_n₀ -- "(λ0.(λ1.(0 (((λ2.(λ3.3)) 0) 1))))"
+  #eval to_string $ pbeta $ pbeta succ_n₀ -- "(λ0.(λ1.(0 ((λ2.2) 1))))"
+  #eval to_string $ pbeta $ pbeta $ pbeta succ_n₀ -- "(λ0.(λ1.(0 1)))"
+  #eval to_string $ pbeta $ pbeta $ pbeta $ succ_n₀ -- "(λ0.(λ1.(0 1)))"
+  `);%
 
-def pbeta' {α} : preterm₁ (preterm₁ α) → preterm₁ α -- parallel outermost reduction
-| (var x) := x
-| (lam f) := lam (λ x, pbeta' (f (var x)))
-| (app (lam f) m) := subst' (f (subst' m))
-| (app n m) := app (pbeta' n) (pbeta' m)
+  うまく動いていますね．
+  これだけでも十分遊べますが，今回の趣旨から逸れてしまうのでほどほどにしておきます．
+}
++p{
+  最後に発散する項が記述できることを確認しておわります．
 
-def pbeta : Preterm₁ → Preterm₁ :=
-λ m α, pbeta' (m _)
-```);%
+  \d-code(`
+  def ω : Preterm₁ := λ α, lam (λ x, app (var x) (var x))
+  def Ω : Preterm₁ := λ α, app (ω α) (ω α)
+  `);%
 
-まず，Leanの構文について説明します．\codem(`subst'`);と\codem(`pbeta'`);の定義の先頭に現れている\codem(`{α}`);は\codem(`{α : Type}`);の略で，これは引数\codem(`α`);がimplicit argumentであることを指定しています．また，\codem(`pbeta`);の定義の中に現れている\codem(`_`);はプレースホルダで，Leanの処理系が適切な項を推論して補完してくれます．ここでは\codem(`preterm₁ α`);という項が自動的に補完されます．
+  \code(`Ω`);は${\paren{\lambda x. x x} \paren{\lambda x. x x}}という項を表しています．
+  この項は簡約しても結果が自分自身となるクワインと呼ばれる種類の項の一つです．
+  実際に簡約して結果が\code(`Ω`);となることを確認します．
 
-それではそれぞれの定義について説明します．\codem(`subst'`);は置換を完了させるための手続きです．(Parametric) HOASでは変数の置換は単なるメタレベルの適用で実現されます．(\codem(`pbeta'`);の下から二行目を見るとわかる通り置換はLeanの関数適用です．) ただし適用を行うには項の型が\codem(`preterm₁ (preterm₁ α)`);という形をしている必要があります．\codem(`subst'`);は適用を完了させ，型を\codem(`preterm₁ α`);に平坦化します．細かい点ですが，Leanは\codem(`subst'`);が停止することを自動で検出してくれます．これは実は自明ではないので，場合によっては手動で証明を書く必要があるかも知れません．
-\codem(`pbeta'`);は${\paren{\lambda x. M}N}という形の項を探し，置換を行います．先ほど説明した通り並列最外簡約です．\codem(`pbeta`);は型を合わせるために\codem(`pbeta'`);とは別に定義しました．
+  \d-code(`
+  #eval to_string Ω -- "((λ0.(0 0)) (λ0.(0 0)))"
+  #eval to_string $ pbeta Ω -- "((λ0.(0 0)) (λ0.(0 0)))"
+  `);
+}
+>
 
-それでは先ほどの\codem(`succ_n₀`);を簡約してみます．
++subsection{単純型付きラムダ計算 (Simply-typed lambda calculus, STLC)} <
++p{
+  ここまででPHOASで発散する項が記述できることを確認しました．
+  これはプログラムで言えば無限ループに陥る項が記述できるということです．
+  一方で，ラムダ計算に「型」の概念を持ち込むことでそのような無限ループに陥る項を排除できることが知られています．
+  この記事の後半では高階論理を扱うことになりますが，そこでは型無しラムダ計算は扱われず，専ら型付きラムダ計算の概念(より細かく言えば，単純型付きラムダ計算(Simply-typed lambda calculus, STLC)のみを扱うことになります．
+  それでは，単純型付きラムダ計算について復習します．
 
-\code(```
-#eval to_string succ_n₀ -- "((λ0.(λ1.(λ2.(1 ((0 1) 2))))) (λ0.(λ1.1)))"
-#eval to_string $ pbeta succ_n₀ -- "(λ0.(λ1.(0 (((λ2.(λ3.3)) 0) 1))))"
-#eval to_string $ pbeta $ pbeta succ_n₀ -- "(λ0.(λ1.(0 ((λ2.2) 1))))"
-#eval to_string $ pbeta $ pbeta $ pbeta succ_n₀ -- "(λ0.(λ1.(0 1)))"
-#eval to_string $ pbeta $ pbeta $ pbeta $ succ_n₀ -- "(λ0.(λ1.(0 1)))"
-```);%
+  %FIXME
+  \listing{
+    * well-typed
+    * SN
+    * eta-long beta-normal
+    * set-theoretic semantics
+    * 型判断，環境/文脈，結論
+    * structural rules
+    * IPC
+    * Subst, Abs, App, Var, Contr
+  }
+}
+>
 
-うまく動いていますね．
-これだけでも十分遊べますが，今回の趣旨から逸れてしまうのでほどほどにしておきます．
++subsection{Typeful PHOAS} <
++p{
+  単純型付きラムダ計算をPHOASを用いて実現する方法は主に二種類あります．
+}
++p{
+  ひとつはλ項自体は型なしのままPHOASでエンコードして，それがwell-typedであるという証明を持ち回るという方法です．
+  依存型がある言語ならではの方法ですが，ここまで定義してきた型無しラムダ計算用のデータ型や関数をそのまま使えるという利点があります．
+  一方で，毎回証明を書かなければならない上にPHOASの項がwell-typedかどうかを表す述語とその証明に関連する補助関数を一式用意しなければなりません．
+  これは今回の記事の動機に反します．
+}
++p{
+  もうひとつの方法は，型検査をメタ言語に外注してしまうことです．
+  それぞれの型付きラムダ計算の項の型をLeanレベルの型に埋め込むことで，Leanの型検査器にPHOASで作成したλ項のオブジェクトレベルの(i.e., 今回定義しようとしているラムダ計算の)型検査を行わせてしまいます．
+  実はこのテクニックはHaskellでもPhantom typeなどを用いてよく使われるものです．
+  この方式であれば，Leanの型検査がパスした時点でオブジェクト言語の型検査も終わっており，型検査に関する余計な手間をかけずに済みます．
+  実はこの手法のさらに大きな利点として，型推論がタダで手に入るという点があります．Leanの型検査器に検査を任せるということは，Leanの型検査器が持つ型推論器も使えるということです．Leanの持つhigher-order unifierがタダで使えるので，型推論の再実装のコストやそれに伴うバグに悩まされることもありません．
+}
++p{
+  それでは実装に移ります．
+  今回用いる手法をここでは\dfn{Typeful PHOAS}と呼ぶことにします．
+  また，ここまでの型無しのPHOASを\dfn{Typeless PHOAS}と呼ぶことにします．
+  まず，オブジェクト言語の型を定義します．
 
-最後に発散する項が記述できることを確認しておわります．
+  \d-code(`
+  inductive type : Type
+  | base : type
+  | arrow : type → type → type
+  `);
+}
++p{
+  そして肝となる\code(`preterm`);型を定義します．
+  \footnote{これまでとは違い項に型が付いているのでpretermと呼ぶのは変ですが，このあとにtermという名前の型も登場するので，このまま進みます．}
+  \code(`variable ν : type → Type`);という文が登場していますが，これは単に\code(`preterm`);の引数を外に書いただけで，
+  \code(`inductive preterm (ν : type → Type) : type → Type`);の略記です．
+  以降定義する関数に\code(`ν`);が登場した場合暗黙のうちに\code(`(ν : type → Type)`);という引数が追加されます．
 
-\code(```
-def ω : Preterm₁ := λ α, lam (λ x, app (var x) (var x))
-def Ω : Preterm₁ := λ α, app (ω α) (ω α)
-```);%
+  \d-code(`
+  variable ν : type → Type
 
-\codem(`Ω`);は${\paren{\lambda x. x x} \paren{\lambda x. x x}}という項を表しています．
-この項は簡約しても結果が自分自身となるクワインと呼ばれる種類の項の一つです．
-実際に簡約して結果が\codem(`Ω`);となることを確認します．
+  inductive preterm : type → Type
+  | var : Π {t}, ν t → preterm t
+  | lam : Π {t₁ t₂}, (ν t₁ → preterm t₂) → preterm (arrow t₁ t₂)
+  | app : Π {t₁ t₂}, preterm (arrow t₁ t₂) → preterm t₁ → preterm t₂
+  `);
 
-\code(```
-#eval to_string Ω -- "((λ0.(0 0)) (λ0.(0 0)))"
-#eval to_string $ pbeta Ω -- "((λ0.(0 0)) (λ0.(0 0)))"
-```);
+  Typeless PHOASでは単なる型変数\code(`α`);だった部分が\code(`type`);を受け取って型を返す関数\code(`ν`);に変化しています．
+  各コンストラクタに現れる\code(`preterm`);という型の引数がうまく設定されているので正しく型がついた項しか作成できないようになっています．
+  \footnote{実は，素のHOASに型だけ導入することも可能です．
+  今回採用している方式はHOASをParametricとTypefulの両方の面で一般化したものです．
+  より詳しい議論は\cite[`Chlipala08`];を参照してください．}
+  また，\code(`var`);，\code(`lam`);，\code(`app`);の型とSTLCの型つけ規則との類似にも注目してください．
+  \code(`preterm t`);が型判断の${\vdash t}のように見なせることがわかります．
+  ${\vdash}の左側がコンストラクタの型に表れないことは，コンストラクタが環境に対して多相的に振る舞うことに対応しています．
+  \code(`ν t₁ → preterm t₂`);という型は環境に${t_1}型の変数が存在するような型判断で結論の型が${t_2}であるような型判断を表します．
+  \footnote{より形式的な議論も可能です．
+  数学的には，それぞれの型が\dfn{前層 (presheaf)}で解釈されます．
+  特に，\code(`ν`);は米田埋め込みとして解釈されます．
+  より詳しい議論は\cite[`Hofmann99`;`SterlingS18`];を参照してください．}
+}
++p{
+  Typeful PHOASの場合でもTypeless PHOASと同様にdependent productを取ると全ての閉項を表す型が得られます．
+  ただし，それらは型\code(`t`);でパラメトライズされています．
+
+  \d-code(`
+  def Preterm (t : type) : Type 1 :=
+  Π ν, preterm ν t
+  `);
+}
++p{
+  それでは型付きのλ項をいくつか作ってみます．
+  型無しの時にも試したChurch encodingを試します．
+  ここには掲載していませんが，Pretermに対してhas_to_stringのインスタンスが定義してあります．
+
+  \d-code(`
+  def type.nat := arrow (arrow base base) (arrow base base)
+
+  def zero : Preterm type.nat :=
+  λ ν, lam (λ f, lam (λ x, var x))
+
+  def succ : Preterm (arrow type.nat type.nat) :=
+  λ ν, lam (λ n, lam (λ f, lam (λ x, app (var f) (app (app (var n) (var f)) (var x)))))
+
+  def succ_zero : Preterm type.nat :=
+  (λ ν, app (succ ν) (zero ν))
+
+  #eval to_string zero      -- "(λ0.(λ1.1)) : ((ι → ι) → (ι → ι))"
+  #eval to_string succ      -- "(λ0.(λ1.(λ2.(1 ((0 1) 2))))) : (((ι → ι) → (ι → ι)) → ((ι → ι) → (ι → ι)))"
+  #eval to_string succ_zero -- "((λ0.(λ1.(λ2.(1 ((0 1) 2))))) (λ0.(λ1.1))) : ((ι → ι) → (ι → ι))"
+  `);
+
+  うまく動いているようです．
+  一方で，オブジェクト言語(i.e., STLC)で型がつかない項はTypeful PHOASでは表現できません．
+
+  \d-code(`
+  -- // error!
+  -- def ω : Preterm _ := λ ν, lam (λ x, app (var x) (var x))
+  `);
+}
+>
+
++subsection{開いた項への対応} <
++p{
+  Typeful PHOASは一見非常にコンパクトで簡潔に見えますが，一つだけ大きな欠点があります．
+  それは開いた項がうまく扱えないという点です．
+  \footnote{実は文脈様相型を持つプログラミング言語(例えばBeluga\cite[`Beluga`];)をメタ言語として用いることでこの欠点が大きく改善されます．}
+  これを解決するために次のようなことを考えてみます．
+  まず，自由変数がない，つまり自由変数が0個の項は以下の型で表せるのでした．
+
+  \d-code(`
+  def term0 (t : type) := Π ν, preterm ν t
+  `);
+
+  では，自由変数をひとつ持つ項はどうなるでしょうか．
+  自由変数もオブジェクト言語の変数なので何らかの型\code(`t₁`);を持つはずですし，\code(`ν`);でパラメトライズされているはずです．
+  さらに，\code(`ν t₁`);型の値は(\code(`ν`);が全称量化されているので)自分で作ることはできませんから外界から受け取る必要があります．
+  よって，自由変数がひとつの項は以下の型で表せます．
+
+  \d-code(`
+  def term1 (t₁ t₂ : type) := Π ν, ν t₁ → preterm ν t₂
+  `);
+
+  \code(`term1`);は自由変数が0個の項に無駄な変数をひとつ追加した項も含むことに注意してください．
+  同様に，自由変数が2個の項は以下のような型で表せます．
+
+  \d-code(`
+  def term2 (t₁ t₂ t₃ : type) := Π ν, ν t₁ → ν t₂ → preterm ν t₃
+  `);
+
+  まとめると，以下のようになります．
+
+  \d-code(`
+  def term0 (t : type) := Π ν, preterm ν t
+  def term1 (t₁ t₂ : type) := Π ν, ν t₁ → preterm ν t₂
+  def term2 (t₁ t₂ t₃ : type) := Π ν, ν t₁ → ν t₂ → preterm ν t₃
+  `);
+
+  法則が見えたので，自由変数を持つ型を以下で定義します．
+
+  \d-code(`
+  inductive term : list type → type → Type
+  | empty : Π {t}, preterm ν t → term [] t
+  | extend : Π {t₁ t₂ Γ}, (ν t₁ → term Γ t₂) → term (t₁ :: Γ) t₂
+  `);
+
+  これで，たとえば\code(`Π ν, term ν [t₁, t₂, t₃] t`);と書けば3つの自由変数をもつ\code(`t`);型の項であって自由変数の型がそれぞれ\code(`t₁`);，\code(`t₂`);，\code(`t₃`);であるような項の型を表すことができます．
+  ただし，実はこの帰納的データ型は若干冗長です．
+  \code(`term`);は依存型であり，その引数のリストを見ればどのコンストラクタによって作成されたかがわかります．
+  つまり，項のレベルで\code(`empty`);や\code(`extend`);というタグを付ける必要がありません．
+  そこで，当初みつけた法則の通り，値から直接型を計算するように改良します．
+
+  \d-code(`
+  def term : list type → type → Type :=
+  λ Γ t, list.foldr (λ t α, ν t → α) (preterm ν t) Γ
+
+  def Term (Γ : list type) (t : type) : Type 1 := -- Type 1
+  Π ν, term ν Γ t
+  `);
+
+  この定義の\code(`term`);は\code(`term1`);や\code(`term2`);で定義したものと同じ型を返します．
+  特に，\code(`Term [] t`);は\code(`Preterm t`);と全く同じ型になります．
+
+  \d-code(`
+  #reduce Term [] base           -- Π ν, preterm ν base
+  #reduce Term [base] base       -- Π ν, ν base → preterm ν base
+  #reduce Term [base, base] base -- Π ν, ν base → ν base → preterm ν base
+  `);
+
+  \code(`term`);をこのように定義することで，値レベルでタグを持たせないようにしつつ，自由変数を持つ項を表す型を作ることができました．
+}
++p{
+  それでは，簡単な開いた項を作成してみます．
+  作成する項は以下のような項です．well-typedであることはすぐに確認できます．
+
+  \eqn(${
+  x : \iota \to \iota, y : \iota \vdash \lambda z:\iota.y : \iota \to \iota
+  });
+
+  対応するエンコードは以下の通りです．
+
+  \d-code(`
+  def ex1 : Term [arrow base base, base] (arrow base base) :=
+  λ ν, λ x₁ x₂, lam (λ y, var x₂)
+  `);
+
+  \code(`Term`);用の\code(`has_to_string`);を用意した上で，\code(`ex1`);を表示してみます．
+
+  \d-code(`
+  #eval to_string ex1 -- "(0 : (ι → ι)) (1 : ι) ⊢ (λ2.1) : (ι → ι)"
+  `);
+
+  正しく表示されています．
+}
++p{
+  この小節を終える前に，\code(`Term`);と\code(`Preterm`);の相互変換について簡単に触れておきます．
+  ここまで長々と開いた項を扱う方法について議論してきましたが，実は開いた項を(Parametric) HOASで扱う自明な方法があります．
+  それは自由変数を全てラムダで抽象してすべて閉項にして扱ってしまうという方法です．
+  もともと開いていた項は閉項にしたときに何個の変数を閉じたかを覚えておきます．
+  この方法を採用すれば\code(`Term`);用と\code(`Preterm`);用で処理が似ている関数を統一できることがあります．
+  今回この方法を採らなかったのは，証明の持ち回りを避けたかったからです．
+  全て閉項にするアプローチではどの項が何個の自由変数を持っていたかを記録しておくために部分型を使用することになります．
+  しかし，部分型のようにproof irrelevantな項を持ち回るスタイルではLeanのプログラム上に項とタクティックが入り混じり可読性が下がりますし，\code(`eq`);型に対する再帰を多用することにもなりメンテナンス性が著しく下がります．
+  可能な限りproof relevantなスタイルでプログラムを組むために今回は\code(`Term`);を\code(`Preterm`);とは異なる型として定義しました．
+  とはいえ，これら二つのスタイルは(部分的に)相互に変換することができます．
+  以下にその変換手続きを示します．
+  \code(`term.to_preterm`);は開いた項を(ラムダ抽象化を繰り返すことにより)閉項に変換します．
+  逆に\code(`preterm.to_term`);は閉じた項を開いた項に変換します．
+  このとき，型が適切な形である必要があります．
+  具体的には，コード中では入力となる値の型が\code(`type.fold`);の戻り値になっていることを要求しています．
+  \code(`Preterm`);の第一引数の型から\code(`type.fold`);の入力を復元できなければならないのですが，出力から入力を作るという点ではPrologに近いプログラミングスタイルになっています．
+  (実際どちらもunificationに基づいています．)
+  また，入力として受け取った閉項が必ずしも先頭に適切な数の\code(`lam`);がついた項だとは限らないので，\code(`to_term`);はレトラクトにしかなっていません．
+  依存型と高階単一化を効果的に使用した例になっています．
+
+  \d-code(`
+  variables {Γ : list type} {t : type} {t₁ t₂ : type}
+
+  def type.fold : list type → type → type :=
+  λ Γ t, list.foldr arrow t Γ
+
+  def term.to_preterm' : Π {Γ : list type}, term ν Γ t → preterm ν (type.fold Γ t)
+  | [] m := m
+  | (t :: Γ) f := lam (λ x, term.to_preterm' (f x))
+
+  def term.to_preterm : Term Γ t → Preterm (type.fold Γ t) :=
+  λ m ν, term.to_preterm' ν (m ν)
+
+  def preterm_subst' : preterm (preterm ν) (arrow t₁ t₂) → preterm ν t₁ → preterm (preterm ν) t₂
+  | (lam f) m := f m
+  | m₁ m₂ := app m₁ (var m₂)
+
+  def preterm.to_term' : Π {Γ : list type}, preterm (preterm ν) (type.fold Γ t) → term ν Γ t
+  | [] m := subst' ν m
+  | (t :: Γ) m := λ x, preterm.to_term' (preterm_subst' ν m (var x))
+
+  def preterm.to_term : Preterm (type.fold Γ t) → Term Γ t :=
+  λ m ν, preterm.to_term' ν (m _)
+  `);
+}
+>
+
++subsection{開いた項の操作} <
++p{
+  \code(`Term`);型を定義したことで閉項だけでなく自由変数を持つ項を扱えるようになりました．
+  しかし，自由変数を持つ項を直接扱うのは非常に骨の折れる作業です．
+  多くの場合，項に対する操作は環境にたいして多相的に振舞って欲しいのですが，環境はメタ言語(i.e., Lean)の関数の引数として実装されているため，\code(`var`);，\code(`lam`);，\code(`app`);を直接使うこれまでの方法では毎回環境に対する再帰を書かなければなりません．
+  そこで，環境に対する再帰も行うラッパー関数を定義します．
+}
++p{
+  まずは，変数の置換操作を行う\code(`term.subst`);を定義します．
+
+  \d-code(`
+  def term.subst' : Π {Γ}, term (preterm ν) (t₁ :: Γ) t₂ → term ν Γ t₁ → term ν Γ t₂
+  | [] m₁ m₂ := subst' ν (m₁ m₂)
+  | (t :: Γ) f m := λ x, term.subst' (λ x', f x' (var x)) (m x)
+
+  def term.subst : Term (t₁ :: Γ) t₂ → Term Γ t₁ → Term Γ t₂ :=
+  λ m₁ m₂ ν, term.subst' ν (m₁ (preterm ν)) (m₂ ν)
+  `);
+
+  \code(`term.subst`);の型に注目してください．
+  ちょうどラムダ計算の型つけ規則で登場した派生ルール${\mathrm{Subst}}に対応していることがわかります．
+
+  \eqn(${
+  FIXME
+  });
+}
++p{
+  同様に，ラムダ抽象を行う\code(`term.abs`);を定義してみます．
+
+  \d-code(`
+  def term.abs' : Π {Γ}, term ν (t₁ :: Γ) t₂ → term ν Γ (arrow t₁ t₂)
+  | [] m := lam (λ x, m x)
+  | (t :: Γ) f := λ x, term.abs' (λ y, f y x)
+
+  def term.abs : Term (t₁ :: Γ) t₂ → Term Γ (arrow t₁ t₂) :=
+  λ m ν, term.abs' ν (m ν)
+  `);
+
+  するとやはり，型つけ規則に登場した${\mathrm{Abs}}というルールにぴったり対応していることがわかります．
+
+  \eqn(${
+  FIXME
+  });
+}
++p{
+  同じことは\code(`term.app`);と${\mathrm{App}}にも当てはまります．
+
+  \d-code(`
+  def term.app' : Π {Γ}, term ν Γ (arrow t₁ t₂) → term ν Γ t₁ → term ν Γ t₂
+  | [] m₁ m₂ := app m₁ m₂
+  | (t :: Γ) f m := λ x, term.app' (f x) (m x)
+
+  def term.app : Term Γ (arrow t₁ t₂) → Term Γ t₁ → Term Γ t₂ :=
+  λ m₁ m₂ ν, term.app' ν (m₁ ν) (m₂ ν)
+  `);
+
+  \eqn(${
+  FIXME
+  });
+}
++p{
+  では，\code(`term.var`);の場合はどうでしょうか．STLCの型つけ規則の変数の導入${\mathrm{Var}}にはside conditionが付いています．これをどのような型に翻訳すればいいでしょうか．
+
+  \eqn(${
+  FIXME
+  });
+
+  幸いLeanには命題の型\code(`Prop`);が存在し，型レベルで様々な命題を表すことができます．
+  それを使用すると\code(`term.var`);の型は以下のようになるでしょう．
+
+  \d-code(`
+  def term.var : (t ∈ Γ) → Term Γ t
+  `);
+
+  同じことですが，\code(`t ∈ Γ`);型のようなものであるということをわかりやすくするために依存型で表記することもできます．この時，\code(`h`);は命題\code(`t ∈ Γ`);の証明です．
+
+  \d-code(`
+  def term.var : Π (h : t ∈ Γ), Term Γ t
+  `);
+
+  しかし，上にあげたような型を持つ\code(`term.var`);は実装がややこしくなってしまいます．
+  そこでこの\code(`term.var`);の定義はあと回しにして，簡単に定義できる\code(`term.var0`);を先に定義します．
+
+  \d-code(`
+  def term.var0' : Π {Γ}, term ν (t :: Γ) t
+  | [] := λ x, var x
+  | (t :: Γ) := λ x y, term.var0' x
+
+  def term.var0 : Term (t :: Γ) t :=
+  λ ν, term.var0' ν
+  `);
+
+  \code(`term.var0`);は\code(`term.var`);と似ていますが環境の中の変数のうち先頭の変数だけを参照できます．
+  当然この\code(`term.var0`);でできることは限られるのですが，これでも多少は遊ぶことができます．
+  たとえば，型つけ規則で出てきた派生ルールの一つ${\mathrm{Contr}}を\code(`term.var0`);を用いると再現できます．
+
+  \d-code(`
+  def term.contr : Term (t₁ :: t₁ :: Γ) t₂ → Term (t₁ :: Γ) t₂ :=
+  λ m, term.subst m term.var0
+  `);
+
+  \eqn(${
+  FIXME
+  });
+}
++p{
+  さて，\code(`term.var0`);では${\mathrm{Var}}でできることの一部しか実現できませんが，\code(`term.var0`);に加えて追加の規則を導入することで${\mathrm{Var}}のすべての機能を再現することができます．
+  そのやり方にはいくつか方法があります．
+  一つ目の方法は${\mathrm{Weaken}}規則に対応する関数を定義することです．
+  \code(`term.var0`);はすでに環境の右側に対する弱化を許しているので左側の弱化に対応する関数\code(`term.weaken`);を定義します．
+
+  \d-code(`
+  def term.weaken1 : Term Γ t₂ → Term (t₁ :: Γ) t₂ :=
+  λ m ν x, m ν
+
+  def term.weaken' : Π {Γ₂ : list type}, Term Γ₁ t → Term (Γ₂ ++ Γ₁) t
+  | [] m := m
+  | (t :: Γ) m := term.weaken1 (term.weaken' m)
+
+  def term.weaken : Term Γ₁ t → Term (Γ₂ ++ Γ₁) t :=
+  term.weaken'
+  `);
+
+  \code(`term.weaken'`);と\code(`term.weaken`);は型シグネチャの書き方が違うのみで同じ関数です．
+  この関数と\code(`term.var0`);を組み合わせることで実質的に${\mathrm{Var}}を再現する関数が定義できます．
+
+  \d-code(`
+  def term.var₁ : Term (Γ₁ ++ t ::  Γ₂) t :=
+  term.weaken term.var0
+  `);
+}
++p{
+  もう一つの方法は派生ルール${\mathrm{Exch}}に対応する関数を用いる方法です．
+  ${\mathrm{Exch}}を定義するためにはまず環境の入れ替えを表す型が必要になります．
+  Leanのライブラリであるmathlibにはリストの並び替えを表す\code(`perm`);という型が定義されているのですが，
+  残念なことにproof relevantなように定義されているため，今回の用途には使えません．
+  そこで，mathlibの\code(`perm`);を微妙に変更したものを自前で定義します．
+
+  \d-code(`
+  inductive perm {α : Type} : list α → list α → Type  -- proof relevant version
+  | nil   : perm [] []
+  | skip  : Π (x : α) {l₁ l₂ : list α}, perm l₁ l₂ → perm (x :: l₁) (x :: l₂)
+  | swap  : Π (x y : α) (l : list α), perm (y :: x :: l) (x :: y :: l)
+  | trans : Π {l₁ l₂ l₃ : list α}, perm l₁ l₂ → perm l₂ l₃ → perm l₁ l₃
+
+  infix ~ := perm
+  `);
+
+  変更点は一行目の型シグネチャの戻り値が\code(`Prop`);から\code(`Type`);に変更されていることだけです．
+  加えて，便利なので二項演算子\code(`l₁ ~ l₂`);で二つのリストが並び替えになっていることを表記できるようにしました．
+  では\code(`term.exchange`);を定義します．基本的に\code(`perm`);の定義に沿って再帰を行うだけです．
+
+  \d-code(`
+  def term.exchange' : Π {Γ₁ Γ₂ : list type}, (Γ₁ ~ Γ₂) → term ν Γ₁ t → term ν Γ₂ t
+  | _ _ perm.nil m := m
+  | _ _ (perm.skip _ h) m := λ x, term.exchange' h (m x)
+  | _ _ (perm.swap _ _ _) m := λ x₁ x₂, m x₂ x₁
+  | _ _ (perm.trans h₁ h₂) m := term.exchange' h₂ (term.exchange' h₁ m)
+
+  def term.exchange : (Γ₁ ~ Γ₂) → Term Γ₁ t → Term Γ₂ t :=
+  λ h m ν, term.exchange' ν h (m ν)
+  `);
+
+  すると，\code(`term.var`);と同じ働きをする，先ほどとは別の関数が得られます．
+
+  \d-code(`
+  def term.var₂ : (t :: Γ₁ ~ Γ₂) → Term Γ₂ t :=
+  λ h, term.exchange h term.var0
+  `);
+}
++p{
+  では，先ほど後回しにした\code(`term.var`);の定義を行ってみましょう．
+  \code(`term.var`);を定義するにはまず\code(`type`);同士の等価性を判定できる必要があります．
+  所属性関係\code(`t ∈ Γ`);の定義を展開する際に要素の間の等しさを計算しなければならないからです．
+  素朴に考えれば，\code(`type`);型の値の等しさは簡単な再帰で計算できるように思えるかもしれません．
+  しかし，今回は普通の言語とは違い，二つの値が等しいと判断した場合，その証明も返す必要があります．
+  それを愚直に実装したのが以下です．
+
+  \d-code(`
+  def type.has_dec_eq : decidable_eq type
+  | base base := is_true rfl
+  | (arrow t₁ t₂) base := is_false (λ h, type.no_confusion h)
+  | base (arrow t₁ t₂) := is_false (λ h, type.no_confusion h)
+  | (arrow t₁ t₂) (arrow s₁ s₂) :=
+    match type.has_dec_eq t₁ s₁ with
+    | (is_true h) :=
+      match type.has_dec_eq t₂ s₂ with
+      | (is_true h') := is_true (h' ▸ h ▸ rfl)
+      | (is_false h') := is_false (λ h'', type.no_confusion h'' (λ h₁ h₂, absurd h₂ h'))
+      end
+    | (is_false h) := is_false (λ h', type.no_confusion h' (λ h₁ h₂, absurd h₁ h))
+    end
+
+  instance type_dec_eq : decidable_eq type :=
+  type.has_dec_eq
+  `);
+
+  \code(`type`);型の値を再帰的に見ていき，等しい場合は等しくないと仮定して矛盾を導いています．
+  最後にそれを用いて\code(`decidable_eq`);という型クラスのインスタンスを定義しています．
+  しかし，後になって気づいたのですが実はLeanには上の定義を自動的に生成する機構が備わっています．
+  それを用いると，\code(`type`);型の定義の際に一行加えるだけで上と等価な式(あるいは証明)が自動で生成されるようです．
+  内部的にはLeanのメタプログラミング機構を用いて実装されています．
+
+  \d-code(`
+  @[derive decidable_eq]
+  inductive type : Type
+  | base : type
+  | arrow : type → type → type
+  `);
+
+  さて，\code(`type`);のequalityが定義できたので，それを用いて\code(`term.var`);を定義します．
+  前述したように，証明項を作成するので通常のプログラミングスタイルとtactic言語を同時に用いて定義を行います．
+  このあたりがフレキシブルなのもLeanの良さの一つです．
+
+  \d-code(`
+  def term.var' : Π {Γ}, (t ∈ Γ) → Term Γ t
+  | [] h := begin rw list.mem_nil_iff at h, exfalso, assumption end
+  | (t' :: ts) h :=
+    match type.decidable_eq t t' with
+    | (is_true h') := by rw h'; exact term.var0
+    | (is_false h') := term.weaken1 $ @term.var' ts begin
+        rw list.mem_cons_iff at h,
+        cases h with h₁ h₂,
+        { exact absurd h₁ h' },
+        { assumption }
+      end
+    end
+
+  def term.var : (t ∈ Γ) → Term Γ t :=
+  term.var'
+  `);
+
+  基本的には，\code(`Γ`);の中を線形探索して\code(`t`);を見つけます．
+  もし最後まで探索したのに見つからなければその事実と仮定である\code(`t ∈ Γ`);との矛盾を導きます．
+  再帰の中で証明の変形が必要なのでその部分にtactic言語を使用しています．
+  この記事の途中で「できる限り命題を持ち回りたくない」と言っていたのはこのように命題を使うとプログラムの可読性が著しく下がるからです．
+  逆にもし，\code(`t ∈ Γ`);が命題ではなく型であれば\code(`(h : t ∈ Γ)`);の\code(`h`);の中には\code(`t`);が\code(`Γ`);のどこにいるかという情報が含まれているので\code(`h`);に対して再帰を行うだけで\code(`term.var`);が定義できます．
+}
++p{
+  3種類の\code(`term.var`);を定義しましたが，実質的にはどれも等価な形式化になっています．
+  ただし，このあと高階論理に使う都合上，一番最後に定義したものを正式な\code(`term.var`);として採用することにします．
+}
++p{
+  最後にちょっとしたクイズを出して終わりたいと思います．
+}
++environment{問}{
+  オブジェクト言語の項\code(`(m : Term (t₁ :: Γ) t₂)`);を受け取って，その環境の中の先頭の変数(\code(`t₁`);型)が自由でないことを表す述語を定義してください．
+}
++p{
+  自由であることを表す述語を定義してもよいです．
+  ここでは想定解が二つあります．
+  ひとつめはこれまで同様のやり方で，もう一つがHOASの特徴をうまく使った定義です．
+  一つ目の方法は\code(`to_string`);と同様，\code(`ν`);を適切な型で実体化して再帰を行う方法です．
+  今回の用途では\code(`λ t, Prop`);という型(族)を用いるのが適当でしょう．
+  実際に定義してみると，以下のようになるはずです．
+
+  \d-code(`
+  def term.nonfree₁' : Π {t : type}, preterm (λ t, Prop) t → Prop
+  | _ (var x) := x
+  | _ (lam f) := term.nonfree₁' (f true)
+  | _ (app m₁ m₂) := term.nonfree₁' m₁ ∧ term.nonfree₁' m₂
+
+  def term.nonfree₁'' : Π {Γ : list type}, term (λ t, Prop) (t₁ :: Γ) t₂ → Prop
+  | [] m := term.nonfree₁' (m false)
+  | (t :: Γ) m := term.nonfree₁'' (λ x, m x true)
+
+  def term.nonfree₁ : Term (t₁ :: Γ) t₂ → Prop :=
+  λ m, term.nonfree₁'' (m _)
+  `);
+
+  この述語の定義でもよいのですが，もう一つのやり方のほうが簡潔で応用が利きます．
+  その方法は先ほど定義した\code(`term.weaken1`);を使う方法です．
+
+  \d-code(`
+  def term.nonfree₂ (m : Term (t₁ :: Γ) t₂) : Prop :=
+  ∃ m', m = term.weaken1 m'
+  `);
+
+  \code(`m`);が先頭の変数について自由でないということは，先頭の変数がない環境でwell-typedな項が存在して，その項に変数を一つ水増ししたものと最初に与えられた項が同じだということです．
+  この方法の優れている点は定義が簡潔である点よりも，むしろその証明が使いやすいという点にあります．
+  とくに，\code(`term.nonfree₂`);は存在量化を用いて命題として定義されていますが，これを依存和に変更することもでき，その場合はproof relevantになります．
+  すると，\code(`term.nonfree₂ m`);型の値からは先頭の(使われていない)変数を削除した項が得られます．
+  最初のエンコードでこれを実現するのは大変です．
+
+  さて，\code(`term.nonfree₂`);の定義をすこし展開すると以下の補題がすぐ証明できます．(気が向いたらぜひご自分で証明してみてください．)
+
+  \d-code(`
+  lemma nonfree_var_lem (m : Term (t₁ :: Γ) t₂)
+  : term.nonfree₂ m ↔ ∃ (m' : Term Γ t₂), ∀ ν, (λ x, (m ν) x) = (λ x, (m' ν)) :=
+  `);
+
+  この中身をよく見てみます．\code(`ν`);を一旦無視してみるとこれは次のような主張です．
+}
++environment{主張}{
+  \code(`term.nonfree₂ m`);とは，\code(`(λ x, m x) = (λ x, m')`);となるある\code(`m'`);が存在することである．
+}
++p{
+  これは，\code(`m`);が\emph{メタレベル言語の中で}最初の変数を使用していないという主張に他なりません．
+  つまり，「オブジェクト言語のfreeness/freshnessがメタ言語のfreeness/freshnessと同一視できる」ということです．
+  これはHOASが束縛関係の管理をメタ言語に委ねているから起きる現象です．
+}
+>
+
++subsection{Normalization-by-Evaluationによる高速な評価器} <
++p{
+  %FIXME
+  \d-code(`
+  def domain : type → Type
+  | base := preterm ν base
+  | (arrow t₁ t₂) := domain t₁ → domain t₂
+
+  def Domain (t : type) : Type 1 :=
+  Π ν, domain ν t
+  `);
+
+  \d-code(`
+  def preterm.eval' : Π {t : type}, preterm (domain ν) t → (domain ν t)
+  | _ (var x) := x
+  | _ (lam f) := λ x, preterm.eval' (f x)
+  | _ (app m₁ m₂) := (preterm.eval' m₁) (preterm.eval' m₂)
+
+  def preterm.eval : Preterm t → Domain t :=
+  λ m ν, preterm.eval' ν (m _)
+  `);
+
+  \d-code(`
+  mutual def reify', reflect'
+  with reify' : Π {t : type}, domain ν t → preterm ν t
+  | base ν := v
+  | (arrow t₁ t₂) f := lam (λ x, reify' (f (reflect' (var x))))
+  with reflect' : Π {t : type}, preterm ν t → domain ν t
+  | base m := m
+  | (arrow t₁ t₂) f := λ x, reflect' (app f (reify' x))
+  `);
+
+  \d-code(`
+  def preterm.reify_reflect : Π {t : type}, (domain ν t → preterm ν t) × (preterm ν t → domain ν t)
+  | base := ⟨ id, id ⟩
+  | (arrow t₁ t₂) :=
+    let r₁ := @preterm.reify_reflect t₁ in
+    let r₂ := @preterm.reify_reflect t₂ in
+    let reify (f : domain ν t₁ → domain ν t₂) := lam (λ x, r₂.1 (f (r₁.2 (var x)))) in
+    let reflect (f : preterm ν (arrow t₁ t₂)) := λ x, r₂.2 (app f (r₁.1 x)) in
+    ⟨reify, reflect⟩
+
+  def preterm.reify : Domain t → Preterm t :=
+  λ x ν, (preterm.reify_reflect ν).1 (x ν)
+
+  def preterm.reflect : Preterm t → Domain t :=
+  λ x ν, (preterm.reify_reflect ν).2 (x ν)
+  `);
+
+  \d-code(`
+  def preterm.normalize : Preterm t → Preterm t :=
+  preterm.reify ∘ preterm.eval
+
+  def term.normalize : Term Γ t → Term Γ t :=
+  preterm.to_term ∘ preterm.normalize ∘ term.to_preterm
+  `);
+
+  \d-code(`
+  #eval to_string $ term.normalize zero
+  #eval to_string $ term.normalize (term.app succ zero)
+  #eval to_string $ term.normalize (term.app succ (term.app succ zero))
+  #eval to_string $ term.normalize (term.app succ (term.app succ (term.app succ zero)))
+  `);
+
+  \d-code(`
+  def i_nat : Term [] type.nat :=
+  λ ν, lam (λ f, var f)
+
+  #eval to_string i_nat
+  #eval to_string $ term.normalize i_nat
+  `);
 }
 >
 >

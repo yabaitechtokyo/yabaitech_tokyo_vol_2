@@ -13,7 +13,7 @@ let wasabiz-bibliography = [
   |));
 
   (`GabbayP02`, Article(|
-    author = {|Murdoch Gabbay, Andrew M. Pitts|};
+    author = {|Murdoch Gabbay | Andrew M. Pitts|};
     title = {A New Approach to Abstract Syntax with Variable Binding};
     journal = {Formal Asp. Comput.};
     volume = Some(13); 
@@ -27,5 +27,65 @@ let wasabiz-bibliography = [
     title = {Nominal sets};
     publisher = {Cambridge University Press};
     year = 2013;
+  |));
+
+  (`LeanRef`, WebSite(|
+    author = {|Jeremy Avigad | Gabriel Ebner | Sebastian Ullrich|};
+    title  = {The Lean Reference Manual (Release 3.3.0)};
+    url    = `https://leanprover.github.io/reference/lean_reference.pdf`;
+    year   = 2018;
+  |));
+
+  (`Yokouchi94`, Book(|
+    author = {|横内 寛文|};
+    title = {プログラム意味論};
+    publisher = {共立出版};
+    year = 1994;
+  |));
+
+  (`DanvyRR01`, Article(|
+    author = {|Olivier Danvy | Morten Rhiger | Kristoffer H. Rose|};
+    title = {Normalization by evaluation with typed abstract syntax};
+    journal = {J. Funct. Program.};
+    volume = Some(11); 
+    number = Some({6}); 
+    pages = (673,680);
+    year = 2001;
+  |));
+
+  (`Hofmann99`, InProceedings(|
+    author = {|Martin Hofmann|};
+    title = {Semantical Analysis of Higher-Order Abstract Syntax};
+    booktitle = {14th Annual IEEE Symposium on Logic in Computer Science};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (204,213);
+    year = 1999;
+  |));
+
+  (`SterlingS18`, WebSite(|
+    author = {| Jonathan Sterling | Bas Spitters |};
+    title  = {Normalization by gluing for free 𝜆-theories};
+    url    = `https://www.jonmsterling.com/pdfs/gluing-note.pdf`;
+    year   = 2018;
+  |));
+
+  (`CPDT`, Book(|
+    author = {| Adam Chlipala |};
+    title  = {Certified Programming with Dependent Types - A Pragmatic Introduction to the Coq Proof Assistant};
+    publisher = {MIT Press};
+    year   = 2013;
+  |));
+
+  (`Chlipala08`, InProceedings(|
+    author = {| Adam Chlipala |};
+    title = {Parametric higher-order abstract syntax for mechanized semantics};
+    booktitle = {Proceeding of the 13th ACM SIGPLAN international conference on Functional programming, ICFP 2008};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (143,156);
+    year = 2008;
   |));
 ]
