@@ -1,0 +1,16 @@
+@require: itemize
+@require: bnf
+@import: local
+@import: bib
+
+let membership = '<+section{所属性判定} <
++problem <
+ +p{\emph{所属性判定問題} }
+ +p{\emph{入力}: }
+ +p{\emph{出力}: }
+>
++p {
+TODO: Membership problem, complexity, proof
+}
+>
+>

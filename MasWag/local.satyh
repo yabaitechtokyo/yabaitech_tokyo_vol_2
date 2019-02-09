@@ -6,19 +6,37 @@ let path-to-root = `../MasWag/`
 let-inline ctx \sample-command it =
   read-inline (ctx |> set-text-color Color.red) it
 
-let-math \bowtie = ${\Join}
-let-math \alphabet = ${\mathrm{\Sigma}}
+%%% Math
+let-math \sequence x = ${\paren{#x}^\ast}
 let-math \powerset set = ${\app{\mathcal{P}}{#set}}
+let-math \bowtie = ${\Join}
+let-math \colon = ${:}
+let-math \iff = ${\Leftrightarrow}
+let-math \Z = ${\mathbb{Z}}
+let-math \R = ${\mathbb{R}}
+let-math \Rp = ${\mathbb{R}_{> 0}}
+let-math \Rnn = ${\mathbb{R}_{\geq 0}}
+
+%%% Timed Words
+let-math \word = ${w}
+let-math \alphabet = ${\mathrm{\Sigma}}
+let-math \event = ${\sigma}
+let-math \eventi i = ${\event_{#i}}
+let-math \ts = ${\tau}
+let-math \tsi i = ${\tau_{#i}}
+
+%%% Timed Automata
 let-math \Autom = ${\mathcal{A}}
 let-math \Loc = ${Q}
+let-math \loc = ${q}
 let-math \InitLoc = ${Q_0}
 let-math \AccLoc = ${Q_F}
 let-math \clock = ${c}
 let-math \Clock = ${C}
 let-math \Transition = ${\mathrm{\Delta}}
+let-math \resets = ${R}
+let-math \guard = ${g}
 let-math \Guard = ${\app{\Phi}{\Clock}}
-let-math \colon = ${:}
-let-math \iff = ${\Leftrightarrow}
 
 let-block ctx +frame content =
   let pads = (10pt, 10pt, 10pt, 10pt) in
@@ -36,6 +54,29 @@ let-block ctx +image-frame-with-line content =
   let pads = (10pt, 10pt, 10pt, 10pt) in
   let decoset = VDecoSet.simple-frame-stroke 1pt Color.black in          
     block-frame-breakable ctx pads decoset (fun ctx -> read-block ctx '<+centering{#content;}>)
+
+let-block ctx +myexample ?:labelopt it =
+  let pads = (15pt, 15pt, 0pt, 0pt) in
+  let decoset = VDecoSet.simple-frame-stroke 1pt (Gray(0.75)) in
+  let bt =
+    match labelopt with
+    | None        -> '<+Book.example{#it;}>
+    | Some(label) -> '<+Book.example?*?:(label){#it;}>
+  in
+    block-frame-breakable ctx pads decoset (fun ctx ->
+      block-skip 0pt
+        +++ read-block ctx bt
+        +++ line-break false true (ctx |> set-paragraph-margin 0pt 0pt) inline-fil
+    )
+
+let-block ctx +problem ?:labelopt bt =
+  let pads = (15pt, 15pt, 0pt, 0pt) in
+  let decoset = VDecoSet.simple-frame-stroke 1pt (Gray(0.75)) in
+    block-frame-breakable ctx pads decoset (fun ctx ->
+      block-skip 0pt
+        +++ read-block ctx bt
+        +++ line-break false true (ctx |> set-paragraph-margin 0pt 0pt) inline-fil
+    )
 
 let-inline ctx \insert-image w path =
   let img = load-image path in
