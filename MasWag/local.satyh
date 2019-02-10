@@ -1,5 +1,6 @@
 @import: ../main/book-class
 @import: maswag-math
+@require: deco
 
 let path-to-root = `../MasWag/`
 
@@ -64,6 +65,11 @@ let-math \path = ${\pi}
 let-math \Lg a = ${\app{\mathcal{L}}{#a}}
 
 
+let-inline ctx \simple-frame it =
+  let pads = (2pt, 2pt, 2pt, 2pt) in
+  let decos = HDecoSet.simple-frame-stroke 1pt (Gray(0.5)) in
+    inline-frame-breakable pads decos (read-inline ctx it)
+
 let-block ctx +frame content =
   let pads = (10pt, 10pt, 10pt, 10pt) in
   let decoset = VDecoSet.simple-frame-stroke 1pt (Color.gray 0.75) in
@@ -95,11 +101,15 @@ let-block ctx +myexample ?:labelopt it =
         +++ line-break false true (ctx |> set-paragraph-margin 0pt 0pt) inline-fil
     )
 
-let-block ctx +problem ?:labelopt bt =
-  let pads = (15pt, 15pt, 0pt, 0pt) in
+let-block ctx +problem title bt =
+  let pads = (5pt, 5pt, 0pt, 0pt) in
   let decoset = VDecoSet.simple-frame-stroke 1pt (Gray(0.75)) in
     block-frame-breakable ctx pads decoset (fun ctx ->
       block-skip 0pt
+        +++ (let ctx-title = ctx
+                     |> set-font HanIdeographic (`ipaexg`, 1.0, 0.)
+                     |> set-font Kana (`ipaexg`, 1.0, 0.) in 
+                line-break false false ctx-title (read-inline ctx-title {\simple-frame{#title;}}))
         +++ read-block ctx bt
         +++ line-break false true (ctx |> set-paragraph-margin 0pt 0pt) inline-fil
     )

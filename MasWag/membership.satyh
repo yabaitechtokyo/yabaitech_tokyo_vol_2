@@ -4,13 +4,44 @@
 @import: bib
 
 let membership = '<+section{所属性判定} <
-+problem <
- +p{\emph{所属性判定問題} }
- +p{\emph{入力}: }
- +p{\emph{出力}: }
++problem{所属性判定問題} <
+ +p{\emph{入力}: 文字集合${\alphabet}上の時間オートマトン${\Autom}とtimed word ${\word}}
+ +p{\emph{出力}: ${\word \in \Lg{\Autom}} であるかどうかを判定する。}
+>
++subsection{所属性判定問題の計算量}<
++theorem {
+時間オートマトンの所属性判定問題はNPに属する。
+}
++proof {
+TODO
+}
++theorem {
+時間オートマトンの所属性判定問題は任意のNP問題に帰着できる。
+}
++problem{ハミルトニアン閉路問題} <
+ +p{\emph{入力}: 有向グラフ ${G = \paren{V,E}}}
+ +p{\emph{出力}: 有向グラフ${G}がハミルトニアン閉路を持つかどうかを判定する。つまり${G}上の閉路${v_0,e_1,v_1,\ldots,e_n,v_n}で全ての頂点を一度だけ通るものが存在するかどうかを判定する。}
+>
++p{
+TODO: ハミルトニアン閉路問題の定義と説明
+}
++proof {
+TODO
+}
++corollary {
+時間オートマトンの所属性判定問題はNP完全問題である。
+}
 >
 +p {
 TODO: Membership problem, complexity, proof
 }
++subsection{オートマトンを固定したときの所属性判定問題}<
++theorem {
+入力の時間オートマトンを固定したとき、時間オートマトンの所属性はtimed word の長さについて多項式時間で判定することができる。
+}
++proof {
+TODO
+}
+>
 >
 >
