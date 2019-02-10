@@ -4,29 +4,37 @@
 @import: bib
 
 let membership = '<+section{所属性判定} <
-+problem{所属性判定問題} <
- +p{\emph{入力}: 文字集合${\alphabet}上の時間オートマトン${\Autom}とtimed word ${\word}}
- +p{\emph{出力}: ${\word \in \Lg{\Autom}} であるかどうかを判定する。}
->
++problem{所属性判定問題}
+ {文字集合${\alphabet}上の時間オートマトン${\Autom}とtimed word ${\word}}
+ {${\word \in \Lg{\Autom}} であるかどうかを判定する。}
 +subsection{所属性判定問題の計算量}<
 +theorem {
 時間オートマトンの所属性判定問題はNPに属する。
 }
 +proof {
-TODO
+所属性判定問題の入力の時間オートマトンを${\AutomWith}、timed wordを${\wordWith}とする。
+まず始めに、時間オートマトン${\Autom}の遷移の列 ${\edgei{0}{1},\edgei{1}{2},\ldots,\edgei{n-1}{n} \in \sequence{\Edge}} で ${\loc_0 \in \InitLoc}、${\loc_n\in \AccLoc} を充たすものを非決定的に選択する。
+次に、制約
+\eqn(${
+        \mathcal{C} = \paren{\nu_0 = \initcval} \land \bigwedge_{i \in \set{1,2,\ldots,n}} \paren{\paren{\cval_{i-1} + \tsi{i} - \tsi{i-1} \models \guard_i} \land \paren{\cval_{i} = \reset{\cval_{i-1} + \tsi{i} - \tsi{i-1}}{\resets_i}}}
+});
+を考える。制約${\mathcal{C}}が充足可能であるとき${\word \in \Lg{\Autom}}が成立し、充足不能であるとき${\word \nin \Lg{\Autom}}となる。
+制約${\mathcal{C}}は線形計画問題であるので、例えばカーマーカーのアルゴリズム\cite([`journals/combinatorica/Karmarkar84`]); を用いることで制約の大きさについて多項式時間で解くことができる。\footnote{筆者は線形計画問題について詳しくないので、具体的にどの様に充足判定を行うことができるのかはわかりませんが、少なくとも多項式時間で解くことができるということは良く知られています。}今回制約の大きさはtimed word ${\word}の長さと各状態遷移 ${\edge \in \Edge}に含まれる制約${\guard}の大きさ、及びクロック変数${\Clock}の個数についての多項式で表わすことができる。従って時間オートマトンの所属性判定問題はNPに属する。
 }
 +theorem {
 時間オートマトンの所属性判定問題は任意のNP問題に帰着できる。
 }
-+problem{ハミルトニアン閉路問題} <
- +p{\emph{入力}: 有向グラフ ${G = \paren{V,E}}}
- +p{\emph{出力}: 有向グラフ${G}がハミルトニアン閉路を持つかどうかを判定する。つまり${G}上の閉路${v_0,e_1,v_1,\ldots,e_n,v_n}で全ての頂点を一度だけ通るものが存在するかどうかを判定する。}
->
++problem{ハミルトニアン閉路問題} 
+{有向グラフ ${G = \paren{V,E}}}
+{有向グラフ${G}がハミルトニアン閉路を持つかどうかを判定する。つまり${G}上の閉路${v_0,e_1,v_1,\ldots,e_n,v_n}で全ての頂点を一度だけ通るものが存在するかどうかを判定する。}
 +p{
 TODO: ハミルトニアン閉路問題の定義と説明
 }
 +proof {
 TODO
+}
++example {
+TODO: hamiltonial circuit problemをmembership problemで解く例を書く。
 }
 +corollary {
 時間オートマトンの所属性判定問題はNP完全問題である。

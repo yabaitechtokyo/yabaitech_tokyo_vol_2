@@ -66,4 +66,20 @@ http://doi.ieeecomputersociety.org/10.1109/QEST.2006.59
 <publisher>サイエンス社</publisher>
 <year>2003</year>
 </book>
+<article key="journals/combinatorica/Karmarkar84" mdate="2018-11-14">
+<author>Narendra Karmarkar</author>
+<title>
+A new polynomial-time algorithm for linear programming.
+</title>
+<pages>373-396</pages>
+<year>1984</year>
+<volume>4</volume>
+<journal>Combinatorica</journal>
+<number>4</number>
+<url>
+db/journals/combinatorica/combinatorica4.html#Karmarkar84
+</url>
+<ee>https://doi.org/10.1007/BF02579150</ee>
+<ee>https://www.wikidata.org/entity/Q29543194</ee>
+</article>
 </dblp>

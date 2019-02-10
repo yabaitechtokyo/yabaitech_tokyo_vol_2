@@ -8,7 +8,7 @@ let-inline ctx \sample-command it =
   read-inline (ctx |> set-text-color Color.red) it
 
 %%% Math
-let-math \sequence x = ${\paren{#x}^\ast}
+let-math \sequence x = ${#x^\ast}
 let-math \powerset set = ${\app{\mathcal{P}}{#set}}
 let-math \bowtie = ${\Join}
 let-math \colon = ${:}
@@ -60,7 +60,7 @@ let-math \AccState = ${S_F}
 let-math \TransitionRel = ${to}
 let-math \Transition = let ord = math-char MathOrd in ord `→`
 let-math \reset cval resets = ${\angle-bracket{#cval}_{#resets}}
-let-math \initcval = ${\mathbb{0}}
+let-math \initcval = ${\mathbb{0}_{\Clock}}
 let-math \path = ${\pi}
 let-math \Lg a = ${\app{\mathcal{L}}{#a}}
 
@@ -101,7 +101,7 @@ let-block ctx +myexample ?:labelopt it =
         +++ line-break false true (ctx |> set-paragraph-margin 0pt 0pt) inline-fil
     )
 
-let-block ctx +problem title bt =
+let-block ctx +problem title input output =
   let pads = (5pt, 5pt, 0pt, 0pt) in
   let decoset = VDecoSet.simple-frame-stroke 1pt (Gray(0.75)) in
     block-frame-breakable ctx pads decoset (fun ctx ->
@@ -110,7 +110,10 @@ let-block ctx +problem title bt =
                      |> set-font HanIdeographic (`ipaexg`, 1.0, 0.)
                      |> set-font Kana (`ipaexg`, 1.0, 0.) in 
                 line-break false false ctx-title (read-inline ctx-title {\simple-frame{#title;}}))
-        +++ read-block ctx bt
+        +++ read-block ctx '<
+                +p{\emph{入力}: #input;}
+                +p{\emph{出力}: #output;}
+        >
         +++ line-break false true (ctx |> set-paragraph-margin 0pt 0pt) inline-fil
     )
 
