@@ -11,7 +11,7 @@ LF term : tp → type =
 | lam : (term A → term B) → term (arr A B)
 ;
 
-schema tctx = some [ t : tp ] block x : term t;
+schema tctx = some [t : tp] block x : term t;
 
 % we use old-style definition because
 % we need both `neut` and `norm` at the same time
@@ -25,14 +25,13 @@ schema ctx = some [a:tp] block x:neut a;
 
 stratified Sem : {g : ctx} [ ⊢ tp] -> ctype =
     | Base : [g ⊢ norm base] → Sem [g] [ ⊢ base]
-    | Arr : {g : ctx} { A : [ ⊢ tp ] } { B : [ |- tp ]}
-            ({h : ctx} {#S: [h |- g]} Sem [h] [ ⊢ A ] → Sem [h] [ ⊢ B ]) → Sem [g] [ ⊢ arr A B ]
+    | Arr : {g : ctx} ({ h : ctx } {#S: [h ⊢ g]} Sem [h] [ ⊢ A] → Sem [h] [ ⊢ B]) → Sem [g] [ ⊢ arr A B]
 ;
 
 rec sem_wkn : {h : ctx} {g : ctx} {#S : [h ⊢ g]} Sem [g] [ ⊢ A] → Sem [h] [ ⊢ A]  =
 mlam h ⇒ mlam g ⇒ mlam S ⇒ fn e ⇒ case e of 
     | Base [g ⊢ R] ⇒ Base [h ⊢ R[#S]]
-    | Arr [g] [⊢ A] [⊢ B] f ⇒ Arr [h] [⊢ A] [⊢ B] (mlam h' ⇒ mlam S' ⇒ f [h'] [h' ⊢ #S[#S']])
+    | Arr [g] f ⇒ Arr [h] (mlam h' ⇒ mlam S' ⇒ f [h'] [h' ⊢ #S[#S']])
 ;
 
 typedef Env : {g : tctx} {h : ctx} ctype =
@@ -40,25 +39,26 @@ typedef Env : {g : tctx} {h : ctx} ctype =
 ;
 
 rec env_ext : Env [g] [h] → Sem [h] [ ⊢ S] → Env [g, x : term S[]] [h]  =
-fn s ⇒ let  s : Env [g] [h] = s
-        in fn e ⇒ mlam T ⇒ mlam p ⇒ case [g, x : term _ ⊢ #p] of 
-            | [ g, x : term S ⊢ x ] ⇒ e
-            | [ g, x : term S ⊢ #q[..] ] ⇒ s [ ⊢ T ] [ g ⊢ #q ]
+fn env ⇒ let  env : Env [g] [h] = env
+          in fn sem ⇒ mlam T ⇒ mlam p ⇒ case [g, x : term _ ⊢ #p] of 
+              | [ g, x : term S ⊢ x ] ⇒ sem
+              | [ g, x : term S ⊢ #q[..] ] ⇒ env [ ⊢ T ] [ g ⊢ #q ]
 ;
 
 rec env_wkn : {h' : ctx} {h : ctx} {#W : [h' ⊢ h]} Env [g] [h] → Env [g] [h']  =
-mlam h' ⇒ mlam h ⇒ mlam W ⇒ fn s ⇒ 
-    let  s : Env [g] [h] = s
-    in mlam T ⇒ mlam p ⇒ sem_wkn [h'] [h] [h' ⊢ #W] (s [ ⊢ T] [g ⊢ #p])
+mlam h' ⇒ mlam h ⇒ mlam W ⇒ fn env ⇒ 
+    let env : Env [g] [h] = env
+    in mlam T ⇒ mlam p ⇒ sem_wkn [h'] [h] [h' ⊢ #W] (env [ ⊢ T] [g ⊢ #p])
 ;
 
 rec eval : [g ⊢ term S[]] → Env [g] [h] → Sem [h] [ ⊢ S]  =
-fn t ⇒ fn s ⇒
-    let  s : Env [g] [h] = s
-    in case t of
-        | [g ⊢ #p] ⇒ s [ ⊢ _] [g ⊢ #p]
-        | [g ⊢ lam (\x. E)] : [g ⊢ term (arr A[] B[])]
-          ⇒ Arr [h] [⊢ A] [⊢ B] (mlam h' ⇒ mlam W ⇒ fn e ⇒ eval [g, x : term A[] ⊢ E] (env_ext (env_wkn [h'] [h] [h' ⊢ #W] s) e))
-        | [g ⊢ app E1 E2] ⇒ let Arr [h] [⊢ A] [⊢ B] f = eval [g ⊢ E1] s
-                             in f [h] [h ⊢ ..] (eval [g ⊢ E2] s)
+fn tm ⇒ fn env ⇒
+    let env : Env [g] [h] = env
+    in case tm of
+        | [g ⊢ #p] ⇒ env [ ⊢ _] [g ⊢ #p]
+        | [g ⊢ lam (\x. E)] ⇒
+              Arr [h] (mlam h' ⇒ mlam W ⇒ fn sem ⇒
+                          eval [g, x : term _ ⊢ E] (env_ext (env_wkn [h'] [h] [h' ⊢ #W] env) sem))
+        | [g ⊢ app E1 E2] ⇒ let Arr [h] f = eval [g ⊢ E1] env
+                             in f [h] [h ⊢ ..] (eval [g ⊢ E2] env)
 ;
