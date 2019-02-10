@@ -924,27 +924,27 @@ end = struct
 
   let-inline ctx \ref-definition label =
     let it-num = get-number `definition:` label in
-      read-inline ctx {Definition #it-num;}
+      read-inline ctx {定義 #it-num;}
 
 
   let-inline ctx \ref-theorem label =
     let it-num = get-number `theorem:` label in
-      read-inline ctx {Theorem #it-num;}
+      read-inline ctx {定理 #it-num;}
 
 
   let-inline ctx \ref-lemma label =
     let it-num = get-number `lemma:` label in
-      read-inline ctx {Lemma #it-num;}
+      read-inline ctx {補題 #it-num;}
 
 
   let-inline ctx \ref-corollary label =
     let it-num = get-number `corollary:` label in
-      read-inline ctx {Corollary #it-num;}
+      read-inline ctx {系 #it-num;}
 
 
   let-inline ctx \ref-example label =
     let it-num = get-number `example:` label in
-      read-inline ctx {Example #it-num;}
+      read-inline ctx {例 #it-num;}
 
 
   let generate-footnote-label n =

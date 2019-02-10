@@ -1,16 +1,21 @@
 @import: bib
 @import: ../main/book-class
 @require: itemize
-@require: code
+@import: code
 @require: hdecoset
 @require: proof
 
 let-math \fv m = ${\app{\mathop{\mathrm{fv}}}{#m}}
-let-math \var m = ${\app{\mathop{\mathrm{var}}}{#m}}
 let cyr it ctx =
   read-inline (ctx |> set-font OtherScript (`CambriaMath` , 1., 0.)) it % FIXME
 let-math \fresh = text-in-math MathOrd (cyr (embed-string `И`))
 let-math \iff = math-char MathRel `⟺`
+let-math \Var = ${\mathrm{Var}}
+let-math \Ty m = ${\app{\mathop{\mathcal{Ty}}}{#m}}
+let-math \base = ${\mathbb{B}}
+let-math \dom m = ${\app{\mathop{\mathrm{dom}}}{#m}}
+let-math \E = ${\mathcal{E}}
+let-math \WT = ${\mathcal{Wt}}
 
 let wasabiz-article = '<
   +chapter ?:(`wasabiz-article`) (|
@@ -155,7 +160,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   \footnote{より正確な定義は教科書を参照してください．${\fv{f_1}}は${\app{\mathrm{supp}}{f_1}}と呼ばれています．また，${\fv{f_1}}を持つことは\dfn{finitely supported}であると呼ばれています．}
   ${f_1}と同様に，${f_2 : \mathcal{Var} \times \Lambda \to \Lambda}，${f_3 : \Lambda \times \Lambda \to \Lambda}のような型の写像に対しても${\fv{f_2},\fv{f_3}}とそれらを持つかどうかを定義することができます．
 }
-+theorem{
++theorem?*?:(`alpha-structural-induction`) {
   写像${f_1 : \mathcal{Var} \to \Lambda}，${f_2 : \mathcal{Var} \times \Lambda \to \Lambda}，${f_3 : \Lambda \times \Lambda \to \Lambda}をとる．
   ${f_1,f_2,f_3}がそれぞれ${\fv{f_1},\fv{f_2},\fv{f_3}}を持つとする．
   さらに，以下の条件を満たすとする．
@@ -190,31 +195,26 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   いずれもwell-definedであり，定理の条件を満たすことが簡単に確認できます．
 }
 +p{
-  置換を用いてラムダ項の\dfn{${\beta}簡約}を定義します．二項関係${\to_\beta \subseteq \Lambda \times \Lambda}を以下の規則で帰納的に定義します．
+  置換を用いてラムダ項の\dfn{${\beta}簡約}を定義します．二項関係${\to_\beta \subseteq \Lambda \times \Lambda}を以下のひとつの規則とみっつの合同性の規則で帰納的に定義します．
+
+  \eqn(${ \derive{| |}{ \paren{\lambda x.M}N \to_\beta \sqbracket{N/x}M } });
 
   \math-list(${
-  | \derive{| |}{ \paren{\lambda x.M}N \to_\beta \sqbracket{N/x}M }
   | \derive{| M \to_\beta M' |}{ \lambda x.M \to_\beta \lambda x.M' }
   | \derive{| M \to_\beta M' |}{ M N \to_\beta M' N }
   | \derive{| M \to_\beta M' |}{ N M \to_\beta N M' }
   |});
 
-  ${M \to_\beta N}であるとき，${M}が${N}に(${\beta})簡約されると言います．
+  ${M \to_\beta N}であるとき，${M}が${N}に\dfn{${\beta}簡約される}と言います．
   単に簡約と言った場合，${\beta}簡約のことを指します．
   一度簡約された項が再度簡約されることもあり得ます．
   ラムダ項の長さ1以上の加算列${\paren{M_i}_{i}}が全ての(有効な)${i}について${M_i \to_\beta M_{i+1}}を満たす時，その列を\dfn{簡約列}と言います．
   特に${M_0}を明示して，\dfn{${M_0}の簡約列}とも言います．
   ある簡約列が無限列であることを\dfn{発散する}と言います．
-  ${M}の長さ2以上の簡約列が存在しない時，${M}を\dfn{正規形}と言います．
+  ${M}の長さ2以上の簡約列が存在しない時，${M}を\dfn{${\beta}正規形 (${\beta}-normal form)}あるいは単に\dfn{正規形 (normal form)}と言います．
+  ${\beta}正規形でない項を\dfn{${\beta}-redex}と言います．
   また，${M}の無限簡約列が存在しない時，${M}は\dfn{強正規化可能である}と言います．
   ${\to_\beta}の反射推移対称閉包を${=_\beta}を書きます．定義より，${=_\beta}は${\Lambda}上の同値関係です．
-}
-+p{
-  最後に${\eta}展開を定義します．${\eta}展開は以下の規則に加えて${\beta}簡約のときと同様の追加規則により定義されます．
-
-  \eqn(${\derive{| x \mathrel{\#} M |}{ M \to_\eta \lambda x.M x }});
-
-  ${\mathord{\to_\eta} \cup \mathord{\to_\beta}}の反射推移対称閉包を${=_{\beta\eta}}と書きます．
 }
 >
 
@@ -279,6 +279,14 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   ];
 
   ただし，${t,f}はそれぞれ真と偽をChurch encodingで表したラムダ項とします．
+  もしLeanで実装する場合は以下のようなコードになるでしょう．
+
+  \d-code(`
+  def isapp : preterm₀ → preterm₀
+  | (lam f) := f
+  | (app m₁ m₂) := t
+  `);
+
   このとき，${\app{\mathrm{lam}}{\mathrm{isapp}}}は\code(`preterm₀`);型をもちかつ(メタレベルで)閉じた項であるので，
   なんらかのラムダ項を表していることが期待されますが，実際には対応するラムダ項は存在しません．
 }
@@ -409,16 +417,23 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   自然数を受け取って次の自然数を返す\code(`succ`);を定義します．
 
   \d-code(`
-  def  succ : Preterm₁ := λ α, lam (λ n, lam (λ f, lam (λ x, app (var f) (app (app (var n) (var f)) (var x)))))
+  def succ : Preterm₁ := λ α, lam (λ n, lam (λ f, lam (λ x, app (var f) (app (app (var n) (var f)) (var x)))))
   `);%
 
   \code(`succ`);を使う時には2つ注意点があります．
   ひとつ目は，\code(`Preterm₁`);型の二つの値を受け取って適用する場合は型変数を適切に分配してやる必要があるということです．
+  そこで，二つの\code(`Preterm₁`);を受け取ってそれらの適用を返す補助関数\code(`App`);を定義しておきます．
+
+  \d-code(`
+  def App : Preterm₁ → Preterm₁ → Preterm₁ :=
+  λ m₁ m₂ α, app (m₁ α) (m₂ α)
+  `);
+
   二つ目は，(当然ですが)単に適用した項を定義しただけでは項の簡約は行われないということです．
   そのため，\code(`succ_n₀`);の結果は\code(`n₁`);とは異なります．
 
   \d-code(`
-  def  succ_n₀ : Preterm₁ := λ α, app (succ α) (n₀ α)
+  def succ_n₀ : Preterm₁ := App succ n₀
   #eval to_string succ_n₀ -- "((λ0.(λ1.(λ2.(1 ((0 1) 2))))) (λ0.(λ1.1)))"
   `);%
 }
@@ -467,7 +482,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 
   \d-code(`
   def ω : Preterm₁ := λ α, lam (λ x, app (var x) (var x))
-  def Ω : Preterm₁ := λ α, app (ω α) (ω α)
+  def Ω : Preterm₁ := App ω ω
   `);%
 
   \code(`Ω`);は${\paren{\lambda x. x x} \paren{\lambda x. x x}}という項を表しています．
@@ -480,22 +495,116 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   `);
 }
 >
+>
 
-+subsection{単純型付きラムダ計算 (Simply-typed lambda calculus, STLC)} <
++section{型付きラムダ計算} <
++subsection{Curry流の単純型付きラムダ計算 (Curry-style simply-typed lambda calculus, STLC)} <
 +p{
-  ここまででPHOASで発散する項が記述できることを確認しました．
-  これはプログラムで言えば無限ループに陥る項が記述できるということです．
-  一方で，ラムダ計算に「型」の概念を持ち込むことでそのような無限ループに陥る項を排除できることが知られています．
-  この記事の後半では高階論理を扱うことになりますが，そこでは型無しラムダ計算は扱われず，専ら型付きラムダ計算の概念(より細かく言えば，単純型付きラムダ計算(Simply-typed lambda calculus, STLC)のみを扱うことになります．
-  それでは，単純型付きラムダ計算について復習します．
+  ここまでの節では型のないラムダ計算を扱ってきました．
+  一方で，ラムダ計算を論理学的に用いようとする場合，\emph{型付きのラムダ計算}を考えることになります．
+  この記事の後半では高階論理を扱うことになりますが，そこでは型無しラムダ計算はもはや扱われず，専ら型付きラムダ計算の概念(より細かく言えば，単純型付きラムダ計算(Simply-typed lambda calculus, STLC)を扱うことになります．
+  その準備のため，ここではまず単純型付きラムダ計算について復習します．
+  型付きラムダ計算の定義には\dfn{Curry流}と\dfn{Church流}と呼ばれる二種類の流儀があります．
+  \footnote{あるいは，\dfn{暗黙的型付け (implicit typing)}と\dfn{明示的型付け (explicit typing)}とも呼ばれます．\cite[`RonriKeisan`];}
+  どちらも基本的なアイデアは同じで直観的には同値ですが数学的にはかなり異なるやり方で導入されます．
+  Curry流はここまで扱ってきた型無しラムダ計算を元に定義されるので，まずはCurry流での定義を紹介します．
+}
++p{
+  まず，\dfn{基底型}の集合${\base}を固定します．
+  そして，\dfn{型}の集合${\Ty{\base}}を以下の規則により帰納的に定義します．
 
-  %FIXME
+  \math-list(${
+  | \derive{| \tau \in \base |}{ \tau \in \Ty{\base} }
+  | \derive{| \tau \in \Ty{\base} | \sigma \in \Ty{\base} |}{ \tau \to \sigma \in \Ty{\base} }
+  |});
+
+  ${\tau \to \sigma}の形の型を${\tau}から${\sigma}への\dfn{関数型}と呼びます．
+  \dfn{型環境 (type environment)}は${\Var}から${\Ty{\base}}への部分関数で定義域が有限であるものと定義します．
+  型環境${\Gamma}について，その定義域が${\set{x_1,\cdots,x_n}}のとき，${\Gamma}を${x_1 : \app{\Gamma}{x_1}, \cdots, x_n : \app{\Gamma}{x_n}}と書きます．
+  また，${\dom{\Gamma_1} \cap \dom{\Gamma_2} = \emptyset}のとき，${\Gamma_1 \cup \Gamma_2}を${\Gamma_1, \Gamma_2}と書きます．
+  すべての型環境からなる集合を${\E}で表します．
+}
++p{
+  さて，三項関係${\WT \subseteq \E \times \Lambda \times \Ty{\base}}を定義します．
+  ${\paren{\Gamma, M, \tau} \in \WT}であることを${\Gamma \vdash M : \tau}と書きます．
+  また，この形の命題を${M}についての\dfn{型判断}と呼びます．
+  ${\WT}は以下の規則により帰納的に定義されます．
+  \footnote{\ref-theorem(`alpha-structural-induction`);での${\alpha}同値な項を無視した帰納法の一般的な場合を用いており，\ref-theorem(`alpha-structural-induction`);と同様の仮定を満たしていることが簡単に確認できます．}
+
+  \math-list(${
+  | \derive{| \app{\Gamma}{x} = \tau |}{ \Gamma \vdash x : \tau }
+  | \derive{| x : \tau, \Gamma \vdash M : \sigma |}{ \Gamma \vdash \lambda x.M : \tau \to \sigma }
+  | \derive{| \Gamma \vdash M : \tau \to \sigma | \Gamma \vdash N : \tau |}{ \Gamma \vdash M N : \sigma }
+  |});
+
+  ラムダ項${M}と型${\tau}について，適当な環境${\Gamma}が存在して${\Gamma \vdash M : \tau}であるとき，${M}は\dfn{型${\tau}を持つ (has type ${\tau})}と言います．
+  また，${M}が何らかの型を持つとき${M}を\dfn{型付け可能 (typeable)}と言います．
+  すると，以下の事実が成り立ちます．
+}
++theorem?*?:(`curry-prop`){
+  \listing{
+    * ${M =_\beta M'}のとき，${\Gamma \vdash M : \tau \iff \Gamma \vdash M' : \tau}
+    * ${M}が型付け可能ならば${M}は強正規化可能．
+  }
+}
++p{
+  型付け可能なラムダ項には${\beta}簡約と並んで有名な\dfn{${\eta}展開}という変換規則が定義されます．
+  \footnote{実際には${\eta}展開は型無しのラムダ項にも定義できますが，今回は型付きの場合しか考えません．}
+  ${\eta}展開は以下の規則に加えて${\beta}簡約のときと同様の追加規則により定義されます．
+
+  \eqn(${\derive{| \text!{${M} has ${\tau \to \sigma}} | x \mathrel{\#} M |}{ M \to_\eta \lambda x.M x }});
+
+  ${\mathord{\to_\eta} \cup \mathord{\to_\beta}}の反射推移対称閉包を${=_{\beta\eta}}と書きます．
+  すると，\ref-theorem(`curry-prop`);の前半の一般化が成り立ちます．
+}
++theorem{
+  \listing{
+    * ${M =_\beta\eta M'}のとき，${\Gamma \vdash M : \tau \iff \Gamma \vdash M' : \tau}
+  }
+}
++p{
+  しかし，\ref-theorem(`curry-prop`);の後半の一般化は成り立ちません．
+  なぜなら，例えば${\lambda x.M}や${M N}のような項について(それらが適当な型を持つなら)以下のような無限簡約列が存在するからです．\cite[`JayG95`];
+
+  \math-list(${
+  | \lambda x.M \to_\eta \lambda y.\paren{\lambda x.M}y \to_\beta \lambda x.\app{\sqbracket{y/x}}{M} =_\alpha \lambda x.M
+  | M N \to_\eta \paren{\lambda x. M x} N \to_\beta M N
+  |});
+
+  それを成り立たせるためには${\eta}展開の規則をやや変更する必要があります．
+  変更後の規則を${\to_{\eta'}}とすると，それは以下のように帰納的に定義されます．
+
+  \math-list(${|
+  | \derive{| \text!{${y} has ${\tau \to \sigma}} | x \mathrel{\#} y |}{ y \to_{\eta'} \lambda x.y x }
+  | \derive{| \text!{${M N} has ${\tau \to \sigma}} | x \mathrel{\#} M N |}{ M N \to_{\eta'} \lambda x .\paren{M N} x }
+  | \derive{| M \to_{\eta'} M' |}{ \lambda x.M \to_{\eta'} \lambda x.M' }
+  | \derive{| M \to_{\eta'} M' |}{ N M \to_{\eta'} N M' }
+  |});
+
+  つまり，ラムダ抽象でなくかつ適用されていない項のみ${\eta}展開を行えるという規則が${\to_{\eta'}}です．
+  ${\to_{\eta'}}にも${\to_\beta}同様簡約列などの概念が定義できます．
+  \footnote{${\to_{\eta'}}は項書き換え系をなさないので一部の用語はここだけの定義としておきます．}
+  特に，${\eta'}正規形を\dfn{長${\eta}形 (${\eta}-long form)}と呼びます．
+  ${\eta}展開は${\eta'}展開と${\beta}\emph{展開}(i.e., ${\beta}簡約の逆向き)を用いることで再現できます．
+  加えて，定義より${\to_{\eta'} \subseteq \to_\eta}であるので${M =_{\beta\eta'} N}と${M =_{\beta\eta} N}は同値です．
+  さらに${\eta'}展開に対しては\ref-theorem(`curry-prop`);の後半の一般化が成立します．
+}
++theorem?*?:(`curry-prop2`){
+  \listing{
+    * ${M}が型付け可能ならば${M}は${\beta\eta'}強正規化可能．
+  }
+}
++p{
+  長${\eta}${\beta}正規形を\dfn{標準形 (canonical form)}と言います．
+  \ref-theorem(`curry-prop2`);よりその標準形は計算可能です．
+  よって，任意の項${M,N}に対して${M =_{\beta\eta} N}は決定可能です．
+}
++p{
   \listing{
     * well-typed
-    * SN
     * eta-long beta-normal
     * set-theoretic semantics
-    * 型判断，環境/文脈，結論
+    * 結論
     * structural rules
     * IPC
     * Subst, Abs, App, Var, Contr
@@ -533,10 +642,10 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   `);
 }
 +p{
-  そして肝となる\code(`preterm`);型を定義します．
-  \footnote{これまでとは違い項に型が付いているのでpretermと呼ぶのは変ですが，このあとにtermという名前の型も登場するので，このまま進みます．}
-  \code(`variable ν : type → Type`);という文が登場していますが，これは単に\code(`preterm`);の引数を外に書いただけで，
-  \code(`inductive preterm (ν : type → Type) : type → Type`);の略記です．
+  そして肝となる\code(`term`);型を定義します．
+  これまでとは違い項に型が付いているのでpretermではなくtermと呼びます．
+  \code(`variable ν : type → Type`);という文が登場していますが，これは単に\code(`term`);の引数を外に書いただけで，
+  \code(`inductive term (ν : type → Type) : type → Type`);の略記です．
   以降定義する関数に\code(`ν`);が登場した場合暗黙のうちに\code(`(ν : type → Type)`);という引数が追加されます．
 
   \d-code(`
@@ -804,7 +913,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   });
 }
 +p{
-  では，\code(`term.var`);の場合はどうでしょうか．STLCの型つけ規則の変数の導入${\mathrm{Var}}にはside conditionが付いています．これをどのような型に翻訳すればいいでしょうか．
+  では，\code(`term.var`);の場合はどうでしょうか．STLCの型つけ規則の変数の導入${\Var}にはside conditionが付いています．これをどのような型に翻訳すればいいでしょうか．
 
   \eqn(${
   FIXME
@@ -849,7 +958,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   });
 }
 +p{
-  さて，\code(`term.var0`);では${\mathrm{Var}}でできることの一部しか実現できませんが，\code(`term.var0`);に加えて追加の規則を導入することで${\mathrm{Var}}のすべての機能を再現することができます．
+  さて，\code(`term.var0`);では${\Var}でできることの一部しか実現できませんが，\code(`term.var0`);に加えて追加の規則を導入することで${\Var}のすべての機能を再現することができます．
   そのやり方にはいくつか方法があります．
   一つ目の方法は${\mathrm{Weaken}}規則に対応する関数を定義することです．
   \code(`term.var0`);はすでに環境の右側に対する弱化を許しているので左側の弱化に対応する関数\code(`term.weaken`);を定義します．
@@ -867,7 +976,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   `);
 
   \code(`term.weaken'`);と\code(`term.weaken`);は型シグネチャの書き方が違うのみで同じ関数です．
-  この関数と\code(`term.var0`);を組み合わせることで実質的に${\mathrm{Var}}を再現する関数が定義できます．
+  この関数と\code(`term.var0`);を組み合わせることで実質的に${\Var}を再現する関数が定義できます．
 
   \d-code(`
   def term.var₁ : Term (Γ₁ ++ t ::  Γ₂) t :=
