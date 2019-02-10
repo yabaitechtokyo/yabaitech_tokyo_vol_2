@@ -105,4 +105,14 @@ let wasabiz-bibliography = [
     pages = (135,154);
     year = 1995;
   |));
+
+  (`BentonHKM12`, Article(|
+    author = {| Nick Benton | Chung-Kil Hur | Andrew Kennedy | Conor McBride |};
+    title = {Strongly Typed Term Representations in Coq};
+    journal = {J. Autom. Reasoning};
+    volume = Some(49); 
+    number = Some({2}); 
+    pages = (141,159);
+    year = 2012;
+  |));
 ]

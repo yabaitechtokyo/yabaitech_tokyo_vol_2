@@ -16,6 +16,8 @@ let-math \base = ${\mathbb{B}}
 let-math \dom m = ${\app{\mathop{\mathrm{dom}}}{#m}}
 let-math \E = ${\mathcal{E}}
 let-math \WT = ${\mathcal{Wt}}
+let-math \NF = ${\mathcal{NF}}
+let-math \NE = ${\mathcal{NE}}
 
 let wasabiz-article = '<
   +chapter ?:(`wasabiz-article`) (|
@@ -312,7 +314,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   def Preterm₁ : Type 1 := Π (α : Type), preterm₁ α
   `);%
 
-  すると，\code(`Preterm₁`);はすべての閉じたλ項を表す型となります．
+  すると，\code(`Preterm₁`);はすべての閉じたラムダ項を表す型となります．
   \footnote{ただしこれをLeanの中で証明することは不可能だと思われます．
   Coqの有名な教科書であるCPDT\cite[`CPDT`];の著者であるChlipalaはPHOASの研究者でもありますが，彼はCPDTの中でこの問題に対して「おそらく不可能だろう」と述べています．}
   \footnote{定義された変数の先頭文字が大文字になっていますが，これはLeanでは特別な意味を持ちません．}
@@ -320,7 +322,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   まず\code(`var`);の引数と\code(`lam`);の引数の引数が型変数\code(`α`);になっていることに注目してください．
   \code(`α`);が全称量化されている場合，\code(`var`);の引数として取れる\code(`α`);型の値は\code(`lam`);で束縛したものに限られます．よって閉項のみが表現されます．
   さらに，\code(`α`);が全称量化されていることにより，\code(`preterm₁ α`);型の値は\code(`var`);,\code(`lam`);,\code(`app`);のいずれかで生成されたものに限られます．
-  よって，\code(`Preterm₁`);はすべての閉じたλ項を忠実に表現する型と言えます．
+  よって，\code(`Preterm₁`);はすべての閉じたラムダ項を忠実に表現する型と言えます．
 }
 +p{
   ちなみに，細かい点ですが，Leanの型システムではTypeはpredicativeなので\code(`Preterm₁`);のようなdependent productは通常の型の宇宙(\code(`Type`);あるいは\code(`Type 0`);で表される)には収まらない程度に大きくなります．
@@ -353,8 +355,8 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   ParametricでないHOASでは実現できなかった\code(`to_string`);を記述することができました．
 }
 +p{
-  それでは実際にλ項を作成してみます．
-  最も簡単な例は引数をひとつとってそれをそのまま返すλ項${\lambda x.x}です．
+  それでは実際にラムダ項を作成してみます．
+  最も簡単な例は引数をひとつとってそれをそのまま返すラムダ項${\lambda x.x}です．
   この項はよく${i}という名前で呼ばれます．
   ${i}を\code(`Preterm₁`);の値として記述すると以下のようになります．
 
@@ -497,19 +499,22 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 >
 >
 
-+section{型付きラムダ計算} <
-+subsection{Curry流の単純型付きラムダ計算 (Curry-style simply-typed lambda calculus, STLC)} <
++section{型付きラムダ計算 (Simply-typed lambda calculus, STLC)} <
 +p{
   ここまでの節では型のないラムダ計算を扱ってきました．
   一方で，ラムダ計算を論理学的に用いようとする場合，\emph{型付きのラムダ計算}を考えることになります．
   この記事の後半では高階論理を扱うことになりますが，そこでは型無しラムダ計算はもはや扱われず，専ら型付きラムダ計算の概念(より細かく言えば，単純型付きラムダ計算(Simply-typed lambda calculus, STLC)を扱うことになります．
   その準備のため，ここではまず単純型付きラムダ計算について復習します．
   型付きラムダ計算の定義には\dfn{Curry流}と\dfn{Church流}と呼ばれる二種類の流儀があります．
-  \footnote{あるいは，\dfn{暗黙的型付け (implicit typing)}と\dfn{明示的型付け (explicit typing)}とも呼ばれます．\cite[`RonriKeisan`];}
-  どちらも基本的なアイデアは同じで直観的には同値ですが数学的にはかなり異なるやり方で導入されます．
+  \footnote{あるいは，\dfn{暗黙的型付け (implicit typing)}と\dfn{明示的型付け (explicit typing)}とも呼ばれます．\cite[`RonriKeisan`]; \dfn{extrinsic}と\dfn{intrinsic}という用語が使われることもあります．}
+  どちらも基本的なアイデアや直観は同じですが技術的には異なるやり方で導入されます．
   Curry流はここまで扱ってきた型無しラムダ計算を元に定義されるので，まずはCurry流での定義を紹介します．
+  その後，Church流での定義を紹介します．
+  あとで詳しく話しますが，今回実装するのはChurch流の型付きラムダ計算です．
 }
++subsection{Curry流の単純型付きラムダ計算 (Curry-style STLC)} <
 +p{
+  Curry流の単純型付きラムダ計算を定義します．
   まず，\dfn{基底型}の集合${\base}を固定します．
   そして，\dfn{型}の集合${\Ty{\base}}を以下の規則により帰納的に定義します．
 
@@ -527,7 +532,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 +p{
   さて，三項関係${\WT \subseteq \E \times \Lambda \times \Ty{\base}}を定義します．
   ${\paren{\Gamma, M, \tau} \in \WT}であることを${\Gamma \vdash M : \tau}と書きます．
-  また，この形の命題を${M}についての\dfn{型判断}と呼びます．
+  また，この形の命題を${M}についての\dfn{型判断 (type judgment)}と呼びます．
   ${\WT}は以下の規則により帰納的に定義されます．
   \footnote{\ref-theorem(`alpha-structural-induction`);での${\alpha}同値な項を無視した帰納法の一般的な場合を用いており，\ref-theorem(`alpha-structural-induction`);と同様の仮定を満たしていることが簡単に確認できます．}
 
@@ -552,14 +557,16 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   \footnote{実際には${\eta}展開は型無しのラムダ項にも定義できますが，今回は型付きの場合しか考えません．}
   ${\eta}展開は以下の規則に加えて${\beta}簡約のときと同様の追加規則により定義されます．
 
-  \eqn(${\derive{| \text!{${M} has ${\tau \to \sigma}} | x \mathrel{\#} M |}{ M \to_\eta \lambda x.M x }});
+  \eqn(${
+    \derive{| \text!{${M} has ${\tau \to \sigma}} | x \mathrel{\#} M |}{ M \to_\eta \lambda x.M x }
+  });
 
   ${\mathord{\to_\eta} \cup \mathord{\to_\beta}}の反射推移対称閉包を${=_{\beta\eta}}と書きます．
   すると，\ref-theorem(`curry-prop`);の前半の一般化が成り立ちます．
 }
 +theorem{
   \listing{
-    * ${M =_\beta\eta M'}のとき，${\Gamma \vdash M : \tau \iff \Gamma \vdash M' : \tau}
+    * ${M =_{\beta\eta} M'}のとき，${\Gamma \vdash M : \tau \iff \Gamma \vdash M' : \tau}
   }
 }
 +p{
@@ -567,7 +574,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   なぜなら，例えば${\lambda x.M}や${M N}のような項について(それらが適当な型を持つなら)以下のような無限簡約列が存在するからです．\cite[`JayG95`];
 
   \math-list(${
-  | \lambda x.M \to_\eta \lambda y.\paren{\lambda x.M}y \to_\beta \lambda x.\app{\sqbracket{y/x}}{M} =_\alpha \lambda x.M
+  | \lambda x.M \to_\eta \lambda y.\paren{\lambda x.M}y \to_\beta \lambda x.\sqbracket{y/x} M =_\alpha \lambda x.M
   | M N \to_\eta \paren{\lambda x. M x} N \to_\beta M N
   |});
 
@@ -586,7 +593,8 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   \footnote{${\to_{\eta'}}は項書き換え系をなさないので一部の用語はここだけの定義としておきます．}
   特に，${\eta'}正規形を\dfn{長${\eta}形 (${\eta}-long form)}と呼びます．
   ${\eta}展開は${\eta'}展開と${\beta}\emph{展開}(i.e., ${\beta}簡約の逆向き)を用いることで再現できます．
-  加えて，定義より${\to_{\eta'} \subseteq \to_\eta}であるので${M =_{\beta\eta'} N}と${M =_{\beta\eta} N}は同値です．
+  加えて，定義より${\to_{\eta'} \subseteq \to_\eta}です．
+  よって${M =_{\beta\eta'} N}と${M =_{\beta\eta} N}は同値です．
   さらに${\eta'}展開に対しては\ref-theorem(`curry-prop`);の後半の一般化が成立します．
 }
 +theorem?*?:(`curry-prop2`){
@@ -597,18 +605,74 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 +p{
   長${\eta}${\beta}正規形を\dfn{標準形 (canonical form)}と言います．
   \ref-theorem(`curry-prop2`);よりその標準形は計算可能です．
-  よって，任意の項${M,N}に対して${M =_{\beta\eta} N}は決定可能です．
+  よって，任意の項${M,N}に対して${M =_{\beta\eta} N}は決定可能です．(${M}と${N}の標準形を計算してそれらの${\alpha}同値性を比較すればよいです．)
+}
+>
+
++subsection{Church流の単純型付きラムダ計算 (Church-style simply typed lambda calculus)} <
++p{
+  Church流の単純型付きラムダ計算を定義します．
+  型の集合${\Ty{\base} = \set{\tau, \sigma, \cdots}}はCurry流と同じ定義を用います．
+  型無しラムダ計算と同様に変数の無限集合${\Var = \set{x,y,z,\cdots}}を固定します．
+  まず，\dfn{擬項 (pseudoterm)}を以下の規則で帰納的に定義します．
+
+  \eqn(${
+  M, N \mathrel{::=} x^\tau \mid \lambda x^\tau. M \mid M N
+  });%
+
+  擬項の\dfn{自由変数}や\dfn{束縛}の概念は型無しラムダ計算と同様に定義されます．
+  型無しラムダ計算では${\alpha}同値な項を同一視するためにかなり苦労をしましたが，今回は暗黙のうちに${\alpha}同値な項は全て同一視することとします．
 }
 +p{
+  すべての型${\tau}に対して擬項の集合${\Lambda_\tau}を以下の(擬項の)構造に関する帰納法により定めます．
+
+  \math-list(${
+  | \derive{| |}{ x^\tau \in \Lambda_\tau }
+  | \derive{| M \in \Lambda_\sigma |}{ \lambda x^\tau.M \in \Lambda_{\tau \to \sigma} }
+  | \derive{| M \in \Lambda_{\tau \to \sigma} | N \in \Lambda_\tau |}{ M N \in \Lambda_\sigma }
+  |});
+
+  擬項${M}が${\Lambda_\tau}に属するとき${M}は\dfn{${\tau}型を持つ (has type ${\tau})}と言います．
+  また擬項${M}がなんらかの型${\tau}を持つとき${M}は\dfn{正しく型付けされている (well-typed)}と言い，そのような擬項を\dfn{項 (term)}と呼びます．
+  実は(擬)項${M}が型を持つときにはその型は一意に決まります．
+  つまり，${M}が型${\tau}と${\sigma}を持つとき，${\tau = \sigma}です．
+  \footnote{この性質を\dfn{型付けの一意性 (uniqueness of typing)}と呼びます．}
+}
++p{
+  Church流のラムダ計算にも置換や${\beta}簡約，${\eta}展開を定義することができます．
+  また，Curry流の場合と同様の性質が成り立ちます．
+  Church流では標準形の定義が帰納法を用いたより簡潔な定義で行うことができます．
+  各型${\tau}ごとに\dfn{標準形}の集合${\NF_\tau \subseteq \Lambda_\tau}と\dfn{neutral form}の集合${\NE_\tau \subseteq \Lambda_\tau}を相互再帰で定義する．
+
+  \math-list(${
+  | \derive{| M \in \NE_\tau |}{ M \in \NF_\tau }
+  | \derive{| M \in \NF_\sigma |}{ \lambda x^\tau.M \in \NF_{\tau \to \sigma} }
+  | \derive{| |}{ x^\tau \in \NE_\tau }
+  | \derive{| M \in \NE_{\tau \to \sigma} | N \in \NF_\tau |}{ M N \in \NE_\sigma }
+  |});
+
+  すると，${\NF_\tau}は${\tau}型を持つ長${\eta}${\beta}正規形の集合と一致します．
+}
+>
+
++subsection{単純型付きラムダ計算のCurry-Howard同型対応} <
++p{
+  Church流の別の定義を与えて直観主義論理との対応を確認します．
+  さらに，Curry流とChurch流との比較も行います．
+
   \listing{
-    * well-typed
-    * eta-long beta-normal
-    * set-theoretic semantics
-    * 結論
     * structural rules
     * IPC
     * Subst, Abs, App, Var, Contr
   }
+  % また，\code(`var`);，\code(`lam`);，\code(`app`);の型とSTLCの型つけ規則との類似にも注目してください．
+  % \code(`term t`);が型判断の${\vdash t}のように見なせることがわかります．
+  % ${\vdash}の左側がコンストラクタの型に表れないことは，コンストラクタが環境に対して多相的に振る舞うことに対応しています．
+  % \code(`ν t₁ → term t₂`);という型は環境に${t_1}型の変数が存在するような型判断で右辺の型が${t_2}であるような型判断を表します．
+  % \footnote{より形式的な議論も可能です．
+  % 数学的には，それぞれの型が\dfn{前層 (presheaf)}で解釈されます．
+  % 特に，\code(`ν`);は米田埋め込みとして解釈されます．
+  % より詳しい議論は\cite[`Hofmann99`;`SterlingS18`];を参照してください．
 }
 >
 
@@ -617,23 +681,27 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   単純型付きラムダ計算をPHOASを用いて実現する方法は主に二種類あります．
 }
 +p{
-  ひとつはλ項自体は型なしのままPHOASでエンコードして，それがwell-typedであるという証明を持ち回るという方法です．
+  ひとつはラムダ項自体は型なしのままPHOASでエンコードして，それがtypeableであるという証明を持ち回るという方法です．
   依存型がある言語ならではの方法ですが，ここまで定義してきた型無しラムダ計算用のデータ型や関数をそのまま使えるという利点があります．
-  一方で，毎回証明を書かなければならない上にPHOASの項がwell-typedかどうかを表す述語とその証明に関連する補助関数を一式用意しなければなりません．
+  一方で，毎回証明を書かなければならない上にPHOASの項がtypeableかどうかを表す述語とその証明に関連する補助関数を一式用意しなければなりません．
   これは今回の記事の動機に反します．
 }
 +p{
   もうひとつの方法は，型検査をメタ言語に外注してしまうことです．
-  それぞれの型付きラムダ計算の項の型をLeanレベルの型に埋め込むことで，Leanの型検査器にPHOASで作成したλ項のオブジェクトレベルの(i.e., 今回定義しようとしているラムダ計算の)型検査を行わせてしまいます．
+  それぞれの型付きラムダ計算の項の型をLeanレベルの型に埋め込むことで，Leanの型検査器にPHOASで作成したラムダ項のオブジェクトレベルの(i.e., 今回定義しようとしているラムダ計算の)型検査を行わせてしまいます．
   実はこのテクニックはHaskellでもPhantom typeなどを用いてよく使われるものです．
   この方式であれば，Leanの型検査がパスした時点でオブジェクト言語の型検査も終わっており，型検査に関する余計な手間をかけずに済みます．
-  実はこの手法のさらに大きな利点として，型推論がタダで手に入るという点があります．Leanの型検査器に検査を任せるということは，Leanの型検査器が持つ型推論器も使えるということです．Leanの持つhigher-order unifierがタダで使えるので，型推論の再実装のコストやそれに伴うバグに悩まされることもありません．
+  実はこの手法のさらに大きな利点として，型推論がタダで手に入るという点があります．Leanの型検査器に検査を任せるということは，Leanの型検査器が持つ型推論器も使えるということです．
+  Leanの持つhigher-order unifierがタダで使えるので，型推論の再実装のコストやそれに伴うバグに悩まされることもありません．
+  よって，今回はこちらの方法を採用します．
 }
 +p{
   それでは実装に移ります．
   今回用いる手法をここでは\dfn{Typeful PHOAS}と呼ぶことにします．
   また，ここまでの型無しのPHOASを\dfn{Typeless PHOAS}と呼ぶことにします．
   まず，オブジェクト言語の型を定義します．
+  この説以降では基底型を一つだけ仮定します．
+  唯一の基底型は(高階論理の流儀で)${\iota}で表されることが通例になっています．
 
   \d-code(`
   inductive type : Type
@@ -642,7 +710,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   `);
 }
 +p{
-  そして肝となる\code(`term`);型を定義します．
+  \code(`type`);型を用いて\code(`term`);型を定義します．
   これまでとは違い項に型が付いているのでpretermではなくtermと呼びます．
   \code(`variable ν : type → Type`);という文が登場していますが，これは単に\code(`term`);の引数を外に書いただけで，
   \code(`inductive term (ν : type → Type) : type → Type`);の略記です．
@@ -651,52 +719,56 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   \d-code(`
   variable ν : type → Type
 
-  inductive preterm : type → Type
-  | var : Π {t}, ν t → preterm t
-  | lam : Π {t₁ t₂}, (ν t₁ → preterm t₂) → preterm (arrow t₁ t₂)
-  | app : Π {t₁ t₂}, preterm (arrow t₁ t₂) → preterm t₁ → preterm t₂
+  inductive term : type → Type
+  | var : Π {t}, ν t → term t
+  | lam : Π {t₁ t₂}, (ν t₁ → term t₂) → term (arrow t₁ t₂)
+  | app : Π {t₁ t₂}, term (arrow t₁ t₂) → term t₁ → term t₂
   `);
 
   Typeless PHOASでは単なる型変数\code(`α`);だった部分が\code(`type`);を受け取って型を返す関数\code(`ν`);に変化しています．
-  各コンストラクタに現れる\code(`preterm`);という型の引数がうまく設定されているので正しく型がついた項しか作成できないようになっています．
+  各コンストラクタに現れる\code(`term`);という型の引数がうまく設定されているので正しく型がついた項しか作成できないようになっています．
   \footnote{実は，素のHOASに型だけ導入することも可能です．
   今回採用している方式はHOASをParametricとTypefulの両方の面で一般化したものです．
   より詳しい議論は\cite[`Chlipala08`];を参照してください．}
-  また，\code(`var`);，\code(`lam`);，\code(`app`);の型とSTLCの型つけ規則との類似にも注目してください．
-  \code(`preterm t`);が型判断の${\vdash t}のように見なせることがわかります．
-  ${\vdash}の左側がコンストラクタの型に表れないことは，コンストラクタが環境に対して多相的に振る舞うことに対応しています．
-  \code(`ν t₁ → preterm t₂`);という型は環境に${t_1}型の変数が存在するような型判断で結論の型が${t_2}であるような型判断を表します．
-  \footnote{より形式的な議論も可能です．
-  数学的には，それぞれの型が\dfn{前層 (presheaf)}で解釈されます．
-  特に，\code(`ν`);は米田埋め込みとして解釈されます．
-  より詳しい議論は\cite[`Hofmann99`;`SterlingS18`];を参照してください．}
 }
 +p{
-  Typeful PHOASの場合でもTypeless PHOASと同様にdependent productを取ると全ての閉項を表す型が得られます．
-  ただし，それらは型\code(`t`);でパラメトライズされています．
+  Typeful PHOASの場合でもTypeless PHOASと同様に\code(`ν`);を全称量化すると各\code(`t`);について\code(`t`);型を持つ全ての閉項を表す型が得られます．
 
   \d-code(`
-  def Preterm (t : type) : Type 1 :=
-  Π ν, preterm ν t
+  def Term (t : type) : Type 1 :=
+  Π ν, term ν t
   `);
 }
 +p{
-  それでは型付きのλ項をいくつか作ってみます．
-  型無しの時にも試したChurch encodingを試します．
-  ここには掲載していませんが，Pretermに対してhas_to_stringのインスタンスが定義してあります．
+  それでは型付きのラムダ項をいくつか作ってみます．
+  型無しラムダ計算の時にも試したChurch encodingを試します．
+  まず，自然数を表すラムダ項の型を定義します．
 
   \d-code(`
-  def type.nat := arrow (arrow base base) (arrow base base)
+  def nat : type := arrow (arrow base base) (arrow base base)
+  `);
 
-  def zero : Preterm type.nat :=
+  型無しラムダ計算のときと同じ例(i.e., \code(`zero`);，\code(`succ`);，\code(`succ_zero`);)を記述してみます．
+  実は，Leanの型推論の機能により，型無しラムダ計算の場合と全く同じコードで型付きラムダ計算の項が記述できます．
+  唯一の違いは\code(`Term`);に引数が増えていることのみです．
+
+  \d-code(`
+  def zero : Term nat :=
   λ ν, lam (λ f, lam (λ x, var x))
 
-  def succ : Preterm (arrow type.nat type.nat) :=
+  def succ : Term (arrow nat nat) :=
   λ ν, lam (λ n, lam (λ f, lam (λ x, app (var f) (app (app (var n) (var f)) (var x)))))
 
-  def succ_zero : Preterm type.nat :=
-  (λ ν, app (succ ν) (zero ν))
+  def App : Term (arrow t₁ t₂) → Term t₁ → Term t₂ :=
+  λ m₁ m₂ ν, app (m₁ ν) (m₂ ν)
 
+  def succ_zero : Term nat :=
+  App succ zero
+  `);
+
+  ただしく項が作成できていることを確認するために(詳細は掲載しませんが)\code(`Term`);に対して\code(`has_to_string`);のインスタンスを定義しました．
+
+  \d-code(`
   #eval to_string zero      -- "(λ0.(λ1.1)) : ((ι → ι) → (ι → ι))"
   #eval to_string succ      -- "(λ0.(λ1.(λ2.(1 ((0 1) 2))))) : (((ι → ι) → (ι → ι)) → ((ι → ι) → (ι → ι)))"
   #eval to_string succ_zero -- "((λ0.(λ1.(λ2.(1 ((0 1) 2))))) (λ0.(λ1.1))) : ((ι → ι) → (ι → ι))"
@@ -707,7 +779,81 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 
   \d-code(`
   -- // error!
-  -- def ω : Preterm _ := λ ν, lam (λ x, app (var x) (var x))
+  -- def ω : Term _ := λ ν, lam (λ x, app (var x) (var x))
+  `);
+}
+>
+
++subsection{Normalization-by-Evaluationによる高速な評価器} <
++p{
+  %FIXME
+  \d-code(`
+  def domain : type → Type
+  | base := preterm ν base
+  | (arrow t₁ t₂) := domain t₁ → domain t₂
+
+  def Domain (t : type) : Type 1 :=
+  Π ν, domain ν t
+  `);
+
+  \d-code(`
+  def preterm.eval' : Π {t : type}, preterm (domain ν) t → (domain ν t)
+  | _ (var x) := x
+  | _ (lam f) := λ x, preterm.eval' (f x)
+  | _ (app m₁ m₂) := (preterm.eval' m₁) (preterm.eval' m₂)
+
+  def preterm.eval : Preterm t → Domain t :=
+  λ m ν, preterm.eval' ν (m _)
+  `);
+
+  \d-code(`
+  mutual def reify', reflect'
+  with reify' : Π {t : type}, domain ν t → preterm ν t
+  | base ν := v
+  | (arrow t₁ t₂) f := lam (λ x, reify' (f (reflect' (var x))))
+  with reflect' : Π {t : type}, preterm ν t → domain ν t
+  | base m := m
+  | (arrow t₁ t₂) f := λ x, reflect' (app f (reify' x))
+  `);
+
+  \d-code(`
+  def preterm.reify_reflect : Π {t : type}, (domain ν t → preterm ν t) × (preterm ν t → domain ν t)
+  | base := ⟨ id, id ⟩
+  | (arrow t₁ t₂) :=
+    let r₁ := @preterm.reify_reflect t₁ in
+    let r₂ := @preterm.reify_reflect t₂ in
+    let reify (f : domain ν t₁ → domain ν t₂) := lam (λ x, r₂.1 (f (r₁.2 (var x)))) in
+    let reflect (f : preterm ν (arrow t₁ t₂)) := λ x, r₂.2 (app f (r₁.1 x)) in
+    ⟨reify, reflect⟩
+
+  def preterm.reify : Domain t → Preterm t :=
+  λ x ν, (preterm.reify_reflect ν).1 (x ν)
+
+  def preterm.reflect : Preterm t → Domain t :=
+  λ x ν, (preterm.reify_reflect ν).2 (x ν)
+  `);
+
+  \d-code(`
+  def preterm.normalize : Preterm t → Preterm t :=
+  preterm.reify ∘ preterm.eval
+
+  def term.normalize : Term Γ t → Term Γ t :=
+  preterm.to_term ∘ preterm.normalize ∘ term.to_preterm
+  `);
+
+  \d-code(`
+  #eval to_string $ term.normalize zero
+  #eval to_string $ term.normalize (term.app succ zero)
+  #eval to_string $ term.normalize (term.app succ (term.app succ zero))
+  #eval to_string $ term.normalize (term.app succ (term.app succ (term.app succ zero)))
+  `);
+
+  \d-code(`
+  def i_nat : Term [] type.nat :=
+  λ ν, lam (λ f, var f)
+
+  #eval to_string i_nat
+  #eval to_string $ term.normalize i_nat
   `);
 }
 >
@@ -1152,80 +1298,6 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   これは，\code(`m`);が\emph{メタレベル言語の中で}最初の変数を使用していないという主張に他なりません．
   つまり，「オブジェクト言語のfreeness/freshnessがメタ言語のfreeness/freshnessと同一視できる」ということです．
   これはHOASが束縛関係の管理をメタ言語に委ねているから起きる現象です．
-}
->
-
-+subsection{Normalization-by-Evaluationによる高速な評価器} <
-+p{
-  %FIXME
-  \d-code(`
-  def domain : type → Type
-  | base := preterm ν base
-  | (arrow t₁ t₂) := domain t₁ → domain t₂
-
-  def Domain (t : type) : Type 1 :=
-  Π ν, domain ν t
-  `);
-
-  \d-code(`
-  def preterm.eval' : Π {t : type}, preterm (domain ν) t → (domain ν t)
-  | _ (var x) := x
-  | _ (lam f) := λ x, preterm.eval' (f x)
-  | _ (app m₁ m₂) := (preterm.eval' m₁) (preterm.eval' m₂)
-
-  def preterm.eval : Preterm t → Domain t :=
-  λ m ν, preterm.eval' ν (m _)
-  `);
-
-  \d-code(`
-  mutual def reify', reflect'
-  with reify' : Π {t : type}, domain ν t → preterm ν t
-  | base ν := v
-  | (arrow t₁ t₂) f := lam (λ x, reify' (f (reflect' (var x))))
-  with reflect' : Π {t : type}, preterm ν t → domain ν t
-  | base m := m
-  | (arrow t₁ t₂) f := λ x, reflect' (app f (reify' x))
-  `);
-
-  \d-code(`
-  def preterm.reify_reflect : Π {t : type}, (domain ν t → preterm ν t) × (preterm ν t → domain ν t)
-  | base := ⟨ id, id ⟩
-  | (arrow t₁ t₂) :=
-    let r₁ := @preterm.reify_reflect t₁ in
-    let r₂ := @preterm.reify_reflect t₂ in
-    let reify (f : domain ν t₁ → domain ν t₂) := lam (λ x, r₂.1 (f (r₁.2 (var x)))) in
-    let reflect (f : preterm ν (arrow t₁ t₂)) := λ x, r₂.2 (app f (r₁.1 x)) in
-    ⟨reify, reflect⟩
-
-  def preterm.reify : Domain t → Preterm t :=
-  λ x ν, (preterm.reify_reflect ν).1 (x ν)
-
-  def preterm.reflect : Preterm t → Domain t :=
-  λ x ν, (preterm.reify_reflect ν).2 (x ν)
-  `);
-
-  \d-code(`
-  def preterm.normalize : Preterm t → Preterm t :=
-  preterm.reify ∘ preterm.eval
-
-  def term.normalize : Term Γ t → Term Γ t :=
-  preterm.to_term ∘ preterm.normalize ∘ term.to_preterm
-  `);
-
-  \d-code(`
-  #eval to_string $ term.normalize zero
-  #eval to_string $ term.normalize (term.app succ zero)
-  #eval to_string $ term.normalize (term.app succ (term.app succ zero))
-  #eval to_string $ term.normalize (term.app succ (term.app succ (term.app succ zero)))
-  `);
-
-  \d-code(`
-  def i_nat : Term [] type.nat :=
-  λ ν, lam (λ f, var f)
-
-  #eval to_string i_nat
-  #eval to_string $ term.normalize i_nat
-  `);
 }
 >
 >
