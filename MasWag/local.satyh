@@ -16,27 +16,53 @@ let-math \Z = ${\mathbb{Z}}
 let-math \R = ${\mathbb{R}}
 let-math \Rp = ${\mathbb{R}_{> 0}}
 let-math \Rnn = ${\mathbb{R}_{\geq 0}}
+let-math \duration = ${t}
+let-math \models = ${\vDash}
+let-math \nmodels = ${\nvDash}
 
 %%% Timed Words
-let-math \word = ${w}
-let-math \alphabet = ${\mathrm{\Sigma}}
 let-math \event = ${\sigma}
 let-math \eventi i = ${\event_{#i}}
 let-math \ts = ${\tau}
 let-math \tsi i = ${\tau_{#i}}
+let-math \eventstyle a = ${\mathrm{#a}}
+let-math \word = ${w}
+let-math \wordWith = ${\word = \paren{\event_1,\tsi{1}},\paren{\event_2, \tsi{2}},\ldots,\paren{\event_n,\tsi{n}}}
+let-math \alphabet = ${\mathrm{\Sigma}}
 
 %%% Timed Automata
-let-math \Autom = ${\mathcal{A}}
+let-math \clock = ${c}
+let-math \Clock = ${C}
+let-math \resets = ${R}
+let-math \guard = ${g}
+let-math \Guard = ${\app{\Phi}{\Clock}}
 let-math \Loc = ${Q}
 let-math \loc = ${q}
 let-math \InitLoc = ${Q_0}
 let-math \AccLoc = ${Q_F}
-let-math \clock = ${c}
-let-math \Clock = ${C}
-let-math \Transition = ${\mathrm{\Delta}}
-let-math \resets = ${R}
-let-math \guard = ${g}
-let-math \Guard = ${\app{\Phi}{\Clock}}
+let-math \Edge = ${E}
+let-math \edge = ${e}
+let-math \edgeInside = ${\paren{\loc, \guard, \event, \resets,\loc'}}
+let-math \edgei i si = ${\paren{\loc_{#i}, \guard_{#si}, \event_{#si}, \resets_{#si},\loc_{#si}}}
+let-math \Autom = ${\mathcal{A}}
+let-math \AutomWith = ${\mathcal{A} = \paren{\alphabet,\Loc,\InitLoc,\AccLoc,\Clock,\Edge}}
+
+%%% TTS
+let-math \CVal = ${\paren{\Rnn}^\Clock}
+let-math \cval = ${\nu}
+let-math \TTS = ${\mathcal{S}}
+let-math \State = ${S}
+let-math \state = ${s}
+let-math \rstatei i = ${\paren{\loc_{#i},\cval_{#i}}}
+let-math \InitState = ${S_0}
+let-math \AccState = ${S_F}
+let-math \TransitionRel = ${to}
+let-math \Transition = let ord = math-char MathOrd in ord `→`
+let-math \reset cval resets = ${\angle-bracket{#cval}_{#resets}}
+let-math \initcval = ${\mathbb{0}}
+let-math \path = ${\pi}
+let-math \Lg a = ${\app{\mathcal{L}}{#a}}
+
 
 let-block ctx +frame content =
   let pads = (10pt, 10pt, 10pt, 10pt) in

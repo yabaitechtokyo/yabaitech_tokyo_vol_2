@@ -4,37 +4,89 @@
 @import: bib
 
 let timedAutomata = '<+section{時間オートマトン} <
++subsection{Timed word} <
 +definition ?:({timed word}) ?:(`def:timedWord`)
 {
   ${\alphabet}を有限の文字集合とする。
-  各 ${i \in \set{1,2,\ldots,n-1}}について${\tau_i < \tau_{i+1}}を満たす様な
-  有限列${w = \paren{\sigma_1,\tau_1},\paren{\sigma_2,\tau_2},\ldots,\paren{\sigma_n,\tau_n} \in \sequence{\alphabet \times \Rp}}
+  各 ${i \in \set{1,2,\ldots,n-1}}について${\ts_i < \ts_{i+1}}を満たす様な
+  有限列${\word = \paren{\event_1,\ts_1},\paren{\event_2,\ts_2},\ldots,\paren{\event_n,\ts_n} \in \sequence{\alphabet \times \Rp}}
   を\dfn{timed word}と言う。
 }
 +example ?* ?:(`example:timedWord`)
 {
-        TODO: Timed wordの例
+  文字集合${\alphabet} を ${\alphabet = \set{\eventstyle{a}, \eventstyle{b}}}とする。
+  このとき、${\word = \paren{\eventstyle{a}, 0.1},\paren{\eventstyle{b}, 0.2},\paren{\eventstyle{a}, 0.8}}は timed wordである。
+  一方で${\word' = \paren{\eventstyle{a}, 0.2},\paren{\eventstyle{b}, 0.1},\paren{\eventstyle{a}, 0.8}}や
+   ${\word'' = \paren{\eventstyle{a}, 0},\paren{\eventstyle{b}, 0.1},\paren{\eventstyle{a}, 0.8}}は timed wordではない。
+  \footnote{定義によっては${\word''}の様にタイムスタンプが0のものや、タイムスタンプが広義単調増加のものもをtimed wordに含める場合もある。}
 }
+>
++subsection{時間オートマトン (構文)} <
 +p {クロック変数の集合${\Clock}について、以下のBNFで定義される制約の集合を${\Guard}で表わす。
-   但し${\clock \in \Clock}、${\bowtie \in \set{\geq, >, <, \leq}}、${k \in \Z}である。
+   但し${\clock \in \Clock}、${\bowtie \in \set{\geq, >, =, <, \leq}}、${k \in \Z}である。
 }
 +BNF (${\guard}) ([[${\clock \bowtie k}; ${\guard \land \guard}]]);
 +definition ?:({時間オートマトン}) ?:(`def:TA`)
 {
-  有限の文字集合${\alphabet}とについて、時間オートマトン${\Autom}は6つ組${\paren{\alphabet,\Loc,\InitLoc,\AccLoc,\Clock,\Transition}}である。
-  但し${\alphabet}は有限の文字集合、
+  有限の文字集合${\alphabet}とについて、\dfn{時間オートマトン}${\Autom}は6つ組${\paren{\alphabet,\Loc,\InitLoc,\AccLoc,\Clock,\Edge}}である。
+  但し、${\alphabet}は有限の文字集合、
   ${\Loc}は有限の状態集合、
   ${\InitLoc\subseteq \Loc}は初期状態の集合、
   ${\AccLoc \subseteq \Loc}は受理状態の集合、
   ${\Clock}は有限のクロック変数の集合、
-  ${\Transition \subseteq \Loc\times\alphabet\times\Guard\times \powerset{\Clock} \times \Loc}は状態遷移関係である。
+  ${\Edge \subseteq \Loc\times\alphabet\times\Guard\times \powerset{\Clock} \times \Loc}は状態遷移集合である。
 }
 +example ?* ?:(`example:TA`)
 {
-        TODO: Timed Automatonの例
+        TODO: Timed Automatonの例。ここで使う例をrunning exampleにしたいので後で考える
 }
-+p {
-TODO: TTS, example of TTS, language, example of langauge
+>
++subsection{時間オートマトン (意味)} <
++p{
+クロック変数の集合 ${\Clock}について、関数${\cval\colon \Clock \to \Rnn}を\dfn{クロック割り当て} (clock valuation) と呼ぶ。
+クロック割り当て${\cval}と${\duration \in \Rnn}について、${\cval + \duration}を${\app{\paren{\cval + \duration}}{\clock} = \app{\cval}{\clock} + \duration}を充たすクロック割り当てと定義する。
+クロック割り当て${\paren{\cval + \duration}}の直感は、${\cval}を${\duration}時間経過させたクロック割り当てである。
+クロック割り当て${\cval}とクロック変数の部分集合${\resets \subseteq \Clock}について、${\reset{\cval}{\resets}}を以下を充たすクロック割り当てと定義する。
+クロック割り当て${\reset{\cval}{\resets}}の直感は${\cval}を${\clock \in \resets}についてリセットしたクロック割り当てである。
+\eqn(${
+\app{\reset{\cval}{\resets}}{\clock} = 
+\cases!(
+        [(${0}, {${\clock \in \resets} のとき});
+        (${\app{\cval}{\clock}}, {${\clock \nin \resets} のとき})])
+});
+クロック割り当て${\cval}とクロック制約${\guard}について、${\cval}が${\guard}を充たすとき${\cval \models \guard}と表記し、充たさないとき${\cval \nmodels \guard}と表記する。
+全てのクロック変数 ${\clock \in \Clock}について${0}を返すクロック割り当てを${\initcval}と表記する。
 }
++definition ?:({時間状態遷移システム}) ?:(`def:TTS`) {
+時間オートマトン${\AutomWith}について、\dfn{時間状態遷移システム} (timed transition system, TTS) は以下の4つ組${\paren{\State, \InitState, \AccState, \Transition}}である。
+但し、${\State = \Loc \times \CVal}は\dfn{状況} (configuration)の集合、
+${\InitState = \InitLoc \times \set{\initcval} \paren{\subseteq \State}}は\dfn{初期状況} (initial configuration)の集合、
+${\AccState = \AccLoc \times \CVal \paren{\subseteq \State}}は\dfn{受理状況} (accepting configuration)の集合、
+${\Transition \subseteq \State \times \State}は以下で定義される状況遷移関係である。
+\eqn(${
+        \paren{\paren{\loc,\cval},\paren{\loc',\cval'}} \in \Transition \iff \exists \paren{\loc, \guard, \resets, \loc'} \in \Edge, \duration \in \Rnn. \paren{\cval + \duration} \models \guard, \cval' = \reset{\cval + \duration}{\resets}
+});
+}
++example ?* ?:(`example:TTS`) {
+TODO: \ref-example(`example:TA`);と同様の例を使うので後で書く
+}
++definition ?:({動作}) ?:(`def:run`) {
+時間オートマトン${\AutomWith}の
+時間状態遷移システム${\TTS = \paren{\State, \InitState, \AccState, \Transition}}について、
+状況${\paren{\loc,\cval} \in \State}と状態遷移${\edgeInside \in \Edge}が交互に表れる列、 
+\eqn(${\path = \rstatei{0},\edgei{0}{1},\rstatei{1},\ldots,\edgei{n-1}{n},\rstatei{n}});
+が${\rstatei{0} \in \InitState}、及び各${i \in \set{1,2,\ldots,n}}について${\paren{\rstatei{i-1},\rstatei{i}} \in \Transition}を充たすとき、${\path}を${\TTS}上の\dfn{動作} (run)と定義する。
+上記の動作${\path}と、${\alphabet}上のtimed word${\wordWith}が、各${i \in \set{1,2,\ldots,n}}について、${\cval_i = \reset{\cval_{i-1} + \tsi{i}}{\resets_i}}を充たすとき、${\word}が${\path}に\dfn{対応する}と言う。
+時間状態遷移システム${\TTS = \paren{\State, \InitState, \AccState, \Transition}}上の動作${\path = \state_{0},\edge_{1},\state_{1},\ldots,\edge_{n},\state_{n}}が${\state_n \in \AccState}を充たすとき、${\path}を\dfn{受理動作} (accepting run)と定義する。
+}
++definition ?:({言語}) ?:(`def:language`) {
+時間オートマトン${\Autom}の時間状態遷移システムを${\TTS}とする。
+時間オートマトン${\Autom}の言語${\Lg{\Autom}}を以下で定義されるtimed wordの集合と定義する。
+\eqn(${\Lg{\Autom} = \setsep{\word}{\text!({${\word}に対応する${\TTS}の受理動作${\path}が存在する})}});
+}
++example ?* ?:(`example:language`) {
+TODO: \ref-example(`example:TA`);及び\ref-example(`example:TTS`);と同様の例を使うので後で書く
+}
+>
 >
 >
