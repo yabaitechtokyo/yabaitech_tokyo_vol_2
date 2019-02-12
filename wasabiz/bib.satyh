@@ -115,4 +115,22 @@ let wasabiz-bibliography = [
     pages = (141,159);
     year = 2012;
   |));
+
+  (`DanvyKP14`, InProceedings(|
+    author = {| Olivier Danvy | Chantal Keller | Matthias Puech |};
+    title = {Typeful Normalization by Evaluation};
+    booktitle = {20th International Conference on Types for Proofs and Programs, TYPES 2014};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (72,88);
+    year = 2014;
+  |));
+
+  (`coq-parametricity`, WebSite(|
+    author = {|Daniel Schepler|};
+    title  = {Parametricity};
+    url    = `https://coq-club.inria.narkive.com/C0bDEhA1/parametricity#post4`;
+    year   = 2011;
+  |));
 ]
