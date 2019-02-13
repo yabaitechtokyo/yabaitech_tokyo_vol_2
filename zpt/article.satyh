@@ -4,9 +4,24 @@
 let zpt-article = '<
   +chapter ?:(`zpt-article`) (|
     bibliography = zpt-bibliography;
-    title = {zpt Chapter};
+    title = {Belugaによる定理証明};
     author = {zpt};
     |) <
-    +p {Hello}
+    +section {はじめに} <
+    >
+    +section {Belugaとは} <
+    >
+    +section {インストール} <
+    >
+    +section {Normalization by Evaluationについて} <
+    >
+    +section {単純型付きλ計算と正規形} <
+    >
+    +section {evalをつくる} <
+    >
+    +section {reifyとreflect} <
+    >
+    +section {理論的背景について} <
+    >
   >
 >
