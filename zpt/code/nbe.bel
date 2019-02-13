@@ -3,12 +3,9 @@ LF tp : type =
 | arr  : tp → tp → tp
 ;
 
---name tp A.
---name tp B.
-
 LF term : tp → type =
-| app : term (arr A B) → term A → term B
-| lam : (term A → term B) → term (arr A B)
+| app : term (arr a b) → term a → term b
+| lam : (term a → term b) → term (arr a b)
 ;
 
 schema tctx = some [t : tp] block x : term t;
@@ -61,4 +58,25 @@ fn tm ⇒ fn env ⇒
                           eval [g, x : term _ ⊢ E] (env_ext (env_wkn [h'] [h] [h' ⊢ #W] env) sem))
         | [g ⊢ app E1 E2] ⇒ let Arr [h] f = eval [g ⊢ E1] env
                              in f [h] [h ⊢ ..] (eval [g ⊢ E2] env)
+;
+
+rec app' : (g:ctx) {R : [g ⊢ neut (arr T[] S[])]} [g ⊢ norm T[]] → [g ⊢ neut S[]]  =
+mlam R ⇒ fn n ⇒ let [g ⊢ N] = n in [g ⊢ rapp R N];
+
+rec reify : Sem [h] [ ⊢ A] → [h ⊢ norm A[]] =
+fn sem ⇒ case sem of
+    | Base [h ⊢ R] ⇒ [h ⊢ R]
+    | Arr [g] f ⇒ let  [g, x : neut _ ⊢ N] =
+                   reify (f [g, x : neut _] [g, x ⊢ ..] (reflect [g, x : neut _ ⊢ x]))
+                   in [g ⊢ nlam (\x. N)]
+and reflect : [h ⊢ neut A[]] → Sem [h] [ ⊢ A] =
+fn n ⇒ let [h ⊢ R] : [h ⊢ neut A[]] = n
+        in case [ ⊢ A] of
+            | [ ⊢ base ] ⇒ Base [h ⊢ embed R]
+            | [ ⊢ arr B C ] ⇒ Arr [h] (mlam h' ⇒ mlam W ⇒ fn tm ⇒
+                                           reflect (app' [h' ⊢ R[#W]] (reify tm)))
+;
+
+rec nbe : Env [g] [h] → [g ⊢ term A[]] → [h ⊢ norm A[]] =
+fn env ⇒ fn tm ⇒ reify (eval tm env)
 ;
