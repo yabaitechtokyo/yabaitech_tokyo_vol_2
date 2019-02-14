@@ -1,12 +1,31 @@
 @import: bib
 @import: ../main/book-class
 
+let-inline ctx \dfnjaen it-ja it-en =
+  let ib-ja = read-inline (ctx |> Book.set-cjk-font Book.font-cjk-gothic) it-ja in
+  let ib-en = read-inline (ctx |> Book.set-latin-font Book.font-latin-italic) it-en in
+  ib-ja ++ ib-en
+
 let gfn-article = '<
   +chapter ?:(`gfn-article`) (|
     bibliography = gfn-bibliography;
     title = {gfn Chapter};
     author = {gfn};
-    |) <
-    +p {Hello}
+  |) <
+    +p{
+      この記事では，一種のメタプログラミング的手法として使われる\dfnjaen{多段階計算}{multi-stage programming}と，
+      手続き的プログラミングを実現する構成要素である\dfnjaen{可変参照}{mutable reference}とを共存させることについて扱います．
+      これらを共存させたときに生じる問題と，
+      その問題が実行時に生じないように静的な検査によって回避するための型システムについていくつかの既存研究を紹介し，
+      またそれらの依然として弱点があると思われる点とそのおおまかな克服の方針について述べたいと思います．
+    }
+    +section{多段階計算の基礎}<
+      +p{
+        ${\lambda^{\bigcirc}}
+      }
+%      +p{
+%        % Curry–Howard同型対応
+%      }
+    >
   >
 >
