@@ -5,11 +5,13 @@ let zpt-article = '<
   +chapter ?:(`zpt-article`) (|
     bibliography = zpt-bibliography;
     title = {Belugaによる定理証明};
-    author = {zpt};
+    author = {zeptometer};
     |) <
     +section {はじめに} <
-    >
-    +section {Belugaとは} <
+    +p {この記事では定理証明系Belugaについて紹介します。BelugaはMcGill大学のBrigitte Pientkaらによって開発されている定理証明支援系です。公式サイトによる紹介は以下の通りです。}
+    +p {Beluga is a functional programming language designed for reasoning about formal systems. It features direct support for object-level binding constructs using higher order abstract syntax and treats contexts as first class objects.}
+    +p{\< ははあなるほどそういうことね、完全に理解した}
+    +p{補足するとBelugaの特徴はその型システムにあります。CoqやAgda、あるいはLeanがCalculus of Inductive Constructionを理論的背景とするのと同様に、IsabelleBelugaはLFと文脈様相型理論を理論的な背景としています。ただしこの記事ではそういった理論的な話には立ち入らずに、実際にコードを書きながらBelugaがどんな雰囲気で証明をしていくのかをわかってもらうという形式をとることにします。}
     >
     +section {インストール} <
     >
