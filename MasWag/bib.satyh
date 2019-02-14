@@ -27,7 +27,7 @@ let maswag-bibliography = [
 
 
   (`conf/qest/BehrmannDLHPYH06`, InProceedings(|
-    author = {|Gerd Behrmann, Alexandre David, Kim Guldstrand Larsen, John Håkansson, Paul Pettersson, Wang Yi, Martijn Hendriks|};
+    author = {|Gerd Behrmann, Alexandre David, Kim Guldstrand Larsen, John Hkansson, Paul Pettersson, Wang Yi, Martijn Hendriks|};
     title = {UPPAAL 4.0.};
     booktitle = {QEST};
     series = None; 
@@ -55,6 +55,17 @@ let maswag-bibliography = [
     title = {オートマトン言語理論計算論 I};
     publisher = {サイエンス社};
     year = 2003;
+  |));
+
+
+  (`journals/combinatorica/Karmarkar84`, Article(|
+    author = {|Narendra Karmarkar|};
+    title = {A new polynomial-time algorithm for linear programming.};
+    journal = {Combinatorica};
+    volume = Some(4);
+    number = Some({4});
+    pages = (373,396);
+    year = 1984;
   |));
 
 

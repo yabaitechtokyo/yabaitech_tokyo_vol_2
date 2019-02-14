@@ -2,6 +2,7 @@
 @import: ../main/book-class
 @import: introduction
 @import: timedAutomata
+@import: membership
 
 let maswag-article = '<
   +chapter ?:(`maswag-article`) (|
@@ -11,5 +12,6 @@ let maswag-article = '<
     |) <
     #introduction;
     #timedAutomata;
+    #membership;
   >
 >

@@ -88,4 +88,49 @@ let wasabiz-bibliography = [
     pages = (143,156);
     year = 2008;
   |));
+
+  (`RonriKeisan`, Book(|
+    author = {| 萩谷 昌巳 | 西崎 真也 |};
+    title  = {論理と計算のしくみ};
+    publisher = {岩波書店};
+    year   = 2007;
+  |));
+
+  (`JayG95`, Article(|
+    author = {| C. Barry Jay | Neil Ghani |};
+    title = {The Virtues of Eta-Expansion};
+    journal = {J. Funct. Program.};
+    volume = Some(5); 
+    number = Some({2}); 
+    pages = (135,154);
+    year = 1995;
+  |));
+
+  (`BentonHKM12`, Article(|
+    author = {| Nick Benton | Chung-Kil Hur | Andrew Kennedy | Conor McBride |};
+    title = {Strongly Typed Term Representations in Coq};
+    journal = {J. Autom. Reasoning};
+    volume = Some(49); 
+    number = Some({2}); 
+    pages = (141,159);
+    year = 2012;
+  |));
+
+  (`DanvyKP14`, InProceedings(|
+    author = {| Olivier Danvy | Chantal Keller | Matthias Puech |};
+    title = {Typeful Normalization by Evaluation};
+    booktitle = {20th International Conference on Types for Proofs and Programs, TYPES 2014};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (72,88);
+    year = 2014;
+  |));
+
+  (`coq-parametricity`, WebSite(|
+    author = {|Daniel Schepler|};
+    title  = {Parametricity};
+    url    = `https://coq-club.inria.narkive.com/C0bDEhA1/parametricity#post4`;
+    year   = 2011;
+  |));
 ]
