@@ -10,6 +10,7 @@ let cyr it ctx =
   read-inline (ctx |> set-font OtherScript (`CambriaMath` , 1., 0.)) it % FIXME
 let-math \fresh = text-in-math MathOrd (cyr (embed-string `И`))
 let-math \iff = math-char MathRel `⟺`
+let-math \shortiff = math-char MathRel `↔`
 let-math \Var = ${\mathcal{Var}}
 let-math \Tm = ${\mathcal{Tm}}
 let-math \Ty m = ${\app{\mathop{\mathcal{Ty}}}{#m}}
@@ -19,11 +20,16 @@ let-math \E = ${\mathcal{E}}
 let-math \W = ${\mathcal{W}}
 let-math \A = ${\mathcal{A}}
 let-math \PsLam = ${\Lambda_{\Ty{\base}}}
-let-math \J = ${\mathcal{J}}
 let-math \NF = ${\mathcal{NF}}
 let-math \NE = ${\mathcal{NE}}
 let-math \IPC = ${\mathrm{IPC}}
 let-math \PVar = ${\mathcal{PVar}}
+let-math \M = ${\mathcal{M}}
+let-math \llbracket = math-char MathOrd `⟦`
+let-math \rrbracket = math-char MathOrd `⟧`
+let-math \den m = ${\llbracket #m \rrbracket} % FIXME
+let-math \lnot = math-char MathOp `¬`
+let-math \uexists = math-char MathOrd `∃!`
 
 let wasabiz-article = '<
 +chapter ?:(`wasabiz-article`) (|
@@ -31,48 +37,89 @@ let wasabiz-article = '<
     title = {定理証明支援系を作ろう！};
     author = {wasabiz};
     |) <
-+p {
-この記事では可能な限り省エネ・省コードで定理証明支援系を作ります．
-
-% 小節ごとに最初にまとめをかく
-% 表とかつかって一覧性を高くする
-% to_string
-}
-
 +section{目標} <
 +p{
-可能な限り省エネ・省コードで定理証明支援系を作成することを目標にします．
-
-\listing{
-* パーサー
-* 束縛関係の管理
-* 型検査
-* 型推論
-* 効率的な評価器
-* tactic言語
-}%
-
-これらを全て実装せずに定理証明支援系をつくります．
-
-\listing{
-* パーサー: DSL
-* 束縛関係の管理, 型検査, 型推論: HOAS
-* 効率的な評価器: NbE
-* tactic言語: Lean
-}%
-
-言語はLeanを使用します．
-Haskellの型システムにはdependencyがなく，論理の推論規則が満たすべき性質を証明するのが難しかったのと，型レベルのラムダ抽象がないせいでコードが不必要に複雑化してしまうため使用をやめてしまいました．
+  定理証明支援系というとCoq\cite[`coq`];やIsabelle\cite[`isabelle`];のような巨大なソフトウェアを思い浮かべる人も多いかもしれません．
+  しかしその実，大抵の証明支援系は核となる非常に小さい論理の上に証明を便利に記述するための殻が覆いかぶさっているにすぎません．
+  そこで，今回は証明支援系をある程度の使いやすさを保証しつつもなるべく\emph{省エネ・省コード}に実装し，定理証明支援系が思ったよりもとっつきやすいものであるということを確認したいと思います．
 }
++p{
+  一言で定理証明支援系を作ると言っても，それがまともに使える状態であるためには核となる論理の部分を実装する以外にも以下のような機能が必要になると思われます．
 
-% HaskHOL
-% HOLlight
+  \listing{
+  * パーサー
+  * 束縛関係の管理
+  * 型検査
+  * 型推論
+  * 効率的な評価器
+  * タクティック言語
+  }%
+
+  以上の機能は一つ一つを取り出してみてもそれなりに実装するのが大変なものばかりです．
+  そこで，今回は，これらの機能を\emph{全て実装せずに}定理証明支援系をつくります．
+  と言っても，これらの機能が提供されないと言うわけではありません．
+  既存の機能と理論をうまく活用してこれらを極めて小さいコードだけで実現しようというのです．
+  ポイントは，\emph{定理証明支援系の上で定理証明支援系と作る}ということです．
+  たとえばCoqにはパーサーも，束縛関係の管理も，型検査器も，型推論器も，効率的な評価器も，タクティック言語もすでに実装されています．
+  Coqの上で定理証明支援系を作成すれば，(非常にうまくやれば)Coq自体に実装されているこれらの機能をハックして利用することができます．
+  具体的には以下のような方針で，様々な言語機能の実装を\emph{サボります}．
+  (ややこしいので，実装に用いる定理証明支援系を\dfn{メタ言語}，これから実装される言語を\dfn{オブジェクト言語}と呼びます．)
+
+  \listing{
+  * パーサー: DSL
+  * 束縛関係の管理, 型検査, 型推論: 高階抽象構文木(HOAS)
+  * 効率的な評価器: Normalization by Evaluation
+  * タクティック言語: メタ言語のタクティック言語
+  }%
+}
++p{
+  具体的な方針は以下の通りです．
+  まず，核となる論理として\emph{高階論理}と呼ばれる論理を採用します．
+  高階論理は非常に強力な表現力を持ちながら極めて簡潔な構文と演繹体系を持ちます．
+  よって今回の目標にはぴったりです．
+  また，実装に使用する言語はLeanと呼ばれる言語です．\cite[`lean`];
+  Leanは2014年ごろからMicrosoft Researchで開発されている定理証明支援系で，Coqとよく似た型理論に基づく言語です．
+  LeanはCoqよりも現代的な設計と強力なメタプログラミング機構を持つ言語で，個人的にとても気に入っている言語です．
+  \footnote{実はこの記事を書き始めた段階ではHaskellでの実装を予定していました．
+  しかし，Haskellの型システムにはdependencyがなく，論理の推論規則が満たすべき性質を証明するのが難しかったのと，型レベルのラムダ抽象がないせいでコードが不必要に複雑化してしまうため使用をやめてしまいました．}
+}
++p{
+  この記事の読み方について簡単に説明します．
+  この記事では定理証明支援系を作成するのにあたって必要な理論的背景とその実装の解説を交互に挟んでいます．
+  もし理論方面に興味がある方は理論方面の節だけを読むのもいいでしょう．
+  また，実装から読み始めたほうが理解が早いという人は実装の部分だけを読んでしまっても問題ないと思います．
+  あと，Leanは知名度がないので今回はLeanの構文を知らない読者にもわかるよう随所にLean自体の解説も挟みました．
+  具体的な目次は以下の通りです．
+}
++p{
+  % FIXME
+  \emph{目次}
+  \listing{
+    * \ref-section(`ulc`);\ \ ラムダ計算
+    ** \ref-subsection(`ulc`);\ \ 型無しラムダ計算
+    ** \ref-subsection(`hoas`);
+    ** \ref-subsection(`phoas`);\ \ 多相高階抽象構文木
+    * \ref-section(`stlc`);\ \ 単純型付きラムダ計算
+    ** \ref-subsection(`curry-style`);\ \ Curry流の単純型付きラムダ計算
+    ** \ref-subsection(`curry-vs-church`);\ \ Curry流とChurch流
+    ** \ref-subsection(`church-style1`);\ \ Church流の単純型付きラムダ計算 (その1)
+    ** \ref-subsection(`typeful-phoas`);\ \ 単純型付きラムダ計算の実装
+    ** \ref-subsection(`nbe`);\ \ Normalization by Evaluationによる正規化
+    ** \ref-subsection(`church-style2`);\ \ Church流の単純型付きラムダ計算 (その2)
+    ** \ref-subsection(`judgment1`);\ \ 型判断の実装 (その1)
+    ** \ref-subsection(`judgment2`);\ \ 型判断の実装 (その2)
+    * \ref-section(`hol`);\ \ 高階論理
+    ** \ref-subsection(`hol`);\ \ 高階論理
+    ** \ref-subsection(`hol-impl`);\ \ 高階論理の実装
+    * \ref-section(`conclusion`);\ \ まとめ
+  }
+}
 >
 
-+section{ラムダ計算}<
-+subsection{型無しラムダ計算 (Untyped lambda calculus)} <
++section?:(`ulc`){ラムダ計算}<
++subsection?:(`ulc`){型無しラムダ計算} <
 +p {
-  この小節では型無しラムダ計算について復習します．
+  この小節では\dfn{型無しラムダ計算 (untyped lambda calculus)}について復習します．
   まず，変数の無限集合${\Var}が定まっているとします．
   ${\Var}の要素は以下で${x,y,z,\cdots}で表すことにします．
   型無しラムダ計算の\dfn{項 (ラムダ項, lambda term)}は以下のBNFで帰納的に定義されます．
@@ -231,9 +278,9 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 }
 >
 
-+subsection{高階抽象構文 (Higher-order abstract syntax, HOAS)} <
++subsection?:(`hoas`){高階抽象構文 (Higher-order abstract syntax, HOAS)} <
 +p{
-  前節でラムダ計算の形式的定義を行う際に${\alpha}変換を定義するのに苦労しました．
+  \ref-subsection(`ulc`);でラムダ計算の形式的定義を行う際に${\alpha}変換を定義するのに苦労しました．
   これはラムダ計算をコンピュータ上で実装する場合でも同様で，束縛の構造を正しく表現するためには(特に効率よく実装するためには)それなりの量と複雑さを持つコードを書かなければなりません．
   そこでこの記事では\dfn{高階抽象構文(HOAS)}と呼ばれる手法を用いてラムダ計算を実装し，\emph{束縛の構造に関するコードをほとんど記述しないまま実装します}．
   直観的には，HOASはメタ言語(今回の場合はLean(の処理系))に束縛関係の管理を外注してしまうという手法です．
@@ -267,11 +314,12 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   \code(`inductive`);を用いてデータ型を定義すると帰納法を行うためのコードが自動で生成されます．
   しかし\code(`preterm`);に対しては停止する帰納法が定義されないのです．
   これは直観的には，集合論的モデルではこのような不動点(解)であって非自明なものが存在しないためです．
-  (集合${X}に関する方程式${X \cong \[X, X\]}の解は一点集合のみです．
-   これの数学的基礎付けについては\dfn{領域理論 (Domain theory)}の教科書が良い導入になるかも知れません．
-   \footnote{たとえば\cite[`Yokouchi94`];など})
-  Leanの仕様では一般的にどのような帰納的データ型の定義が許されているかがもう少しわかりやすく定められています．(たとえば\cite[`LeanRef`];の4.4節)
-  一方でHaskellの型システムはLeanよりも寛容なので \code(`preterm`); のような型が実際に定義できます．
+  \footnote{集合${X}に関する方程式${X \cong \[X, X\]}の解は一点集合のみです．
+  これの数学的基礎付けについては\dfn{領域理論 (Domain theory)}の教科書が良い導入になるかも知れません．
+  (たとえば\cite[`Yokouchi94`];など)}
+  Leanの仕様では一般的にどのような帰納的データ型の定義が許されているかがもう少しわかりやすく定められています．
+  \footnote{たとえば\cite[`LeanRef`];の4.4節．}
+  一方でHaskellの型システムはLeanよりも寛容なので\code(`preterm`);のような型が実際に定義できます．
   そのため，この問題はLeanのような定理証明支援系固有の問題と言えます．
 }
 +p{
@@ -305,10 +353,10 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 }
 >
 
-+subsection{Parametric HOAS (PHOAS)} <
++subsection?:(`phoas`){多相高階抽象構文木} <
 +p{
-  先にあげたHOASの欠点を克服する手法が\dfn{Parametric HOAS (PHOAS)}と呼ばれる手法です．
-  先ほど定義したpretermを表す型をPHOASで定義すると以下のようになります．
+  \ref-subsection(`hoas`);で挙げたHOASの欠点を克服する手法が\dfn{多相高階抽象構文木 (Parametric HOAS, PHOAS)}と呼ばれる手法です．
+  PHOASで前項を表す型を定義すると以下のようになります．
 
   \d-code(`
   inductive preterm (α : Type) : Type
@@ -317,7 +365,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   | app : preterm → preterm → preterm
   `);%
 
-  このようにpretermの型が型変数\code(`α`);によってパラメータ化されています．
+  このように型\code(`preterm`);が型変数\code(`α`);によってパラメータ化されています．
   各コンストラクタの型シグネチャに現れている\code(`preterm`);はゼロ引数に見えますが，暗黙に\code(`α`);が適用されています．
   (これはLeanの仕様で，帰納的定義を行う際は\code(`:`);の前の引数は再帰の中で常に固定されていると解釈されます．
   この場合は，\code(`inductive preterm (α : Type) : Type`);という行の\code(`:`);の前に\code(`(α : Type)`);があるのでこの\code(`α`);は定義中で固定されています．)
@@ -541,20 +589,21 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 >
 >
 
-+section{型付きラムダ計算 (Simply-typed lambda calculus, STLC)} <
++section?:(`stlc`){単純型付きラムダ計算} <
 +p{
-  ここまでの節では型のないラムダ計算を扱ってきました．
+  \ref-section(`ulc`);では型のないラムダ計算を扱いました．
   一方で，ラムダ計算を論理学的に用いようとする場合，\emph{型付きのラムダ計算}を考えることになります．
   特に，この記事の目標である高階論理では\dfn{単純型付きラムダ計算 (Simply-typed lambda calculus, STLC)}が使われます．
   そのためにまず単純型付きラムダ計算について復習します．
   型付きラムダ計算の定義には\dfn{Curry流 (Curry-style)}と\dfn{Church流 (Church-style)}と呼ばれる二種類の流儀があります．
-  \footnote{あるいは，\dfn{暗黙的型付け (implicit typing)}と\dfn{明示的型付け (explicit typing)}とも呼ばれます．\cite[`RonriKeisan`]; \dfn{extrinsic}と\dfn{intrinsic}という用語が使われることもあります．}
+  \footnote{あるいは，\dfn{暗黙的型付け (implicit typing)}と\dfn{明示的型付け (explicit typing)}とも呼ばれます．\cite[`HagiyaN07`];
+  \dfn{extrinsic}と\dfn{intrinsic}という用語が使われることもあります．}
   どちらも基本的なアイデアや直観は同じですが技術的には異なるやり方で導入されます．
-  Curry流はここまで扱ってきた型無しラムダ計算を元に定義されるので，まずはCurry流での定義を紹介します．
+  Curry流は\ref-section(`ulc`);で登場した型無しラムダ計算を元に定義されるので，まずはCurry流での定義を紹介します．
   その後，Church流での定義を紹介します．
   あとで詳しく話しますが，今回実装するのはChurch流の型付きラムダ計算です．
 }
-+subsection{Curry流の単純型付きラムダ計算} <
++subsection?:(`curry-style`){Curry流の単純型付きラムダ計算} <
 +p{
   Curry流の単純型付きラムダ計算を定義します．
   まず，\dfn{基底型}の集合${\base}を固定します．
@@ -653,7 +702,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 }
 >
 
-+subsection{PHOASで単純型付きラムダ計算} <
++subsection?:(`curry-vs-church`){Curry流とChurch流} <
 +p{
   単純型付きラムダ計算をPHOASを用いて実現する方法は主に二種類あります．
 }
@@ -674,14 +723,14 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   よって，今回はこちらの方法を採ります．
 }
 +p{
-  しかし残念ながら二つ目の方法は先ほど導入したCurry流の定義をそのまま用いることができません．
-  一つ目の方法であれば型無しラムダ計算を用いるのでCurry流のSTLCの技法をそのまま用いることができるのですが，二つ目の方法は各変数に対して型が固定されている必要があります．
+  しかし実は\ref-subsection(`curry-style`);で導入したCurry流の型付きラムダ計算は二つ目の方法を実装するのには用いることができません．
+  もし一つ目の方法を採用するのであれば型無しラムダ計算を用いるのでCurry流のSTLCの技法をそのまま用いることができるのですが，二つ目の方法を採用する場合は各変数に対して型が固定されている必要があります．
   そのような型付きラムダ計算の流儀は\dfn{Church流}と呼ばれています．
   そこで，次節ではChurch流に基づく単純型付きラムダ計算の定義を紹介します．
 }
 >
 
-+subsection{Church流の単純型付きラムダ計算 (その1)} <
++subsection?:(`church-style1`){Church流の単純型付きラムダ計算 (その1)} <
 +p{
   Church流の単純型付きラムダ計算を定義します．
   型の集合${\Ty{\base} = \set{\tau, \sigma, \cdots}}はCurry流と同じ定義を用います．
@@ -731,11 +780,11 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 }
 >
 
-+subsection{Typeful PHOAS} <
++subsection?:(`typeful-phoas`){単純型付きラムダ計算の実装} <
 +p{
   単純型付きラムダ計算をPHOASを用いて実装します．
   今回用いる手法をここでは\dfn{Typeful PHOAS}と呼ぶことにします．
-  また，ここまでの型無しのPHOASを\dfn{Typeless PHOAS}と呼ぶことにします．
+  また，\ref-subsection(`phoas`);での型無しのPHOASを\dfn{Typeless PHOAS}と呼ぶことにします．
   この節以降では基底型は一つだけしかないとします．
   その唯一の基底型は(高階論理の流儀で)${\iota}で表されることが通例になっています．
   \footnote{individualの頭文字です．}
@@ -751,7 +800,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 }
 +p{
   \code(`type`);型を用いて項を表す型\code(`term`);を定義します．
-  \ref-section(`curry-stlc`);のChurch流のSTLCの形式的な定義とは違い，擬項を定義せず直接項を定義します．
+  \ref-subsection(`curry-style`);のChurch流のSTLCの形式的な定義とは違い，擬項を定義せず直接項を定義します．
   \code(`variable ν : type → Type`);という文が登場していますが，これは単に\code(`term`);の引数を外に書いただけで，
   \code(`inductive term (ν : type → Type) : type → Type`);の略記です．
   以降定義する関数に\code(`ν`);が登場した場合暗黙のうちに\code(`(ν : type → Type)`);という引数が追加されます．
@@ -766,7 +815,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   `);
 
   Typeless PHOASでは単なる型変数\code(`α`);だった部分が\code(`type`);を受け取って型を返す関数\code(`ν`);に変化しています．
-  \footnote{\ref-section(`curry-stlc`);の定義とここでの\code(`term`);の定義を見比べると\code(`ν`);が使用されているあたりに違いがあります．
+  \footnote{\ref-subsection(`curry-style`);の定義とここでの\code(`term`);の定義を見比べると\code(`ν`);が使用されているあたりに違いがあります．
   この違いがなぜ起こるのかを説明するのは容易ではないですが，そのヒントになるかもしれない研究としてHOASの圏論的解釈を紹介しておきます．
   HOASの圏論的解釈ではそれぞれの型が\dfn{前層 (presheaf)}で解釈されます．
   すると\code(`ν`);は米田埋め込みとして解釈できます．
@@ -832,7 +881,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 }
 >
 
-+subsection{Normalization by Evaluation (NbE) による正規化} <
++subsection?:(`nbe`){Normalization by Evaluationによる正規化} <
 +p{
   この節では項の正規化を実装します．
   特に，\dfn{Normalization by Evaluation (NbE)}というテクニックを使って実装することで非常にコンパクトなコードで正規化を実装します．
@@ -980,13 +1029,13 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 }
 >
 
-+subsection{Church流の単純型付きラムダ計算 (その2)} <
++subsection?:(`church-style2`){Church流の単純型付きラムダ計算 (その2)} <
 +p{
   Curry流では型付けが型判断や型環境を元に定義されました．
   同様にChurch流でも型判断や型環境を用いた定義が可能です．
   関連して，\dfn{Curry-Howard同型対応}と呼ばれる直観主義論理との対応を確認します．
   さらに，Curry流とChurch流との比較も行います．
-  技術的には，この節の内容はここまでで開発してきた正規形を計算する手続きを閉じた項から開いた項に一般化する際に(むしろそのためだけに)必要です．
+  技術的には，この節の内容は\ref-subsection(`nbe`);で開発した正規形を計算する手続きを閉じた項から開いた項に一般化する際に(むしろそのためだけに)必要です．
 }
 +p{
   固定された写像${\A : \Var \to \Ty{\base}}の有限部分集合を\dfn{型環境 (type enrivonment)}と呼びます．
@@ -1006,7 +1055,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   すなわち，${\Delta,\Delta'}がいずれも${\Gamma \vdash M : \tau}の証明のとき，${\Delta = \Delta'}が成り立ちます．
 }
 +p{
-  \ref-section(`church-style-1`);での定義とここでの定義の関連はつぎの通りです．
+  \ref-subsection(`church-style1`);での定義とここでの定義の関連はつぎの通りです．
   ${M}を任意の擬項とし，${\Gamma}を${\A}の${\fv{M}}への制限とします．
   すると${M}が${\tau}型を持つとき，型判断${\Gamma \vdash M : \tau}が成り立ちます．
   逆に，なんらかの${\Gamma}について型判断${\Gamma \vdash M : \tau}が成り立つとき，${M}は${\tau}型を持ちます．
@@ -1030,14 +1079,14 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 }
 +p{
   ${\PVar = \set{P,Q,\cdots}}を\dfn{命題変数 (propositional variable)}の集合とします．
-  ${\IPC^\to}における\dfn{式 (formula)}は以下のBNFで定義されます．
+  ${\IPC^\to}における\dfn{論理式 (formula)}，あるいは単に\dfn{式}は以下のBNFで定義されます．
 
   \eqn(${
     \phi \mathrel{::=} P \mid \phi \to \phi
   });
 
-  式の有限列\footnote{今後の節のために有限集合ではなく有限列として定義します．}を${\Phi,\cdots}で表します．
-  式の有限列と式との間の二項関係${\vdash}を以下の規則で帰納的に定義します．
+  論理式の有限列\footnote{今後の節のために有限集合ではなく有限列として定義します．}を${\Phi,\cdots}で表します．
+  論理式の有限列と論理式との間の二項関係${\vdash}を以下の規則で帰納的に定義します．
 
   \math-list(${
   | \derive{| \phi \in \Phi |}{ \Phi \vdash \phi }
@@ -1046,7 +1095,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   |});
 
   ${\Phi \vdash \phi}の形の命題を\dfn{仮説的判断 (hypothetical judgment)}あるいは単に\dfn{判断 (judgment)}と言います．
-  判断の左辺に並ぶ式を\dfn{仮定 (hypothesis)}，右辺の式を\dfn{結論 (conclusion)}と呼びます．
+  判断の左辺に並ぶ論理式を\dfn{仮定 (hypothesis)}，右辺の論理式を\dfn{結論 (conclusion)}と呼びます．
 }
 +p{
   仮説的判断について以下の補題が成立します．
@@ -1064,7 +1113,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 }
 +p{
   交換規則と縮約規則のおかげで，仮説的判断の左辺を集合と見做すことができます．
-  つまり，式の有限集合${\Phi'}について${\Phi' \vdash' \phi}を，なんらかの${\Phi}について${\abs{\Phi} = \Phi'}かつ${\Phi \vdash \phi}と定義します．
+  つまり，論理式の有限集合${\Phi'}について${\Phi' \vdash' \phi}を，なんらかの${\Phi}について${\abs{\Phi} = \Phi'}かつ${\Phi \vdash \phi}と定義します．
   ここで，${\abs{\cdot}}は有限列を(順序と重複を無視することで)有限集合に送る写像です．
   すると，${\abs{\Phi} \vdash' \phi}と${\Phi \vdash \phi}は同値です．
 }
@@ -1093,13 +1142,13 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 }
 >
 
-+subsection{型判断の実装 (その1)} <
++subsection?:(`judgment1`){型判断の実装 (その1)} <
 +p{
   Typeful PHOASは一見非常にコンパクトで簡潔に見えますが，開いた項がうまく扱えないという問題があります．
-  \ref-section(`church-style2`);で定義した型判断を用います．
-  型判断は開いた項に対する良い形式化になっています．
-  \ref-section(`typeful-phoas`);で定義した項に加えて型判断を実装し，それらの間に適切な相互変換を定義することで，開いた項をうまく扱うことを試みます．
-  \footnote{この問題に対する他のアプローチとして文脈様相型を持つプログラミング言語(例えばBeluga \cite[`Beluga`];)を用いる手法があります．}
+  その問題を解決するために\ref-subsection(`church-style2`);で定義した型判断を用います．
+  型判断は開いた項を扱いやすくする良い形式化になっているためです．
+  具体的には，\ref-subsection(`typeful-phoas`);で定義した項に加えて型判断を実装し，それらの間に適切な相互変換を定義することで，開いた項をうまく扱うことを試みます．
+  \footnote{この問題に対する他のアプローチとして文脈様相型を持つプログラミング言語(例えばBeluga \cite[`beluga`];)を用いる手法があります．}
   先に予告しておくと，この方針は(最後の最後で)失敗します．
 }
 +p{
@@ -1304,7 +1353,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   \code(`wf`);は\dfn{logical relation}や\dfn{parametricity}という名前でも知られる述語です．
   \code(`WF t m`);は全ての\code(`m`);が満たしていてほしい性質です．
   実際，様々な具体的な\code(`m : Term t`);に対して\code(`WF t m`);を(Leanの中で)証明をすることができます．
-  \footnote{メタ的な議論を用いれば${\forall \text!{\code(`m : Term t`);}. \text!{\code(`WF t m`); is inhabited}}が証明できると予想されています．\cite[`cpdt`];}
+  \footnote{メタ的な議論を用いれば${\forall \text!{\code(`m : Term t`);}. \text!{\code(`WF t m`); is inhabited}}が証明できると予想されています．\cite[`CPDT`];}
   もし，全ての項に対して\code(`WF t m`);が成り立つことをLeanの中で証明できれば，それを用いて\code(`to_judgment₁`);を用いて定義できます．
   \footnote{
     \code(`term_wf`);の存在を仮定した場合の\code(`to_judgment₁`);の定義の例を以下に掲載します．
@@ -1335,9 +1384,9 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 }
 >
 
-+subsection{型判断の実装 (その2)} <
++subsection?:(`judgment2`){型判断の実装 (その2)} <
 +p{
-  \ref-section(`judgment-1`);では型判断を実装するのに項との変換がうまく定義できませんでした．
+  \ref-subsection(`judgment1`);では型判断を実装するのに項との変換がうまく定義できませんでした．
   この節では別のエンコーディングを用いて型判断を実装して，項との変換が正しく動くことを確認します．
 }
 +p{
@@ -1351,7 +1400,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   `);
 
   このアイデアをうまく用いて型判断を表す型\code(`judgment₂`);を以下のように定義できます．
-  \footnote{\ref-section(`judgment-1`);では型のリストに対して\code(`foldl`);を行なっていましたが，この節では技術的な理由により\code(`foldr`);を用います．
+  \footnote{\ref-subsection(`judgment1`);では型のリストに対して\code(`foldl`);を行なっていましたが，この節では技術的な理由により\code(`foldr`);を用います．
   どちらも表現能力に違いはありません．}
 
   \d-code(`
@@ -1448,7 +1497,7 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
   def app : Judgment₂ Γ (arrow t₁ t₂) → Judgment₂ Γ t₁ → Judgment₂ Γ t₂
   `);
 
-  縮約は\ref-section(`judgment1`);と全く同じコードで定義できます．
+  縮約は\ref-subsection(`judgment1`);と全く同じコードで定義できます．
 
   \d-code(`
   def contr : Judgment₂ (t₁ :: t₁ :: Γ) t₂ → Judgment₂ (t₁ :: Γ) t₂ :=
@@ -1474,9 +1523,372 @@ Haskellの型システムにはdependencyがなく，論理の推論規則が満
 >
 >
 
-+section{高階論理 (Higher-order logic, HOL)}<
++section?:(`hol`){高階論理}<
++subsection?:(`hol`){高階論理}<
++p{
+  \dfn{高階論理 (Higher-order logic, HOL)}を導入します．
+  高階論理と呼ばれるものには様々な変種があり確立された唯一の定義があるわけではありません．
+  例えば，Churchの\emph{Simple type theory (STT)}\cite[`Church40`];やCoquandとHuetの\emph{Calculus of construction (CoC)}\cite[`CoquandH88`];が有名です．
+  この節では高階論理のなかでも特に小さくわかりやすい等号に基づく定義を紹介します．
+}
++p{
+  定義に移る前に，ひとつ注意を述べます．
+  この節で導入する高階論理は\dfn{古典高階論理 (Classical HOL)}と呼ばれる種類の古典論理です．
+  一方で，次節\ref-subsection(`hol-impl`);で実際に実装する高階論理は\dfn{直観主義高階論理 (Intuitionistic HOL)}として分類されるものです．
+  両者はアイデアはほぼ同じですが直観主義高階論理の方が意味論の定義が大変なのでここでは古典論理を説明します．
+  証明論的には両者の違いはそこまでややこしいものではなく，直観主義高階論理の演繹体系は古典高階論理の演繹体系を直観主義にするだけで得られます．\cite[`BenzmullerM14`];
+  \ref-subsection(`hol-impl`);で用いる定義はとくに\emph{HOL light}\cite[`hol-light`];のコア言語から多相型を除いたもの，あるいは\emph{初等トポスの内部言語}\cite[`LambekS86`];を冪対象でなく指数対象で形式化したものと考えられます．
+}
++p{
+  高階論理の構文論を定義します．
+  高階論理はChurch流の型付きラムダ計算を拡張したような構文を持ちます．
+  基底型の集合として${\set{\iota, \omicron}}という二点集合をとります．
+  一階述語論理とのアナロジーで言えば，${\iota}が項が動く領域で，${\omicron}が命題が動く領域です．
+  高階論理の\dfn{言語 (language)}あるいは\dfn{シグニチャ (signature)}とは型で添字づけられた集合${\paren{\Sigma_\tau}_{\tau \in \Ty{\base}}}のこととします．
+  以下，言語${\Sigma}を固定します．
+  擬項の定義と${\Lambda_\omicron}の定義を以下の規則で拡張します．
 
+  \math-list(${
+  | \derive{| c \in \Sigma_\tau |}{ c^\tau \in \PsLam }
+  | \derive{| M \in \PsLam | N \in \PsLam |}{ M \doteq N \in \PsLam }
+  | \derive{| c \in \Sigma_\tau |}{ c^\tau \in \Lambda_\tau }
+  | \derive{| M \in \Lambda_\tau | N \in \Lambda_\tau |}{ M \doteq N \in \Lambda_\omicron }
+  |});
+
+  ${\Sigma_\tau}の要素であるような項を\dfn{定数 (constant)}と呼びます．
+  ${\beta}簡約や${\eta}展開は定数や${\doteq}に対してcongruentに振る舞うとします．
+  ${\omicron}型の項を\dfn{論理式 (formula)}と呼びます．
+  閉じた論理式を\dfn{閉論理式 (closed formula)}あるいは\dfn{文 (sentense)}と呼びます．
+  言語${\Sigma}と${\Sigma}上の文の集合${E}の組${\paren{\Sigma,E}}を\dfn{理論 (theory)}と呼びます．
+  ${E}の要素を\dfn{公理 (axiom)}と呼ぶことがあります．
+}
++p{
+  高階論理の意味論を定義します．
+  高階論理には\dfn{集合論的意味論 (set-theoretic semantics)}，\dfn{Henkin意味論 (Henkin semantics)}，\dfn{トポス意味論 (topos semantics)}など複数の意味論があります．
+  ここで紹介するのはもっとも標準的な意味論である集合論的意味論です．
+  \footnote{集合論的意味論は素朴で直観的なのですが，意味論として期待される性質を満たさないことが知られています．
+  現代的にはトポス意味論やその一般化を用いることが良いとされているようです．
+  例えば，Bauerによる投稿を\cite[`Bauer-mathoverflow`];参照してください．
+  トポス意味論への入門記事としては\cite[`Uemura18`];が大変わかりやすいです．}
+  ${\Omega}を${0}と${1}からなる二点集合とします．
+  この記事では${0}を真，${1}を偽として扱います．
+  言語${\Sigma}の\dfn{構造 (structure)}とは集合族${\M = \paren{D_\tau, \M_\tau : \Sigma_\tau \to D_\tau}_{\tau \in \Ty{\base}}}であって，
+
+  \align[
+    ${| D_\omicron |= \Omega |};
+    ${| D_{\tau \to \sigma} |= \paren{f : D_\tau \to D_\sigma} |}
+  ];
+
+  を満たすものとします．
+  \footnote{${D_\iota}を決めれば残りの${D_\tau}は自動的に決まります．}
+  構造${\M}についての\dfn{付値 (valuation)}とは各変数${x \in \Var}に対して${D_{\app{\A}{x}}}の要素を割り当てる写像です．
+  構造${\M}による項の\dfn{解釈 (interpretation)}を型${\tau}と付値${\theta}を添字にとる写像${\den{\cdot}^\M_{\tau,\theta} : \Lambda_\tau \to D_\tau}として以下の帰納法で定めます．
+
+  \align[
+    ${| \den{x^\tau}^\M_{\tau,\theta} |= \app{\theta}{x} |};
+    ${| \den{c^\tau}^\M_{\tau,\theta} |= \app{\M_\tau}{c} |};
+    ${| \app{\den{\lambda x^\tau.M}^\M_{\tau\to\sigma,\theta}}{v} |= \den{M}^\M_{\sigma,\sqbracket{v/x}\theta} |};
+    ${| \den{MN}^\M_{\sigma,\theta} |= \app{\den{M}^\M_{\tau\to\sigma,\theta}}{\den{N}^\M_{\tau,\theta}} |};
+    ${| \den{M \doteq N}^\M_{\omicron,\theta} |= \cases![
+      (${0}, {(${\den{M}^\M_{\tau,\theta} = \den{N}^\M_{\tau,\theta}})});
+      (${1}, {otherwise})
+    ] |}
+  ];
+
+  論理式${\phi}について${\den{\phi}^\M_{\omicron,\theta} = 0}が成り立つとき，${\M,\theta \vDash \phi}と書きます．
+  また，任意の付値${\theta}について${\M,\theta \vDash \phi}であるとき，${\M \vDash \phi}と書きます．
+  任意の構造${\M}について${\M \vDash \phi}であるとき，${\vDash \phi}と書き，${\phi}は\dfn{恒真である (valid)}と言います．
+  ある構造${\M}と付値${\theta}が存在して${\M,\theta \vDash \phi}となるとき，${\phi}は\dfn{充足可能である (satisfiable)}と言います．
+  文の集合${E}について，任意の${E}の要素${A}が${\M \vDash A}を満たすとき，${\M}を${E}の\dfn{モデル (model)}と呼びます．
+  また，理論${T = \paren{\Sigma,E}}の\dfn{モデル}とは${E}のモデルのことです．
+  論理式${\phi}と文の集合${E}について，任意の${E}のモデル${\M}が${\M \vDash \phi}を満たすとき，${E \vDash \phi}と書き，${\phi}を${E}の\dfn{論理的帰結 (logical consequence)}と呼びます．
+}
++p{
+  高階論理の証明体系を与えます．
+  ここでは自然演繹を採用します．
+  理論${T = \paren{\Sigma,E}}を固定します．
+  高階論理の判断は${\Phi \vdash_\Gamma \phi}という形です．
+  ただしこのとき，${\Gamma}は型環境，${\phi}は論理式，${\Phi = \set{\phi_1,\cdots,\phi_n}}は論理式の有限集合で，各論理式について以下の型判断が成り立つとします．
+
+  \math-list(${
+  | \Gamma \vdash \phi : \omicron
+  | \Gamma \vdash \phi_1 : \omicron
+  | \cdots
+  | \Gamma \vdash \phi_n : \omicron
+  |});
+
+  高階論理の証明(つまり判断の定義)は以下の規則で表されます．
+
+  \math-list(${
+  | \derive{| \phi \in E |}{ \Phi \vdash_\Gamma \phi }
+  | \derive{| \phi \in \Phi |}{ \Phi \vdash_\Gamma \phi }
+  | \derive{| M =_{\beta\eta} N |}{ \Phi \vdash_\Gamma M \doteq N }
+  | \derive{| \Phi \vdash_\Gamma M_1 \doteq M_2 | \Phi \vdash_\Gamma \sqbracket{M_1/x}N |}{ \Phi \vdash_\Gamma \sqbracket{M_2/x}N }
+  | \derive{| \phi_1, \Phi \vdash_\Gamma \phi_2 | \phi_2, \Phi \vdash_\Gamma \phi_2 |}{ \Phi \vdash_\Gamma \phi_1 \doteq \phi_2 }
+  | \derive{| \Phi \vdash_{\set{x} \cup \Gamma} M \doteq N | x \mathrel{\#} \Phi |}{ \Phi \vdash_\Gamma \paren{\lambda x^\app{\A}{x}.M} \doteq \paren{\lambda x^\app{\A}{x}.N}}
+  |});
+
+  これらの規則を順に\dfn{公理 (axiom)}，\dfn{仮定 (assumption)}，\dfn{${\doteq}導入 (${\doteq}-introduction)}，\dfn{${\doteq}除去 (${\doteq}-elimination)}，\dfn{命題外延性 (proposition extensitionality)}，\dfn{関数外延性 (function extentionality)}と呼びます．
+  型付きラムダ計算の場合と同様の理由で高階論理の判断の左辺は集合ではなく(有限の)リストとして定義しても証明可能性は変わりません．
+  その場合，弱化，置換，交換，縮約，演繹定理が成り立ちます．
+  さらに，集合論的意味論に対しての健全性が成り立ちます．
+}
++theorem{
+  ${E \vdash_\Gamma \phi}のとき${E \vDash \phi}が成り立つ．
+}
++p{
+  高階論理の表現能力について簡単に触れます．
+  高階論理が持つ論理式の構成子は${\doteq}だけです．
+  これでは一見高階論理が非常に表現力の弱い論理に見えます．
+  \footnote{たとえば，論理結合子が${\land}しかない命題論理を考えると，それはかなり表現力の弱い論理であると言えるでしょう．}
+  しかし，実は高階論理ではラムダ抽象をうまく用いることで通常用いられる種々の論理結合子を高階論理の中で定義することができます．
+  たとえば，論理式${\phi_1}と${\phi_2}に対して以下のような論理式を考えます．
+
+  \eqn(${
+    \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \paren{f \doteq f} \paren{f \doteq f}} \doteq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \phi_1 \phi_2}
+  });
+
+  この論理式を${\phi_1 \land \phi_2}と書くことにします．
+  すると，以下が成り立ちます．
+}
++lemma{
+  ${E \vDash \phi_1 \land \phi_2}であるときかつその時に限り${E \vDash \phi_1}かつ${E \vDash \phi_2}
+}
++p{
+  先ほど与えた証明体系でも同様の(より強い)主張が成り立ちます．
+  \footnote{今回の証明体系は集合論的意味論に対して完全性を持たないので，別途証明する必要があります．}
+  よって，上で定義した${\land}は通常の論理で言うconjunctionと見なせます．
+  このように高階論理では等式${\doteq}とラムダ抽象を用いて様々な論理結合子を定義することができます．\cite[`Farmer08`];
+
+  \align[
+    ${| \top |\mathrel{:=} \paren{\lambda x^\omicron.x} \doteq \paren{\lambda x^\omicron.x} |};
+    ${| \phi_1 \land \phi_2 |\mathrel{:=} \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \top \top} \doteq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \phi_1 \phi_2} |};
+    ${| \forall x^\tau.\phi |\mathrel{:=} \paren{\lambda x^\tau.\phi} \doteq \paren{\lambda x^\tau.\top} |};
+    ${| \bot |\mathrel{:=} \forall x^\omicron.x |};
+    ${| \phi_1 \to \phi_2 |\mathrel{:=} \paren{\phi_1 \land \phi_2} \doteq \phi_1 |};
+    ${| \lnot \phi |\mathrel{:=} \phi \to \bot |};
+    ${| \phi_1 \shortiff \phi_2 |\mathrel{:=} \paren{\phi_1 \to \phi_2} \land \paren{\phi_2 \to \phi_1} |};
+    ${| \phi_1 \lor \phi_2 |\mathrel{:=} \forall r^\omicron. \paren{\paren{\phi_1 \to r} \land \paren{\phi_2 \to r}} \to r |};
+    ${| \exists x^\tau.\phi |\mathrel{:=} \forall r^\omicron. \paren{\forall x^\tau. \phi \to r} \to r |};
+    ${| \uexists x^\tau.\phi |\mathrel{:=} \paren{\exists x^\tau.\phi} \land \forall x_1^\tau.\forall x_2^\tau. \paren{\paren{\lambda x^\tau.\phi}x_1^\tau \land \paren{\lambda x^\tau.\phi}x_2^\tau} \to x_1 \doteq x_2 |};
+  ];
+}
 >
 
++subsection?:(`hol-impl`){高階論理の実装} <
++p{
+  ついに高階論理を実装します．
+  特に，対話的証明が行えることを確認します．
+  \ref-subsection(`hol`);と違い定数は考えません．
+  \footnote{表現能力は変わりません．}
+  高階論理の項は単純型付きラムダ計算に${\omicron}型と${\doteq}という項が増えただけです．
+  実装は\ref-section(`stlc`);の各種の定義をほんの少し変更するだけで済みます．
+  \footnote{実はこれはたまたまです．
+  PHOASによるエンコーディングは実装が綺麗に行く場合とそうでない場合がかなりはっきり分かれているのですが，今回実装した範囲ではたまたまほんの少しの変更で済みました．}
+
+  \d-code(`
+  inductive type : Type
+  | base : type
+  | prop : type
+  | arrow : type → type → type
+
+  inductive term : type → Type
+  | var : Π {t}, ν t → term t
+  | lam : Π {t₁ t₂}, (ν t₁ → term t₂) → term (arrow t₁ t₂)
+  | app : Π {t₁ t₂}, term (arrow t₁ t₂) → term t₁ → term t₂
+  | eq : Π {t}, term t → term t → term prop
+  `);
+}
++p{
+  \ref-subsection(`hol`);で定義したように様々な論理結合子を定義します．
+  今回は論理結合子をメタレベルの関数ではなくオブジェクトレベルの関数として実装しました．
+  \footnote{\code(`Forall`);と\code(`Exists`);は先頭を小文字にするとLeanの予約語と名前が衝突するため大文字から始めています．}
+
+  \d-code(`
+  def top : Term prop :=
+  λ ν, eq (lam (λ x : ν prop, var x)) (lam (λ x, var x))
+
+  def and : Term (arrow prop (arrow prop prop)) :=
+  λ ν, lam (λ p₁, lam (λ p₂, eq (lam (λ f : ν (arrow _ (arrow _ prop)), app (app (var f) (top ν)) (top ν))) (lam (λ f, app (app (var f) (var p₁)) (var p₂)))))
+
+  def Forall : Term (arrow (arrow t prop) prop) :=
+  λ ν, lam (λ f, eq (var f) (lam (λ x, (top ν))))
+
+  def bot : Term prop :=
+  λ ν, app (Forall ν) (lam (λ p, var p))
+
+  def implies : Term (arrow prop (arrow prop prop)) :=
+  λ ν, lam (λ p₁, lam (λ p₂, eq (app (app (and ν) (var p₁)) (var p₂)) (var p₁)))
+
+  def not : Term (arrow prop prop) :=
+  λ ν, lam (λ p, app (app (implies ν) (var p)) (bot ν))
+
+  def iff : Term (arrow prop (arrow prop prop)) :=
+  λ ν, lam (λ p₁, lam (λ p₂, app (app (and ν) (app (app (implies ν) (var p₁)) (var p₂))) (app (app (implies ν) (var p₂)) (var p₁))))
+
+  def or : Term (arrow prop (arrow prop prop)) :=
+  λ ν, lam (λ p₁, lam (λ p₂, app (Forall ν) (lam (λ r, app (app (implies ν) (app (app (and ν) (app (app (implies ν) (var p₁)) (var r))) (app (app (implies ν) (var p₂)) (var r)))) (var r)))))
+
+  def Exists : Term (arrow (arrow t prop) prop) :=
+  λ ν, lam (λ f, app (Forall ν) (lam (λ r, app (app (implies ν) (app (Forall ν) (lam (λ x, app (app (implies ν) (app (var f) (var x))) (var r))))) (var r))))
+  `);
+}
++p{
+  最後に高階論理の証明を定義して，全ての定義が終わりです．
+
+  \d-code(`
+  inductive proof : Π {Γ}, list (Judgment Γ prop) → Judgment Γ prop → Prop
+  | assump : Π {Γ Φ} {φ : Judgment Γ prop}, φ ∈ Φ → proof Φ φ
+  | refl : Π {Γ Φ t} {m₁ m₂ : Judgment Γ t}, m₁ ≈ m₂ → proof Φ (eq m₁ m₂)
+  | cong : Π {Γ Φ t} (m : Judgment (t :: Γ) prop) (m₂ m₁ : Judgment Γ t), proof Φ (eq m₁ m₂) → proof Φ (subst m m₁) → proof Φ (subst m m₂)
+  | prop_ext : Π {Γ Φ} {φ₁ φ₂ : Judgment Γ prop}, proof (φ₁ :: Φ) φ₂ → proof (φ₂ :: Φ) φ₁ → proof Φ (eq φ₁ φ₂)
+  | fun_ext : Π {Γ Φ t₁ t₂} (m₁ m₂ : Judgment (t₁ :: Γ) t₂), proof (list.map weak Φ) (eq m₁ m₂) → proof Φ (eq (lam m₁) (lam m₂))
+  `);
+
+  これで定理証明支援系が完成しました．
+  お疲れ様でした．
+}
++p{
+  と言ってもこれだけだとよくわからないので，実際に証明を書いてみます．
+  たとえば，${\phi \vdash_{\phi : \omicron} \top \doteq \phi}を証明してみます．
+  答えを先に述べると，以下の証明木を構成し，Leanの型検査が通ればその証明が正しい証明であることがわかるという寸法です．
+
+  \eqn(${
+    \derive?:{\text!{\ 命題外延性}}{
+    | \derive?:{\text!{\ 仮定}}{||}{\top, \phi \vdash_{\phi : \omicron} \phi}
+    | \derive?:{\text!{\ ${\doteq}導入}}{| |}{\phi, \phi \vdash_{\phi : \omicron} \top}
+    |}{ \phi \vdash_{\phi : \omicron} \top \doteq \phi }
+  });
+
+  判断${\phi \vdash_{\phi : \omicron} \top \doteq \phi}に対応するLeanの命題は\code(`@proof [prop] [var here] (eq (weak top) (var here))`);です．
+  \code(`@proof`);は命題\code(`proof`);の暗黙の引数を明示的に与えるという構文です．
+  この場合，\code(`@proof [prop] ...`);で判断の型環境${\Gamma}が${\omicron}型の一つの変数からなるという意味になります．
+  よって，Leanの中で以下の\code(`...`);を埋めれば証明が完了します．
+
+  \d-code(`
+  def proof1 : @proof [prop] [var here] (eq (weak top) (var here)) := ...
+  `);
+
+  ここで，普通にプログラミングしてLeanの項を作るのではなく，Leanのタクティック言語を用います．
+
+  \d-code(`
+  def proof1 : @proof [prop] [var here] (eq (weak top) (var here)) :=
+  begin
+    -- ここを埋める
+  end
+  `);
+
+  すると，Leanは以下のようなメッセージを出力して証明を埋めるように指示してきます．
+
+  \d-code(`
+  Tactic State:
+  ⊢ proof [var here] (eq (weak top) (var here))
+  `);
+
+  出来上がるべき証明木は根が命題外延性なので\code(`prop_ext`);を用います．
+  もし普通にLeanの証明を書くのであればここで単に\code(`prop_ext`);と書くのですが，今回はLeanの上で実装された演繹体系の証明を書いているので\code(`apply proof.prop_ext`);と書くのが正解です．
+
+  \d-code(`
+  example : @proof [prop] [var here] (eq (weak top) (var here)) :=
+  begin
+    apply proof.prop_ext,
+    -- ここを埋める
+  end
+  `);
+
+  すると，Leanは証明すべき命題があと二つ残っているという旨のメッセージを出力します．
+
+  \d-code(`
+  Tactic State:
+  2 goals
+  ⊢ proof [weak top, var here] (var here)
+
+  ⊢ proof [var here, var here] (weak top)
+  `);
+
+  このように，Lean自体のタクティック言語を用いることで今回作成した論理の証明を対話的に記述することができます．
+  この証明を最後まで書くと以下のようになります．
+
+  \d-code(`
+  example : @proof [prop] [var here] (eq (weak top) (var here)) :=
+  begin
+    apply proof.prop_ext,
+    { apply proof.assump,
+      simp },
+    { apply proof.refl,
+      canonicity }
+  end
+  `);
+
+  Lean自体のタクティック\code(`simp`);と\code(`canonicity`);はそれぞれ条件${\phi \in \sqbracket{\top, \phi}}と${\paren{\lambda x^\omicron.x} =_{\beta\eta} \paren{\lambda x^\omicron.x}}を証明するために用いました．
+}
++p{
+  最後にもう少し実用的な例として，${\Phi \vdash_\emptyset \phi_1 \land \phi_2}ならば${\Phi \vdash_\emptyset \phi_1}を証明します．
+  詳細は省きますが，この証明支援系での証明がどのような雰囲気かがわかると思います．
+
+  \d-code(`
+  example {φ₁ φ₂} {Φ : list (Judgment [] prop)} : proof Φ (app (app and φ₁) φ₂) → proof Φ φ₁ :=
+  begin
+    intro p,
+    apply proof.cong
+      (var here)
+      φ₁
+      (λ ν, app (lam (λ f, app (app (var f) (φ₁ ν)) (φ₂ ν))) (lam (λ p₁, lam (λ p₂, var p₁)))),
+    { apply proof.refl,
+      canonicity, },
+    { apply proof.cong
+        (@id (Judgment [arrow _ prop] prop) $ λ ν f, app (var f) (lam (λ p₁, lam (λ p₂, var p₁))))
+        (λ ν, lam (λ f, app (app (var f) (φ₁ ν)) (φ₂ ν)))
+        (@id (Judgment [] (arrow _ prop)) $ λ ν, lam (λ f, app (app (var f) (top ν)) (top ν))),
+      { apply proof.cong
+          (var here)
+          (eq
+            (@id (Judgment [] (arrow _ prop)) $ λ ν, lam (λ f, app (app (var f) (top ν)) (top ν)))
+            (λ ν, lam (λ f, app (app (var f) (φ₁ ν)) (φ₂ ν))))
+          (λ ν, app (app (lam (λ p₁, lam (λ p₂, eq (lam (λ f : ν (arrow _ (arrow _ prop)), app (app (var f) (top ν)) (top ν))) (lam (λ f, app (app (var f) (var p₁)) (var p₂)))))) (φ₁ ν)) (φ₂ ν)),
+        { apply proof.refl,
+          canonicity },
+        { from p } },
+      { apply proof.cong
+          (var here)
+          (@id (Judgment [] _) $ λ ν, app (lam (λ f, app (app (var f) (top ν)) (top ν))) (lam (λ p₁, lam (λ p₂, var p₁))))
+          top,
+        { apply proof.refl,
+          canonicity },
+        { apply proof.refl,
+          canonicity } } }
+  end
+  `);
+}
+>
+>
+
++section?:(`conclusion`){まとめ}<
++p{
+  いかがでしたか？
+}
++p{
+  この記事では定理証明支援系であるLeanの上で高階論理に基づく定理証明支援系を作成しました．
+  最終的なソースコードはgithub上に公開してあります．\cite[`leanhol`];
+  紙面上は説明のためにかなり多くのコードを書いていますが，実際に最後の証明の部分にたどり着くだけなら200行ちょっと程度のコードだけで十分です．
+  この数字が\emph{極めて}小さいと言えるかどうかは微妙ですが，かなり小さくコンパクトに実装できていると思います．
+  この記事の企画の類似物としてHOL Light\cite[`hol-light`];やHaskHOL\cite[`haskhol`];がありますが，HOL Lightではパーサーや型推論器などの機能を一切提供しないコア部分が670行あります．
+  当然ですが，今回の企画とHOL Lightでは定理証明支援系を小さく実装するというアイデアが共通しているのみで，参考程度の値にしかなりませんが，概観はつかめるかと思います．
+}
++p{
+  ちなみに，今回は実装言語として定理証明支援系を選んだので作成した定理証明支援系自体を検証したいと思うわけですが，残念ながらそれはできません．
+  理由は\code(`judgment1`);で説明したのと同じで，今回は色々と省コードにするためにかなり飛び道具を使っており，Leanの中では証明できないLeanの性質を用いてオブジェクト言語の健全性を保証しているからです．
+  結局，PHOASを使うのをやめて普通に頑張って実装したほうが後々の拡張のためには良いかもしれません．
+}
++p{
+  さて，完走した感想ですが，今回の企画の趣旨である「\emph{省エネ・省コード}で定理証明支援系を実装」というのは自分が楽して省エネで記事を完成させるという意味もありました．
+  実際，Leanのコードを書き始めてから最後の節の最後の大きな証明を書くまでには1週間かかっていなかったはずです．
+  しかし，記事を書くにあたって理論的背景を本気で書き始めてしまったことと，説明をわかりやすくしようと色々工夫するうちにコード量と執筆料が膨大になったことで，まったく省エネではありませんでした．
+  しかも，この記事はSatysfiで書いているのですが，その学習にも結構な時間が取られました．
+  Satysfiは意味論は美しく不満はないのですが，構文にまだ改善の余地があり，またなにぶん機能が足りない部分も多く，ハマった時の対処法が大変でした．
+  とはいえ，自分にとっても非常に勉強になったので書いてよかったと思います．
+  高階論理，ラムダ計算，Lean，その他諸々，初めて知った人でもそうでない人でも，この記事の内容が少しでも心に残れば幸いです．
+}
+>
 >
 >

@@ -89,7 +89,7 @@ let wasabiz-bibliography = [
     year = 2008;
   |));
 
-  (`RonriKeisan`, Book(|
+  (`HagiyaN07`, Book(|
     author = {| 萩谷 昌巳 | 西崎 真也 |};
     title  = {論理と計算のしくみ};
     publisher = {岩波書店};
@@ -132,5 +132,115 @@ let wasabiz-bibliography = [
     title  = {Parametricity};
     url    = `https://coq-club.inria.narkive.com/C0bDEhA1/parametricity#post4`;
     year   = 2011;
+  |));
+
+  (`Bauer-mathoverflow`, WebSite(|
+    author = {|Andrej Bauer|};
+    title  = {Is there a nice characterisation of topoi with nice meta-logical properties?};
+    url    = `https://mathoverflow.net/q/132639`;
+    year   = 2013;
+  |));
+
+  (`BenzmullerM14`, Article(|
+    author = {| Christoph Benzmüller | Dale Miller |};
+    title = {Automation of Higher-Order Logic};
+    journal = {Computational Logic};
+    volume = None; 
+    number = None;
+    pages = (215,254);
+    year = 2014;
+  |));
+
+  (`beluga`, WebSite(|
+    author = {|Brigitte Pientka|};
+    title  = {The Beluga language};
+    url    = `http://complogic.cs.mcgill.ca/beluga/index.html`;
+    year   = 2019;
+  |));
+
+  (`hol-light`, WebSite(|
+    author = {|John Harrison|};
+    title  = {The HOL Light theorem prover};
+    url    = `https://www.cl.cam.ac.uk/~jrh13/hol-light/`;
+    year   = 2019;
+  |));
+
+  (`lean`, WebSite(|
+    author = {|Leonardo de Moura|};
+    title  = {Lean theorem prover};
+    url    = `https://leanprover.github.io`;
+    year   = 2019;
+  |));
+
+  (`isabelle`, WebSite(|
+    author = {|Makarius Wenze|};
+    title  = {The Isabelle proof assistant};
+    url    = `https://isabelle.in.tum.de/index.html`;
+    year   = 2019;
+  |));
+
+  (`coq`, WebSite(|
+    author = {|The Coq Consortium|};
+    title  = {The Coq proof assistant};
+    url    = `https://coq.inria.fr`;
+    year   = 2019;
+  |));
+
+  (`haskhol`, WebSite(|
+    author = {|E. Austin|};
+    title  = {HaskHOL};
+    url    = `http://ecaustin.github.io/haskhol/`;
+    year   = 2019;
+  |));
+
+  (`leanhol`, WebSite(|
+    author = {|Yuichi Nishiwaki|};
+    title  = {LeanHOL};
+    url    = `https://github.com/nyuichi/LeanHOL`;
+    year   = 2019;
+  |));
+
+  (`CoquandH88`, Article(|
+    author = {| Thierry Coquand | Gérard P. Huet |};
+    title = {The Calculus of Constructions};
+    journal = {Inf. Comput.};
+    volume = Some(76); 
+    number = Some({2/3});
+    pages = (95,120);
+    year = 1988;
+  |));
+
+  (`Church40`, Article(|
+    author = {| Alonzo Church |};
+    title = {A Formulation of the Simple Theory of Types};
+    journal = {The Journal of Symbolic Logic};
+    volume = Some(5); 
+    number = Some({2});
+    pages = (56,68);
+    year = 1940;
+  |));
+
+  (`LambekS86`, Book(|
+    author = {| J. Lambek | P. J. Scott |};
+    title  = {Introduction to Higher Order Categorical Logic};
+    publisher = {Cambridge University Press};
+    year   = 1986;
+  |));
+
+  (`Farmer08`, Article(|
+    author = {| William M. Farmer |};
+    title = {The seven virtues of simple type theory};
+    journal = {J. Applied Logic};
+    volume = Some(6); 
+    number = Some({3});
+    pages = (267,286);
+    year = 2008;
+  |));
+
+  (`Uemura18`, WebSite(|
+    author = {|Taichi Uemura|};
+    title = {トポスと高階論理};
+    url = `https://staff.fnwi.uva.nl/t.uemura/files/topos-and-hol.pdf`;
+    year = 2018;
   |));
 ]
