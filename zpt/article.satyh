@@ -1,5 +1,7 @@
 @import: bib
 @import: code
+@import: nbe
+@import: moreproof
 @import: ../main/book-class
 
 let zpt-article = '<
