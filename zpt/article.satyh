@@ -7,18 +7,38 @@
 let zpt-article = '<
   +chapter ?:(`zpt-article`) (|
     bibliography = zpt-bibliography;
-    title = {Belugaで形式化された体系のメタ的な性質を証明する};
+    title = {Belugaによる定理証明};
     author = {zeptometer};
     |) <
     +section {はじめに} <
-    +p {この記事では定理証明系Belugaについて紹介します。BelugaはMcGill大学のBrigitte Pientkaらによって開発されている定理証明支援系です。公式サイトによる紹介は以下の通りです。}
-    +p {Beluga is a functional programming language designed for reasoning about formal systems. It features direct support for object-level binding constructs using higher order abstract syntax and treats contexts as first class objects.}
+    +p {BelugaはMcGill大学のBrigitte Pientkaらによって開発されている定理証明支援系というか関数型プログラミング言語というか、なんかそんなかんじのものです\footnote{Curry-Howard同型が理論的背景にあるから境目が曖昧になるんですわ、しゃーない}。公式サイトによる紹介は以下の通りです。}
+    +p {\> Beluga is a functional programming language designed for reasoning about formal systems. It features direct support for object-level binding constructs using higher order abstract syntax and treats contexts as first class objects.}
+    +p {なんかわかるようなわからないようなことが書いてありますね。これの意味するところがわかるところまで持っていくのがこの記事の目標となっております。がんばるぞー}
+    +p {記事の流れは以下のようになっております:
+    \listing{
+    * Normalization by Evaluationというテクニックについて解説をしながらReasonで実装し、その実装の問題点について考える
+    * Belugaの言語機能について解説しつつNormalization by Evaluationを再実装し、先の問題点が解消されていることを確認する
+    }
+    それではやっていきましょう。
+    }
     >
     +section {インストール} <
+    +p{GithubのREADMEを読め。}
     >
-    +section {Normalization by Evaluationについて} <
+    +section {Normalization by Evaluationことはじめ} <
+    +math-list (${
+    | \bderive{ \judgeStlc{\Gamma}{\var{x}}{A} }
+              {||}
+    | \bderive{ \judgeStlc{\Gamma}{\lam{x}{A}{M}}{\arr{A}{B}} }
+              {| \judgeStlc{\Gamma, x:A}{M}{B} |}
+    | \bderive{ \judgeStlc{\Gamma}{\app{M}{N}}{B} }
+              {| \judgeStlc{\Gamma}{M}{\arr{A}{B}}
+               | \judgeStlc{\Gamma}{N}{A}
+               |}
+
+    |});
     >
-    +section {単純型付きλ計算と正規形} <
+    +section {BelugaでNbEを書く} <
       +math (${});
 
       +code(`
@@ -45,8 +65,6 @@ nlam : (neut a → norm b) → norm (arr a b).
 rapp : neut (arr a b) → norm a → neut b.
 embed : neut base → norm base.
       `);
-    >
-    +section {evalをつくる} <
     +code(`
 schema ctx = some [a:tp] block x:neut a;
 
@@ -90,8 +108,6 @@ fn tm ⇒ fn env ⇒
                              in f [h] [h ⊢ ..] (eval [g ⊢ E2] env)
 ;
     `);
-    >
-    +section {reifyとreflect} <
     +code(`
 mlam R ⇒ fn n ⇒ let [g ⊢ N] = n in [g ⊢ rapp R N];
 
