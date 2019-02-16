@@ -11,21 +11,21 @@ let zpt-article = '<
     author = {zeptometer};
     |) <
     +section {はじめに} <
-    +p {BelugaはMcGill大学のBrigitte Pientkaらによって開発されている定理証明支援系というか関数型プログラミング言語というか、なんかそんなかんじのものです\footnote{Curry-Howard同型が理論的背景にあるから境目が曖昧になるんですわ、しゃーない}。公式サイトによる紹介は以下の通りです。}
+    +p {Beluga\footnote{http://complogic.cs.mcgill.ca/beluga/}はMcGill大学のBrigitte Pientkaらによって開発されている定理証明支援系というか関数型プログラミング言語というか、なんかそんなかんじのものです\footnote{Curry-Howard同型が理論的背景にあるから境目が曖昧になるんですわ、しゃーない}。公式サイトによる紹介は以下の通りです。}
     +p {\> Beluga is a functional programming language designed for reasoning about formal systems. It features direct support for object-level binding constructs using higher order abstract syntax and treats contexts as first class objects.}
-    +p {なんかわかるようなわからないようなことが書いてありますね。これの意味するところがわかるところまで持っていくのがこの記事の目標となっております。がんばるぞー}
-    +p {記事の流れは以下のようになっております:
+    +p {なんかわかるようなわからないようなことが書いてありますね。これの意味するところがわかるところまで持っていくのがこの記事の目標となっております。がんばるぞー。記事の流れは以下のようになっております:
     \listing{
     * Normalization by Evaluationというテクニックについて解説をしながらReasonで実装し、その実装の問題点について考える
     * Belugaの言語機能について解説しつつNormalization by Evaluationを再実装し、先の問題点が解消されていることを確認する
     }
-    それではやっていきましょう。
     }
     >
     +section {インストール} <
     +p{GithubのREADMEを読め。}
     >
     +section {Normalization by Evaluationことはじめ} <
+    +p{\dfn{Normalization by Evaluation}とは、${\lambda}計算やその亜種の項が与えられた時にその表示的意味論(あるいはeval関数)を経由して正規形を得るテクニックです。}
+    
     +math-list (${
     | \bderive{ \judgeStlc{\Gamma}{\var{x}}{A} }
               {||}

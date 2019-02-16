@@ -3,6 +3,7 @@
 
 var Block = require("bs-platform/lib/js/block.js");
 var Curry = require("bs-platform/lib/js/curry.js");
+var Caml_exceptions = require("bs-platform/lib/js/caml_exceptions.js");
 
 function envExt(env, name, sem, name2) {
   if (name === name2) {
@@ -11,6 +12,8 @@ function envExt(env, name, sem, name2) {
     return Curry._1(env, name2);
   }
 }
+
+var Wrong_application = Caml_exceptions.create("Demo-NbeReason.Wrong_application");
 
 function evaluate(m, e) {
   switch (m.tag | 0) {
@@ -25,22 +28,18 @@ function evaluate(m, e) {
                                   }));
                     })]);
     case 2 : 
-        var sem1opt = evaluate(m[0], e);
-        var sem2opt = evaluate(m[1], e);
-        if (sem1opt !== undefined && sem2opt !== undefined) {
-          var sem1 = sem1opt;
-          if (sem1.tag) {
-            return Curry._1(sem1[0], sem2opt);
-          } else {
-            return undefined;
-          }
+        var sem1 = evaluate(m[0], e);
+        var sem2 = evaluate(m[1], e);
+        if (sem1.tag) {
+          return Curry._1(sem1[0], sem2);
         } else {
-          return undefined;
+          throw Wrong_application;
         }
     
   }
 }
 
 exports.envExt = envExt;
+exports.Wrong_application = Wrong_application;
 exports.evaluate = evaluate;
 /* No side effect */
