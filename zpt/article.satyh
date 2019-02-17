@@ -1,3 +1,4 @@
+@require: math
 @import: bib
 @import: code
 @import: nbe
@@ -24,19 +25,28 @@ let zpt-article = '<
     +p{GithubのREADMEを読め。}
     >
     +section {Normalization by Evaluationことはじめ} <
-    +p{\dfn{Normalization by Evaluation}とは、${\lambda}計算やその亜種の項が与えられた時にその表示的意味論(あるいはeval関数)を経由して正規形を得るテクニックです。}
-    
-    +math-list (${
-    | \bderive{ \judgeStlc{\Gamma}{\var{x}}{A} }
-              {||}
-    | \bderive{ \judgeStlc{\Gamma}{\lam{x}{A}{M}}{\arr{A}{B}} }
+    +p{\dfn{Normalization by Evaluation}とは、λ計算やその亜種の項が与えられた時にその表示的意味論(あるいはeval関数)を経由して正規形を得るテクニックです。今回は対象として単純型付きλ計算(Simply Typed Lambda Calculus, STLC)を扱います\footnote{厳密にはChurch-styleです}。STLCの型は\dfn{基底型}${\base}と\dfn{関数型}${\arr{A}{B}}からなります。
+    \math-list(${| A, B \coloncoloneq \base \mid \arr{A}{B} |});
+
+    STLCの項は\dfn{変数}${\var{x}}、\dfn{関数}${\lam{x}{A}{M}}、\dfn{関数適用}${\app{M}{N}}からなります。
+    \math-list(${| M, N \coloncoloneq \var{x} \mid \lam{x}{A}{M} \mid \app{M}{N} |});
+
+    \dfn{環境}${\Gamma}を変数と型のペアの集合とするときに、\dfn{型判断}${\judgeStlc{\Gamma}{M}{A}}は「環境${\Gamma}の下で項${M}が型${A}を持つ」ことを表します。型判断は以下の導出規則に従って導かれます。
+
+    \math-list (${
+    | \bderive?:!{Var}
+              { \judgeStlc{\Gamma}{\var{x}}{A} }
+              {| x \colon A \in \Gamma |}
+    | \bderive?:!{Abs}
+              { \judgeStlc{\Gamma}{\lam{x}{A}{M}}{\arr{A}{B}} }
               {| \judgeStlc{\Gamma, x:A}{M}{B} |}
-    | \bderive{ \judgeStlc{\Gamma}{\app{M}{N}}{B} }
+    | \bderive?:!{App}
+              { \judgeStlc{\Gamma}{\app{M}{N}}{B} }
               {| \judgeStlc{\Gamma}{M}{\arr{A}{B}}
                | \judgeStlc{\Gamma}{N}{A}
                |}
-
     |});
+    }
     >
     +section {BelugaでNbEを書く} <
       +math (${});
