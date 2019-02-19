@@ -7,11 +7,11 @@
 module Code : sig
 
   val scheme : deco-set -> color -> context -> string -> block-boxes
-  direct +code : [string] block-cmd
-  direct +console : [string] block-cmd
-  direct \code : [string] inline-cmd
-  direct \console : [string] inline-cmd
-  direct \d-code : [string] inline-cmd
+  val +code : [string] block-cmd
+  val +console : [string] block-cmd
+  val \code : [string] inline-cmd
+  val \console : [string] inline-cmd
+  val \d-code : [string] inline-cmd
 
 end = struct
 
