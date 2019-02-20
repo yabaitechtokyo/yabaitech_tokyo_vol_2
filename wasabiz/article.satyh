@@ -794,7 +794,7 @@ let article = '<
 +subsection?:(`typeful-phoas`){単純型付きラムダ計算の実装} <
 +p{
   単純型付きラムダ計算をPHOASを用いて実装します．
-  今回用いる手法をここでは\dfn{Typeful PHOAS}と呼ぶことにします．
+  今回用いる手法をここでは\dfn{Typeful PHOAS}と呼ぶことにします．
   また，\ref-subsection(`phoas`);での型無しのPHOASを\dfn{Typeless PHOAS}と呼ぶことにします．
   この節以降では基底型は一つだけしかないとします．
   その唯一の基底型は(高階論理の流儀で)${\iota}で表されることが通例になっています．
@@ -1125,7 +1125,7 @@ let article = '<
 +p{
   交換規則と縮約規則のおかげで，仮説的判断の左辺を集合と見做すことができます．
   つまり，論理式の有限集合${\Phi'}について${\Phi' \vdash' \phi}を，なんらかの${\Phi}について${\abs{\Phi} = \Phi'}かつ${\Phi \vdash \phi}と定義します．
-  ここで，${\abs{\cdot}}は有限列を(順序と重複を無視することで)有限集合に送る写像です．
+  ここで，${\abs{\cdot}}は有限列を(順序と重複を無視することで)有限集合に送る写像です．
   すると，${\abs{\Phi} \vdash' \phi}と${\Phi \vdash \phi}は同値です．
 }
 +p{
@@ -1568,7 +1568,7 @@ let article = '<
   |});
 
   ${\Sigma_\tau}の要素であるような項を\dfn{定数 (constant)}と呼びます．
-  ${\beta}簡約や${\eta}展開は定数や${\doteq}に対してcongruentに振る舞うとします．
+  ${\beta}簡約や${\eta}展開は定数や${\doteq}に対してcongruentに振る舞うとします．
   ${\omicron}型の項を\dfn{論理式 (formula)}と呼びます．
   閉じた論理式を\dfn{閉論理式 (closed formula)}あるいは\dfn{文 (sentense)}と呼びます．
   言語${\Sigma}と${\Sigma}上の文の集合${E}の組${\paren{\Sigma,E}}を\dfn{理論 (theory)}と呼びます．
@@ -1592,7 +1592,7 @@ let article = '<
   ];
 
   を満たすものとします．
-  \footnote{${D_\iota}を決めれば残りの${D_\tau}は自動的に決まります．}
+  \footnote{${D_\iota}を決めれば残りの${D_\tau}は自動的に決まります．}
   構造${\M}についての\dfn{付値 (valuation)}とは各変数${x \in \Var}に対して${D_{\app{\A}{x}}}の要素を割り当てる写像です．
   構造${\M}による項の\dfn{解釈 (interpretation)}を型${\tau}と付値${\theta}を添字にとる写像${\den{\cdot}^\M_{\tau,\theta} : \Lambda_\tau \to D_\tau}として以下の帰納法で定めます．
 
@@ -1855,7 +1855,7 @@ let article = '<
   Lean自体のタクティック\code(`simp`);と\code(`canonicity`);はそれぞれ条件${p \in \sqbracket{\top, p}}と${\paren{\lambda p^\omicron.p} =_{\beta\eta} \paren{\lambda p^\omicron.p}}を証明するために用いました．
 }
 +p{
-  最後にもう少し実用的な例として，${\Phi \vdash_\emptyset \phi_1 \land \phi_2}ならば${\Phi \vdash_\emptyset \phi_1}を証明します．
+  最後にもう少し実用的な例として，${\Phi \vdash_\emptyset \phi_1 \land \phi_2}ならば${\Phi \vdash_\emptyset \phi_1}を証明します．
   詳細は省きますが，この証明支援系での証明がどのような雰囲気かがわかると思います．
 
   \d-code(`
