@@ -1,9 +1,9 @@
 @require: math
 @import: bib
-@import: ../lib/code
 @import: nbe
 @import: moreproof
 @import: ../main/book-class
+@import: ../lib/code
 
 let zpt-article = '<
   +chapter ?:(`zpt-article`) (|
@@ -31,7 +31,7 @@ let zpt-article = '<
     STLCの項は\dfn{変数}${\var{x}}、\dfn{関数}${\lam{x}{A}{M}}、\dfn{関数適用}${\app{M}{N}}からなります。
     \math-list(${| M, N \coloncoloneq \var{x} \mid \lam{x}{A}{M} \mid \app{M}{N} |});
 
-    \dfn{環境}${\Gamma}を変数と型のペアの集合とするときに、\dfn{型判断}${\judgeStlc{\Gamma}{M}{A}}は「環境${\Gamma}の下で項${M}が型${A}を持つ」ことを表します。型判断は以下の導出規則に従って導かれます。
+    \dfn{環境}${\Gamma}を変数と型のペアの集合とするときに、\dfn{型判断}${\judgeStlc{\Gamma}{M}{A}}は「環境${\Gamma}の下で項${M}が型${A}を持つ」ことを表します。型判断は以下の規則に従って導出されます。
 
     \math-list (${
     | \bderive?:!{Var}
@@ -67,8 +67,16 @@ type term =
     ${| \app{M}{L} | \br \app{N}{L} | \text!{if\ } M \br N |};
     ${| \app{L}{M} | \br \app{L}{N} | \text!{if\ } M \br N |};
     ];
-
-}
+    ここで${\subst{M}{x}{N}}は「項M中における変数xの使用を項Nに置き換えて得られる項」を表しています。厳密な定義は実は結構面倒くさいのでここでは省略します。}
+    +p{さて、STLCに関する重要な性質として今しがた定義したβ簡約の合流性と強正規化性があります。以降において二項関係${\brm}は${\br}の反射推移閉包とします。}
+    +definition{項${M}が正規形である ${\Leftrightarrow} ${M \br N}を満たす項${N}が存在しない}
+    +definition{
+    ${\br}が\dfn{合流性}を満たす ${\Leftrightarrow} ${M \brm N_1}かつ${M \brm N_2}ならば${N_1 \brm L}かつ${N_2 \brm L}であるようなLが存在する
+    }
+    +definition{
+    ${\br}が\dfn{強正規化性}を満たす ${\Leftrightarrow} 無限簡約列 ${M_1 \br M_2 \br \ldots}が存在しない
+    }
+    +p{合流性と強正規化性の帰結として、「STLC上で導出可能な項\footnote{厳密には「STLCの導出規則によって導出された型判断を伴う項」ですかね}は対応する正規形をただ一つもつ」ということが言えます。}
     >
     +section {BelugaでNbEを書く} <
       +math (${});

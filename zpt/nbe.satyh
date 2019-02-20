@@ -8,6 +8,7 @@ module NBE : sig
   direct \lam : [math; math; math] math-cmd
   direct \app : [math; math] math-cmd
   direct \br : [] math-cmd
+  direct \brm : [] math-cmd
   direct \subst : [math; math; math] math-cmd
   direct \judgeStlc : [math; math; math] math-cmd
 
@@ -19,5 +20,6 @@ end = struct
   let-math \app fn arg = ${#fn #arg}
   let-math \judgeStlc ctx term typ = ${#ctx \vdash #term : #typ}
   let-math \br = ${\rightarrow_{\beta}}
+  let-math \brm = ${\rightarrow_{\beta}^{*}}
   let-math \subst m x n = ${#m \sqbracket{#x \coloneq #n}}
 end
