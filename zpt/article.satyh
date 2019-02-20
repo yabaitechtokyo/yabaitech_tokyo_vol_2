@@ -1,11 +1,24 @@
 @require: math
 @import: bib
-@import: nbe
 @import: moreproof
 @import: ../main/book-class
 @import: ../lib/code
 
-let zpt-article = '<
+module Zpt : sig
+  val article : block-text
+end = struct
+
+let-math \base = ${\iota}
+let-math \arr ant succ = ${#ant \rightarrow #succ}
+let-math \var name = ${#name}
+let-math \lam name typ body = ${\lambda #name^{#typ} . #body}
+let-math \app fn arg = ${#fn #arg}
+let-math \judgeStlc ctx term typ = ${#ctx \vdash #term : #typ}
+let-math \br = ${\rightarrow_{\beta}}
+let-math \brm = ${\rightarrow_{\beta}^{*}}
+let-math \subst m x n = ${#m \sqbracket{#x \coloneq #n}}
+
+let article = '<
   +chapter ?:(`zpt-article`) (|
     bibliography = zpt-bibliography;
     title = {Belugaによる定理証明};
@@ -174,3 +187,4 @@ fn env ⇒ fn tm ⇒ reify (eval tm env)
     >
   >
 >
+end
