@@ -4,6 +4,10 @@
 @require: itemize
 @require: proof
 
+module Wasabiz : sig
+  val article : block-text
+end = struct
+
 let-math \iff = math-char MathRel `⟺`
 let-math \leftrightarrow = math-char MathRel `↔`
 let-math \lnot = math-char MathOp `¬`
@@ -18,6 +22,7 @@ let cyr it ctx =
   read-inline (ctx |> set-font OtherScript (`CambriaMath` , 1., 0.)) it % FIXME
 let-math \fresh = text-in-math MathOrd (cyr (embed-string `И`))
 let-math \fv m = ${\app{\mathop{\mathrm{fv}}}{#m}}
+let-math \subst m1 m2 = ${\mathord{\sqbracket{#m1/#m2}}}
 let-math \Var = ${\mathcal{Var}}
 let-math \Tm = ${\mathcal{Tm}}
 let-math \Ty m = ${\app{\mathop{\mathcal{Ty}}}{#m}}
@@ -34,7 +39,7 @@ let-math \PVar = ${\mathcal{PVar}}
 let-math \M = ${\mathcal{M}}
 let-math \den m = ${\Brack{#m}}
 
-let wasabiz-article = '<
+let article = '<
 +chapter ?:(`wasabiz-article`) (|
     bibliography = wasabiz-bibliography;
     title = {定理証明支援系を作ろう！};
@@ -242,8 +247,8 @@ let wasabiz-article = '<
 }
 +p{
   この定理は${\Lambda}の帰納法の特殊な場合です．この定理を用いることで，ラムダ項の\dfn{置換}を定義することができます．
-  変数${x}とラムダ項${M}について，以下の写像${f_1,f_2,f_3}で定理により誘導される写像を${\app{\sqbracket{M/x}}{-} : \Lambda \to \Lambda}と書きます．
-  ${\app{\sqbracket{M/x}}{-}}を適用することを${x}を${M}で\dfn{置換する}と言います．
+  変数${x}とラムダ項${M}について，以下の写像${f_1,f_2,f_3}で定理により誘導される写像を${\app{\subst{M}{x}}{-} : \Lambda \to \Lambda}と書きます．
+  ${\app{\subst{M}{x}}{-}}を適用することを${x}を${M}で\dfn{置換する}と言います．
 
   \listing{
     * ${\app{f_1}{y} = \cases![
@@ -259,7 +264,7 @@ let wasabiz-article = '<
 +p{
   置換を用いてラムダ項の\dfn{${\beta}簡約}を定義します．二項関係${\to_\beta \subseteq \Lambda \times \Lambda}を以下のひとつの規則とみっつの合同性の規則で帰納的に定義します．
 
-  \eqn(${ \derive{| |}{ \paren{\lambda x.M}N \to_\beta \sqbracket{N/x}M } });
+  \eqn(${ \derive{| |}{ \paren{\lambda x.M}N \to_\beta \subst{N}{x} M } });
 
   \math-list(${
   | \derive{| M \to_\beta M' |}{ \lambda x.M \to_\beta \lambda x.M' }
@@ -670,7 +675,7 @@ let wasabiz-article = '<
   なぜなら，例えば${\lambda x.M}や${M N}のような項について(それらが適当な型を持つなら)以下のような無限簡約列が存在するからです．\cite[`JayG95`];
 
   \math-list(${
-  | \lambda x.M \to_\eta \lambda y.\paren{\lambda x.M}y \to_\beta \lambda y.\sqbracket{y/x} M =_\alpha \lambda x.M
+  | \lambda x.M \to_\eta \lambda y.\paren{\lambda x.M}y \to_\beta \lambda y.\subst{y}{x} M =_\alpha \lambda x.M
   | M N \to_\eta \paren{\lambda x. M x} N \to_\beta M N
   |});
 
@@ -891,7 +896,7 @@ let wasabiz-article = '<
 +p{
   この節では項の正規化を実装します．
   特に，\dfn{Normalization by Evaluation (NbE)}というテクニックを使って実装することで非常にコンパクトなコードで正規化を実装します．
-  NbEについてはこの本の別の記事\cite[`zpt-article`];に詳細が掲載されているので，テクニックの概要の説明はそちらに譲ることにします．
+  NbEについてはこの本のzeptometerによる別の記事(\ref-chapter(`zpt-article`);)に詳細が掲載されているので，テクニックの概要の説明はそちらに譲ることにします．
   代わりに，この記事ではNbEをTypeful PHOASでどのように実装するかに焦点を合わせます．
 }
 +p{
@@ -1543,7 +1548,7 @@ let wasabiz-article = '<
   一方で，次節\ref-subsection(`hol-impl`);で実際に実装する高階論理は\dfn{直観主義高階論理 (Intuitionistic HOL)}として分類されるものです．
   両者はアイデアはほぼ同じですが直観主義高階論理の方が意味論の定義が大変なのでここでは古典論理を説明します．
   証明論的には両者の違いはそこまでややこしいものではなく，直観主義高階論理の演繹体系は古典高階論理の演繹体系を直観主義にするだけで得られます．\cite[`BenzmullerM14`];
-  \ref-subsection(`hol-impl`);で用いる定義はとくに\emph{HOL light}\cite[`hol-light`];のコア言語から多相型を除いたもの，あるいは\emph{初等トポスの内部言語}\cite[`LambekS86`];を冪対象でなく指数対象で形式化したものと考えられます．
+  \ref-subsection(`hol-impl`);で用いる定義はとくに\emph{HOL Light}\cite[`hol-light`];のコア言語から多相型を除いたもの，あるいは\emph{初等トポスの内部言語}\cite[`LambekS86`];を冪対象でなく指数対象で形式化したものと考えられます．
 }
 +p{
   高階論理の構文論を定義します．
@@ -1594,7 +1599,7 @@ let wasabiz-article = '<
   \align[
     ${| \den{x^\tau}^\M_{\tau,\theta} |= \app{\theta}{x} |};
     ${| \den{c^\tau}^\M_{\tau,\theta} |= \app{\M_\tau}{c} |};
-    ${| \app{\den{\lambda x^\tau.M}^\M_{\tau\to\sigma,\theta}}{v} |= \den{M}^\M_{\sigma,\sqbracket{v/x}\theta} |};
+    ${| \app{\den{\lambda x^\tau.M}^\M_{\tau\to\sigma,\theta}}{v} |= \den{M}^\M_{\sigma,\subst{v}{x} \theta} |};
     ${| \den{MN}^\M_{\sigma,\theta} |= \app{\den{M}^\M_{\tau\to\sigma,\theta}}{\den{N}^\M_{\tau,\theta}} |};
     ${| \den{M \doteq N}^\M_{\omicron,\theta} |= \cases![
       (${0}, {(${\den{M}^\M_{\tau,\theta} = \den{N}^\M_{\tau,\theta}})});
@@ -1628,7 +1633,7 @@ let wasabiz-article = '<
   \math-list(${
   | \derive{| \phi \in \Phi |}{ \Phi \vdash_\Gamma \phi }
   | \derive{| M =_{\beta\eta} N |}{ \Phi \vdash_\Gamma M \doteq N }
-  | \derive{| \Phi \vdash_\Gamma M_1 \doteq M_2 | \Phi \vdash_\Gamma \sqbracket{M_1/x}N |}{ \Phi \vdash_\Gamma \sqbracket{M_2/x}N }
+  | \derive{| \Phi \vdash_\Gamma M_1 \doteq M_2 | \Phi \vdash_\Gamma \subst{M_1}{x} N |}{ \Phi \vdash_\Gamma \subst{M_2}{x} N }
   |});
 
   これらの規則を順に\dfn{仮定 (assumption)}，\dfn{${\doteq}導入 (${\doteq}-introduction)}，\dfn{${\doteq}除去 (${\doteq}-elimination)}と呼びます．
@@ -1919,3 +1924,5 @@ let wasabiz-article = '<
 >
 >
 >
+
+end
