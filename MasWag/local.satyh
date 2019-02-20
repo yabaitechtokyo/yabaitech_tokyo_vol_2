@@ -1,6 +1,7 @@
 @import: ../main/book-class
 @import: maswag-math
 @require: deco
+@require: HDecoSet
 
 let path-to-root = `../MasWag/`
 

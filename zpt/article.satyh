@@ -1,6 +1,6 @@
 @require: math
 @import: bib
-@import: code
+@import: ../lib/code
 @import: nbe
 @import: moreproof
 @import: ../main/book-class

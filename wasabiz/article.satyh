@@ -1,16 +1,23 @@
 @import: bib
 @import: ../main/book-class
+@import: ../lib/code
 @require: itemize
-@import: code
-@require: hdecoset
 @require: proof
 
-let-math \fv m = ${\app{\mathop{\mathrm{fv}}}{#m}}
+let-math \iff = math-char MathRel `⟺`
+let-math \leftrightarrow = math-char MathRel `↔`
+let-math \lnot = math-char MathOp `¬`
+let-math \Coloneq = math-char MathRel `::=` % FIXME: `⩴`, (U+2A74)
+let-math \lBrack = math-char MathOrd `⟦`
+let-math \rBrack = math-char MathOrd `⟧`
+let-math \uexists = math-char MathOrd `∃!`
+
+let-math \Brack m = ${\lBrack #m \rBrack} % FIXME
+
 let cyr it ctx =
   read-inline (ctx |> set-font OtherScript (`CambriaMath` , 1., 0.)) it % FIXME
 let-math \fresh = text-in-math MathOrd (cyr (embed-string `И`))
-let-math \iff = math-char MathRel `⟺`
-let-math \shortiff = math-char MathRel `↔`
+let-math \fv m = ${\app{\mathop{\mathrm{fv}}}{#m}}
 let-math \Var = ${\mathcal{Var}}
 let-math \Tm = ${\mathcal{Tm}}
 let-math \Ty m = ${\app{\mathop{\mathcal{Ty}}}{#m}}
@@ -25,11 +32,7 @@ let-math \NE = ${\mathcal{NE}}
 let-math \IPC = ${\mathrm{IPC}}
 let-math \PVar = ${\mathcal{PVar}}
 let-math \M = ${\mathcal{M}}
-let-math \llbracket = math-char MathOrd `⟦`
-let-math \rrbracket = math-char MathOrd `⟧`
-let-math \den m = ${\llbracket #m \rrbracket} % FIXME
-let-math \lnot = math-char MathOp `¬`
-let-math \uexists = math-char MathOrd `∃!`
+let-math \den m = ${\Brack{#m}}
 
 let wasabiz-article = '<
 +chapter ?:(`wasabiz-article`) (|
@@ -98,7 +101,7 @@ let wasabiz-article = '<
   \listing{
     * \ref-section(`ulc`);\ \ ラムダ計算
     ** \ref-subsection(`ulc`);\ \ 型無しラムダ計算
-    ** \ref-subsection(`hoas`);
+    ** \ref-subsection(`hoas`);\ \ 高階抽象構文
     ** \ref-subsection(`phoas`);\ \ 多相高階抽象構文
     * \ref-section(`stlc`);\ \ 単純型付きラムダ計算
     ** \ref-subsection(`curry-style`);\ \ Curry流の単純型付きラムダ計算
@@ -126,7 +129,7 @@ let wasabiz-article = '<
   型無しラムダ計算の\dfn{項 (ラムダ項, lambda term)}は以下のBNFで帰納的に定義されます．
 
   \eqn(${
-  M \mathrel{::=} x \mid \lambda x. M \mid M M
+  M \Coloneq x \mid \lambda x. M \mid M M
   });%
 
   ${\lambda x.M}の形のラムダ項を\dfn{ラムダ抽象}と呼び，${MN}の形のラムダ項を\dfn{適用}と呼びます．
@@ -1041,7 +1044,7 @@ let wasabiz-article = '<
   技術的には，この節の内容は\ref-subsection(`nbe`);で開発した正規形を計算する手続きを閉じた項から開いた項に一般化する際に(むしろそのためだけに)必要です．
 }
 +p{
-  固定された写像${\A : \Var \to \Ty{\base}}の有限部分集合を\dfn{型環境 (type enrivonment)}と呼びます．
+  固定された写像${\A : \Var \to \Ty{\base}}の有限部分集合を\dfn{型環境 (type environment)}と呼びます．
   型環境全体の集合を${\E}とします．
   定義より，Church流の型環境はCurry流の型環境です．
   Church流の型環境にたいしてもCurry流の型環境と同様の記法を用います．
@@ -1085,7 +1088,7 @@ let wasabiz-article = '<
   ${\IPC^\to}における\dfn{論理式 (formula)}，あるいは単に\dfn{式}は以下のBNFで定義されます．
 
   \eqn(${
-    \phi \mathrel{::=} P \mid \phi \to \phi
+    \phi \Coloneq P \mid \phi \to \phi
   });
 
   論理式の有限列\footnote{今後の節のために有限集合ではなく有限列として定義します．}を${\Phi,\cdots}で表します．
@@ -1632,11 +1635,11 @@ let wasabiz-article = '<
   場合によっては以下の二つの規則を加えることもあります．
 
   \math-list(${
-  | \derive{| \phi_1, \Phi \vdash_\Gamma \phi_2 | \phi_2, \Phi \vdash_\Gamma \phi_2 |}{ \Phi \vdash_\Gamma \phi_1 \doteq \phi_2 }
-  | \derive{| \Phi \vdash_{\set{x} \cup \Gamma} M \doteq N | x \mathrel{\#} \Phi |}{ \Phi \vdash_\Gamma \paren{\lambda x^\app{\A}{x}.M} \doteq \paren{\lambda x^\app{\A}{x}.N}}
+  | \derive{| \phi_1, \Phi \vdash_\Gamma \phi_2 | \phi_2, \Phi \vdash_\Gamma \phi_1 |}{ \Phi \vdash_\Gamma \phi_1 \doteq \phi_2 }
+  | \derive{| \Phi \vdash_{\set{x : \tau} \cup \Gamma} M \doteq N | x \mathrel{\#} \Phi |}{ \Phi \vdash_\Gamma \paren{\lambda x^\tau.M} \doteq \paren{\lambda x^\tau.N}}
   |});
 
-  この二つの規則はそれぞれ\dfn{命題外延性 (proposition extensitionality)}，\dfn{関数外延性 (function extentionality)}と呼ばれます．
+  この二つの規則はそれぞれ\dfn{命題外延性 (propositional extensionality)}，\dfn{関数外延性 (functional extensionality)}と呼ばれます．
   型付きラムダ計算の場合と同様の理由で高階論理の判断の左辺は集合ではなく(有限の)リストとして定義しても証明可能性は変わりません．
   その場合，弱化，置換，交換，縮約，演繹定理が成り立ちます．
   さらに，集合論的意味論に対して健全性が成り立ちます．
@@ -1669,16 +1672,16 @@ let wasabiz-article = '<
   このように高階論理では等式${\doteq}とラムダ抽象を用いて様々な論理結合子を定義することができます．\cite[`Farmer08`];
 
   \align[
-    ${| \top |\mathrel{:=} \paren{\lambda p^\omicron.p} \doteq \paren{\lambda p^\omicron.p} |};
-    ${| \phi_1 \land \phi_2 |\mathrel{:=} \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \top \top} \doteq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \phi_1 \phi_2} |};
-    ${| \forall x^\tau.\phi |\mathrel{:=} \paren{\lambda x^\tau.\phi} \doteq \paren{\lambda x^\tau.\top} |};
-    ${| \bot |\mathrel{:=} \forall p^\omicron.p |};
-    ${| \phi_1 \to \phi_2 |\mathrel{:=} \paren{\phi_1 \land \phi_2} \doteq \phi_1 |};
-    ${| \lnot \phi |\mathrel{:=} \phi \to \bot |};
-    ${| \phi_1 \shortiff \phi_2 |\mathrel{:=} \paren{\phi_1 \to \phi_2} \land \paren{\phi_2 \to \phi_1} |};
-    ${| \phi_1 \lor \phi_2 |\mathrel{:=} \forall p^\omicron. \paren{\paren{\phi_1 \to p} \land \paren{\phi_2 \to p}} \to p |};
-    ${| \exists x^\tau.\phi |\mathrel{:=} \forall p^\omicron. \paren{\forall x^\tau. \phi \to p} \to p |};
-    ${| \uexists x^\tau.\phi |\mathrel{:=} \paren{\exists x^\tau.\phi} \land \forall x_1^\tau.\forall x_2^\tau. \paren{\paren{\lambda x^\tau.\phi}x_1^\tau \land \paren{\lambda x^\tau.\phi}x_2^\tau} \to x_1 \doteq x_2 |};
+    ${| \top |\coloneq \paren{\lambda p^\omicron.p} \doteq \paren{\lambda p^\omicron.p} |};
+    ${| \phi_1 \land \phi_2 |\coloneq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \top \top} \doteq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \phi_1 \phi_2} |};
+    ${| \forall x^\tau.\phi |\coloneq \paren{\lambda x^\tau.\phi} \doteq \paren{\lambda x^\tau.\top} |};
+    ${| \bot |\coloneq \forall p^\omicron.p |};
+    ${| \phi_1 \to \phi_2 |\coloneq \paren{\phi_1 \land \phi_2} \doteq \phi_1 |};
+    ${| \lnot \phi |\coloneq \phi \to \bot |};
+    ${| \phi_1 \leftrightarrow \phi_2 |\coloneq \paren{\phi_1 \to \phi_2} \land \paren{\phi_2 \to \phi_1} |};
+    ${| \phi_1 \lor \phi_2 |\coloneq \forall p^\omicron. \paren{\paren{\phi_1 \to p} \land \paren{\phi_2 \to p}} \to p |};
+    ${| \exists x^\tau.\phi |\coloneq \forall p^\omicron. \paren{\forall x^\tau. \phi \to p} \to p |};
+    ${| \uexists x^\tau.\phi |\coloneq \exists x^\tau.\phi \land \forall y^\tau. \paren{\lambda x^\tau.\phi}y \to x \doteq y |};
   ];
 }
 +p{
@@ -1686,14 +1689,14 @@ let wasabiz-article = '<
   命題外延性の規則を追加することは以下の公理を仮定することと同値です．
 
   \eqn(${
-    \paren{\phi_1 \shortiff \phi_2} \shortiff \paren{\phi_1 \doteq \phi_2}
+    \paren{\phi_1 \leftrightarrow \phi_2} \leftrightarrow \paren{\phi_1 \doteq \phi_2}
   });
 
   これは「(証明可能性で)区別できないものは同じである」というまさに(命題についての)外延性そのものです．
   同様に，関数外延性の規則を追加することは以下の公理を仮定することと同値です．
 
   \eqn(${
-    \paren{\forall x^\tau. \mathop{f_1} x \doteq \mathop{f_2} x} \shortiff \paren{f_1 \doteq f_2}
+    \paren{\forall x^\tau. \mathop{f_1} x \doteq \mathop{f_2} x} \leftrightarrow \paren{f_1 \doteq f_2}
   });
 
   これもまさに「(適用によって)区別できないものは同じである」という(関数についての)外延性に他なりません．
