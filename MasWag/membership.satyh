@@ -60,8 +60,8 @@ TODO: hamiltonial circuit problemをmembership problemで解く例を書く。
 }
 +p {
 \figure ?:(`fig:membership-algorithm`){所属性判定問題を解くアルゴリズムの例}<
-   +image-frame{TODO: show a pseudo code
-%\insert-pdf-image(7cm)(path-to-root ^ `figs/evenDFA.pdf`)(1);
+   +image-frame{
+   \insert-pdf-image(12cm)(`../MasWag/figs/algorithm.pdf`)(1);
 }
 >
 }
