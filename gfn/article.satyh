@@ -3,7 +3,7 @@
 
 let-inline ctx \dfnjaen it-ja it-en =
   let ib-ja = read-inline (ctx |> Book.set-cjk-font Book.font-cjk-gothic) it-ja in
-  let ib-en = read-inline (ctx |> Book.set-latin-font Book.font-latin-italic) it-en in
+  let ib-en = read-inline (ctx |> Book.set-latin-font Book.font-latin-italic) {(#it-en;)} in
   ib-ja ++ ib-en
 
 let gfn-article = '<
