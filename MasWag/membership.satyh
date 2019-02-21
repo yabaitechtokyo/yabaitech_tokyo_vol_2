@@ -7,6 +7,13 @@ let membership = '<+section{所属性判定} <
 +problem{所属性判定問題}
  {文字集合${\alphabet}上の時間オートマトン${\Autom}とtimed word ${\word}}
  {${\word \in \Lg{\Autom}} であるかどうかを判定する。}
++p {
+\figure ?:(`fig:membership-algorithm`){所属性判定問題を解くアルゴリズムの例}<
+   +image-frame{
+   \insert-pdf-image(12cm)(`../MasWag/figs/algorithm.pdf`)(1);
+}
+>
+}
 +subsection{所属性判定問題の計算量}<
 +theorem ?* ?:(`theorem:NP-complete`) {
 時間オートマトンの所属性判定問題はNPに属する。
@@ -57,13 +64,6 @@ TODO: hamiltonial circuit problemをmembership problemで解く例を書く。
 }
 +corollary {
 時間オートマトンの所属性判定問題はNP完全問題である。
-}
-+p {
-\figure ?:(`fig:membership-algorithm`){所属性判定問題を解くアルゴリズムの例}<
-   +image-frame{
-   \insert-pdf-image(12cm)(`../MasWag/figs/algorithm.pdf`)(1);
-}
->
 }
 >
 +subsection{オートマトンを固定したときの所属性判定問題}<
