@@ -34,7 +34,7 @@ let timedAutomata = '<+section{時間オートマトン} <
   ${\InitLoc\subseteq \Loc}は初期状態の集合、
   ${\AccLoc \subseteq \Loc}は受理状態の集合、
   ${\Clock}は有限のクロック変数の集合、
-  ${\Edge \subseteq \Loc\times\alphabet\times\Guard\times \powerset{\Clock} \times \Loc}は状態遷移集合である。
+  ${\Edge \subseteq \Loc\times\Guard\times\alphabet\times \powerset{\Clock} \times \Loc}は状態遷移集合である。
 }
 +example ?* ?:(`example:TA`)
 {
@@ -64,7 +64,7 @@ ${\InitState = \InitLoc \times \set{\initcval} \paren{\subseteq \State}}は\dfn{
 ${\AccState = \AccLoc \times \CVal \paren{\subseteq \State}}は\dfn{受理状況} (accepting configuration)の集合、
 ${\Transition \subseteq \State \times \State}は以下で定義される状況遷移関係である。
 \eqn(${
-        \paren{\paren{\loc,\cval},\paren{\loc',\cval'}} \in \Transition \iff \exists \paren{\loc, \guard, \resets, \loc'} \in \Edge, \duration \in \Rnn. \paren{\cval + \duration} \models \guard, \cval' = \reset{\cval + \duration}{\resets}
+        \paren{\paren{\loc,\cval},\paren{\loc',\cval'}} \in \Transition \iff \exists \edgeInside \in \Edge, \duration \in \Rnn. \paren{\cval + \duration} \models \guard, \cval' = \reset{\cval + \duration}{\resets}
 });
 }
 +example ?* ?:(`example:TTS`) {

@@ -9,7 +9,7 @@ let-inline ctx \sample-command it =
   read-inline (ctx |> set-text-color Color.red) it
 
 %%% Math
-let-math \sequence x = ${#x^\ast}
+let-math \sequence x = ${\paren{#x}^\ast}
 let-math \powerset set = ${\app{\mathcal{P}}{#set}}
 let-math \bowtie = ${\Join}
 let-math \colon = ${:}
