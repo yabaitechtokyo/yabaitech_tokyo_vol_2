@@ -1,16 +1,28 @@
 @import: bib
 @import: ../main/book-class
+@import: ../lib/code
 @require: itemize
-@import: code
-@require: hdecoset
 @require: proof
 
-let-math \fv m = ${\app{\mathop{\mathrm{fv}}}{#m}}
+module Wasabiz : sig
+  val article : block-text
+end = struct
+
+let-math \iff = math-char MathRel `⟺`
+let-math \leftrightarrow = math-char MathRel `↔`
+let-math \lnot = math-char MathOp `¬`
+let-math \Coloneq = math-char MathRel `::=` % FIXME: `⩴`, (U+2A74)
+let-math \lBrack = math-char MathOrd `⟦`
+let-math \rBrack = math-char MathOrd `⟧`
+let-math \uexists = math-char MathOrd `∃!`
+
+let-math \Brack m = ${\lBrack #m \rBrack} % FIXME
+
 let cyr it ctx =
   read-inline (ctx |> set-font OtherScript (`CambriaMath` , 1., 0.)) it % FIXME
 let-math \fresh = text-in-math MathOrd (cyr (embed-string `И`))
-let-math \iff = math-char MathRel `⟺`
-let-math \shortiff = math-char MathRel `↔`
+let-math \fv m = ${\app{\mathop{\mathrm{fv}}}{#m}}
+let-math \subst m1 m2 = ${\mathord{\sqbracket{#m1/#m2}}}
 let-math \Var = ${\mathcal{Var}}
 let-math \Tm = ${\mathcal{Tm}}
 let-math \Ty m = ${\app{\mathop{\mathcal{Ty}}}{#m}}
@@ -25,13 +37,9 @@ let-math \NE = ${\mathcal{NE}}
 let-math \IPC = ${\mathrm{IPC}}
 let-math \PVar = ${\mathcal{PVar}}
 let-math \M = ${\mathcal{M}}
-let-math \llbracket = math-char MathOrd `⟦`
-let-math \rrbracket = math-char MathOrd `⟧`
-let-math \den m = ${\llbracket #m \rrbracket} % FIXME
-let-math \lnot = math-char MathOp `¬`
-let-math \uexists = math-char MathOrd `∃!`
+let-math \den m = ${\Brack{#m}}
 
-let wasabiz-article = '<
+let article = '<
 +chapter ?:(`wasabiz-article`) (|
     bibliography = wasabiz-bibliography;
     title = {定理証明支援系を作ろう！};
@@ -67,7 +75,7 @@ let wasabiz-article = '<
 
   \listing{
   * パーサー: DSL
-  * 束縛関係の管理, 型検査, 型推論: 高階抽象構文木(HOAS)
+  * 束縛関係の管理, 型検査, 型推論: 高階抽象構文(HOAS)
   * 効率的な評価器: Normalization by Evaluation
   * タクティック言語: メタ言語のタクティック言語
   }%
@@ -88,6 +96,7 @@ let wasabiz-article = '<
   この記事では定理証明支援系を作成するのにあたって必要な理論的背景とその実装の解説を交互に挟んでいます．
   もし理論方面に興味がある方は理論方面の節だけを読むのもいいでしょう．
   また，実装から読み始めたほうが理解が早いという人は実装の部分だけを読んでしまっても問題ないと思います．
+  なんなら，一番最後の節から読み始めてもよいと思います．
   あと，Leanは知名度がないので今回はLeanの構文を知らない読者にもわかるよう随所にLean自体の解説も挟みました．
   具体的な目次は以下の通りです．
 }
@@ -97,8 +106,8 @@ let wasabiz-article = '<
   \listing{
     * \ref-section(`ulc`);\ \ ラムダ計算
     ** \ref-subsection(`ulc`);\ \ 型無しラムダ計算
-    ** \ref-subsection(`hoas`);
-    ** \ref-subsection(`phoas`);\ \ 多相高階抽象構文木
+    ** \ref-subsection(`hoas`);\ \ 高階抽象構文
+    ** \ref-subsection(`phoas`);\ \ 多相高階抽象構文
     * \ref-section(`stlc`);\ \ 単純型付きラムダ計算
     ** \ref-subsection(`curry-style`);\ \ Curry流の単純型付きラムダ計算
     ** \ref-subsection(`curry-vs-church`);\ \ Curry流とChurch流
@@ -125,7 +134,7 @@ let wasabiz-article = '<
   型無しラムダ計算の\dfn{項 (ラムダ項, lambda term)}は以下のBNFで帰納的に定義されます．
 
   \eqn(${
-  M \mathrel{::=} x \mid \lambda x. M \mid M M
+  M \Coloneq x \mid \lambda x. M \mid M M
   });%
 
   ${\lambda x.M}の形のラムダ項を\dfn{ラムダ抽象}と呼び，${MN}の形のラムダ項を\dfn{適用}と呼びます．
@@ -238,8 +247,8 @@ let wasabiz-article = '<
 }
 +p{
   この定理は${\Lambda}の帰納法の特殊な場合です．この定理を用いることで，ラムダ項の\dfn{置換}を定義することができます．
-  変数${x}とラムダ項${M}について，以下の写像${f_1,f_2,f_3}で定理により誘導される写像を${\app{\sqbracket{M/x}}{-} : \Lambda \to \Lambda}と書きます．
-  ${\app{\sqbracket{M/x}}{-}}を適用することを${x}を${M}で\dfn{置換する}と言います．
+  変数${x}とラムダ項${M}について，以下の写像${f_1,f_2,f_3}で定理により誘導される写像を${\app{\subst{M}{x}}{-} : \Lambda \to \Lambda}と書きます．
+  ${\app{\subst{M}{x}}{-}}を適用することを${x}を${M}で\dfn{置換する}と言います．
 
   \listing{
     * ${\app{f_1}{y} = \cases![
@@ -255,7 +264,7 @@ let wasabiz-article = '<
 +p{
   置換を用いてラムダ項の\dfn{${\beta}簡約}を定義します．二項関係${\to_\beta \subseteq \Lambda \times \Lambda}を以下のひとつの規則とみっつの合同性の規則で帰納的に定義します．
 
-  \eqn(${ \derive{| |}{ \paren{\lambda x.M}N \to_\beta \sqbracket{N/x}M } });
+  \eqn(${ \derive{| |}{ \paren{\lambda x.M}N \to_\beta \subst{N}{x} M } });
 
   \math-list(${
   | \derive{| M \to_\beta M' |}{ \lambda x.M \to_\beta \lambda x.M' }
@@ -353,9 +362,9 @@ let wasabiz-article = '<
 }
 >
 
-+subsection?:(`phoas`){多相高階抽象構文木} <
++subsection?:(`phoas`){多相高階抽象構文} <
 +p{
-  \ref-subsection(`hoas`);で挙げたHOASの欠点を克服する手法が\dfn{多相高階抽象構文木 (Parametric HOAS, PHOAS)}と呼ばれる手法です．
+  \ref-subsection(`hoas`);で挙げたHOASの欠点を克服する手法が\dfn{多相高階抽象構文 (Parametric HOAS, PHOAS)}と呼ばれる手法です．
   PHOASで前項を表す型を定義すると以下のようになります．
 
   \d-code(`
@@ -666,7 +675,7 @@ let wasabiz-article = '<
   なぜなら，例えば${\lambda x.M}や${M N}のような項について(それらが適当な型を持つなら)以下のような無限簡約列が存在するからです．\cite[`JayG95`];
 
   \math-list(${
-  | \lambda x.M \to_\eta \lambda y.\paren{\lambda x.M}y \to_\beta \lambda y.\sqbracket{y/x} M =_\alpha \lambda x.M
+  | \lambda x.M \to_\eta \lambda y.\paren{\lambda x.M}y \to_\beta \lambda y.\subst{y}{x} M =_\alpha \lambda x.M
   | M N \to_\eta \paren{\lambda x. M x} N \to_\beta M N
   |});
 
@@ -762,6 +771,8 @@ let wasabiz-article = '<
   実は(擬)項${M}が型を持つときにはその型は一意に決まります．
   つまり，${M}が型${\tau}と${\sigma}を持つとき，${\tau = \sigma}です．
   \footnote{この性質を\dfn{型付けの一意性 (uniqueness of typing)}と呼びます．}
+  項の中に現れる変数${x^\tau}はしばしば${x}と略して書かれます．
+  また，関数型を持つ変数をしばしば${f,g,\cdots}というメタ変数で表します．
 }
 +p{
   Church流のラムダ計算にも置換や${\beta}簡約，${\eta}展開を定義することができます．
@@ -885,7 +896,7 @@ let wasabiz-article = '<
 +p{
   この節では項の正規化を実装します．
   特に，\dfn{Normalization by Evaluation (NbE)}というテクニックを使って実装することで非常にコンパクトなコードで正規化を実装します．
-  NbEについてはこの本の別の記事\cite[`zpt-article`];に詳細が掲載されているので，テクニックの概要の説明はそちらに譲ることにします．
+  NbEについてはこの本のzeptometerによる別の記事(\ref-chapter(`zpt-article`);)に詳細が掲載されているので，テクニックの概要の説明はそちらに譲ることにします．
   代わりに，この記事ではNbEをTypeful PHOASでどのように実装するかに焦点を合わせます．
 }
 +p{
@@ -1038,7 +1049,7 @@ let wasabiz-article = '<
   技術的には，この節の内容は\ref-subsection(`nbe`);で開発した正規形を計算する手続きを閉じた項から開いた項に一般化する際に(むしろそのためだけに)必要です．
 }
 +p{
-  固定された写像${\A : \Var \to \Ty{\base}}の有限部分集合を\dfn{型環境 (type enrivonment)}と呼びます．
+  固定された写像${\A : \Var \to \Ty{\base}}の有限部分集合を\dfn{型環境 (type environment)}と呼びます．
   型環境全体の集合を${\E}とします．
   定義より，Church流の型環境はCurry流の型環境です．
   Church流の型環境にたいしてもCurry流の型環境と同様の記法を用います．
@@ -1082,7 +1093,7 @@ let wasabiz-article = '<
   ${\IPC^\to}における\dfn{論理式 (formula)}，あるいは単に\dfn{式}は以下のBNFで定義されます．
 
   \eqn(${
-    \phi \mathrel{::=} P \mid \phi \to \phi
+    \phi \Coloneq P \mid \phi \to \phi
   });
 
   論理式の有限列\footnote{今後の節のために有限集合ではなく有限列として定義します．}を${\Phi,\cdots}で表します．
@@ -1537,16 +1548,17 @@ let wasabiz-article = '<
   一方で，次節\ref-subsection(`hol-impl`);で実際に実装する高階論理は\dfn{直観主義高階論理 (Intuitionistic HOL)}として分類されるものです．
   両者はアイデアはほぼ同じですが直観主義高階論理の方が意味論の定義が大変なのでここでは古典論理を説明します．
   証明論的には両者の違いはそこまでややこしいものではなく，直観主義高階論理の演繹体系は古典高階論理の演繹体系を直観主義にするだけで得られます．\cite[`BenzmullerM14`];
-  \ref-subsection(`hol-impl`);で用いる定義はとくに\emph{HOL light}\cite[`hol-light`];のコア言語から多相型を除いたもの，あるいは\emph{初等トポスの内部言語}\cite[`LambekS86`];を冪対象でなく指数対象で形式化したものと考えられます．
+  \ref-subsection(`hol-impl`);で用いる定義はとくに\emph{HOL Light}\cite[`hol-light`];のコア言語から多相型を除いたもの，あるいは\emph{初等トポスの内部言語}\cite[`LambekS86`];を冪対象でなく指数対象で形式化したものと考えられます．
 }
 +p{
   高階論理の構文論を定義します．
   高階論理はChurch流の型付きラムダ計算を拡張したような構文を持ちます．
   基底型の集合として${\set{\iota, \omicron}}という二点集合をとります．
   一階述語論理とのアナロジーで言えば，${\iota}が項が動く領域で，${\omicron}が命題が動く領域です．
+  ${\omicron}型を持つ変数をしばしば${p,q,\cdots}というメタ変数で表します．
   高階論理の\dfn{言語 (language)}あるいは\dfn{シグニチャ (signature)}とは型で添字づけられた集合${\paren{\Sigma_\tau}_{\tau \in \Ty{\base}}}のこととします．
   以下，言語${\Sigma}を固定します．
-  擬項の定義と${\Lambda_\omicron}の定義を以下の規則で拡張します．
+  擬項の定義${\PsLam}と項の定義${\Lambda_\tau}を以下の規則で拡張します．
 
   \math-list(${
   | \derive{| c \in \Sigma_\tau |}{ c^\tau \in \PsLam }
@@ -1572,11 +1584,11 @@ let wasabiz-article = '<
   トポス意味論への入門記事としては\cite[`Uemura18`];が大変わかりやすいです．}
   ${\Omega}を${0}と${1}からなる二点集合とします．
   この記事では${0}を真，${1}を偽として扱います．
-  言語${\Sigma}の\dfn{構造 (structure)}とは集合族${\M = \paren{D_\tau, \M_\tau : \Sigma_\tau \to D_\tau}_{\tau \in \Ty{\base}}}であって，
+  言語${\Sigma}の\dfn{構造 (structure)}とは集合と写像の組の族${\M = \paren{D_\tau,\ \M_\tau : \Sigma_\tau \to D_\tau}_{\tau \in \Ty{\base}}}であって，
 
   \align[
     ${| D_\omicron |= \Omega |};
-    ${| D_{\tau \to \sigma} |= \paren{f : D_\tau \to D_\sigma} |}
+    ${| D_{\tau \to \sigma} |= \set{f : D_\tau \to D_\sigma} |}
   ];
 
   を満たすものとします．
@@ -1587,7 +1599,7 @@ let wasabiz-article = '<
   \align[
     ${| \den{x^\tau}^\M_{\tau,\theta} |= \app{\theta}{x} |};
     ${| \den{c^\tau}^\M_{\tau,\theta} |= \app{\M_\tau}{c} |};
-    ${| \app{\den{\lambda x^\tau.M}^\M_{\tau\to\sigma,\theta}}{v} |= \den{M}^\M_{\sigma,\sqbracket{v/x}\theta} |};
+    ${| \app{\den{\lambda x^\tau.M}^\M_{\tau\to\sigma,\theta}}{v} |= \den{M}^\M_{\sigma,\subst{v}{x} \theta} |};
     ${| \den{MN}^\M_{\sigma,\theta} |= \app{\den{M}^\M_{\tau\to\sigma,\theta}}{\den{N}^\M_{\tau,\theta}} |};
     ${| \den{M \doteq N}^\M_{\omicron,\theta} |= \cases![
       (${0}, {(${\den{M}^\M_{\tau,\theta} = \den{N}^\M_{\tau,\theta}})});
@@ -1606,7 +1618,6 @@ let wasabiz-article = '<
 +p{
   高階論理の証明体系を与えます．
   ここでは自然演繹を採用します．
-  理論${T = \paren{\Sigma,E}}を固定します．
   高階論理の判断は${\Phi \vdash_\Gamma \phi}という形です．
   ただしこのとき，${\Gamma}は型環境，${\phi}は論理式，${\Phi = \set{\phi_1,\cdots,\phi_n}}は論理式の有限集合で，各論理式について以下の型判断が成り立つとします．
 
@@ -1617,21 +1628,26 @@ let wasabiz-article = '<
   | \Gamma \vdash \phi_n : \omicron
   |});
 
-  高階論理の証明(つまり判断の定義)は以下の規則で表されます．
+  高階論理の証明(つまり判断の定義)は以下の三つの規則で表されます．
 
   \math-list(${
-  | \derive{| \phi \in E |}{ \Phi \vdash_\Gamma \phi }
   | \derive{| \phi \in \Phi |}{ \Phi \vdash_\Gamma \phi }
   | \derive{| M =_{\beta\eta} N |}{ \Phi \vdash_\Gamma M \doteq N }
-  | \derive{| \Phi \vdash_\Gamma M_1 \doteq M_2 | \Phi \vdash_\Gamma \sqbracket{M_1/x}N |}{ \Phi \vdash_\Gamma \sqbracket{M_2/x}N }
-  | \derive{| \phi_1, \Phi \vdash_\Gamma \phi_2 | \phi_2, \Phi \vdash_\Gamma \phi_2 |}{ \Phi \vdash_\Gamma \phi_1 \doteq \phi_2 }
-  | \derive{| \Phi \vdash_{\set{x} \cup \Gamma} M \doteq N | x \mathrel{\#} \Phi |}{ \Phi \vdash_\Gamma \paren{\lambda x^\app{\A}{x}.M} \doteq \paren{\lambda x^\app{\A}{x}.N}}
+  | \derive{| \Phi \vdash_\Gamma M_1 \doteq M_2 | \Phi \vdash_\Gamma \subst{M_1}{x} N |}{ \Phi \vdash_\Gamma \subst{M_2}{x} N }
   |});
 
-  これらの規則を順に\dfn{公理 (axiom)}，\dfn{仮定 (assumption)}，\dfn{${\doteq}導入 (${\doteq}-introduction)}，\dfn{${\doteq}除去 (${\doteq}-elimination)}，\dfn{命題外延性 (proposition extensitionality)}，\dfn{関数外延性 (function extentionality)}と呼びます．
+  これらの規則を順に\dfn{仮定 (assumption)}，\dfn{${\doteq}導入 (${\doteq}-introduction)}，\dfn{${\doteq}除去 (${\doteq}-elimination)}と呼びます．
+  場合によっては以下の二つの規則を加えることもあります．
+
+  \math-list(${
+  | \derive{| \phi_1, \Phi \vdash_\Gamma \phi_2 | \phi_2, \Phi \vdash_\Gamma \phi_1 |}{ \Phi \vdash_\Gamma \phi_1 \doteq \phi_2 }
+  | \derive{| \Phi \vdash_{\set{x : \tau} \cup \Gamma} M \doteq N | x \mathrel{\#} \Phi |}{ \Phi \vdash_\Gamma \paren{\lambda x^\tau.M} \doteq \paren{\lambda x^\tau.N}}
+  |});
+
+  この二つの規則はそれぞれ\dfn{命題外延性 (propositional extensionality)}，\dfn{関数外延性 (functional extensionality)}と呼ばれます．
   型付きラムダ計算の場合と同様の理由で高階論理の判断の左辺は集合ではなく(有限の)リストとして定義しても証明可能性は変わりません．
   その場合，弱化，置換，交換，縮約，演繹定理が成り立ちます．
-  さらに，集合論的意味論に対しての健全性が成り立ちます．
+  さらに，集合論的意味論に対して健全性が成り立ちます．
 }
 +theorem{
   ${E \vdash_\Gamma \phi}のとき${E \vDash \phi}が成り立つ．
@@ -1661,17 +1677,34 @@ let wasabiz-article = '<
   このように高階論理では等式${\doteq}とラムダ抽象を用いて様々な論理結合子を定義することができます．\cite[`Farmer08`];
 
   \align[
-    ${| \top |\mathrel{:=} \paren{\lambda x^\omicron.x} \doteq \paren{\lambda x^\omicron.x} |};
-    ${| \phi_1 \land \phi_2 |\mathrel{:=} \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \top \top} \doteq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \phi_1 \phi_2} |};
-    ${| \forall x^\tau.\phi |\mathrel{:=} \paren{\lambda x^\tau.\phi} \doteq \paren{\lambda x^\tau.\top} |};
-    ${| \bot |\mathrel{:=} \forall x^\omicron.x |};
-    ${| \phi_1 \to \phi_2 |\mathrel{:=} \paren{\phi_1 \land \phi_2} \doteq \phi_1 |};
-    ${| \lnot \phi |\mathrel{:=} \phi \to \bot |};
-    ${| \phi_1 \shortiff \phi_2 |\mathrel{:=} \paren{\phi_1 \to \phi_2} \land \paren{\phi_2 \to \phi_1} |};
-    ${| \phi_1 \lor \phi_2 |\mathrel{:=} \forall r^\omicron. \paren{\paren{\phi_1 \to r} \land \paren{\phi_2 \to r}} \to r |};
-    ${| \exists x^\tau.\phi |\mathrel{:=} \forall r^\omicron. \paren{\forall x^\tau. \phi \to r} \to r |};
-    ${| \uexists x^\tau.\phi |\mathrel{:=} \paren{\exists x^\tau.\phi} \land \forall x_1^\tau.\forall x_2^\tau. \paren{\paren{\lambda x^\tau.\phi}x_1^\tau \land \paren{\lambda x^\tau.\phi}x_2^\tau} \to x_1 \doteq x_2 |};
+    ${| \top |\coloneq \paren{\lambda p^\omicron.p} \doteq \paren{\lambda p^\omicron.p} |};
+    ${| \phi_1 \land \phi_2 |\coloneq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \top \top} \doteq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \phi_1 \phi_2} |};
+    ${| \forall x^\tau.\phi |\coloneq \paren{\lambda x^\tau.\phi} \doteq \paren{\lambda x^\tau.\top} |};
+    ${| \bot |\coloneq \forall p^\omicron.p |};
+    ${| \phi_1 \to \phi_2 |\coloneq \paren{\phi_1 \land \phi_2} \doteq \phi_1 |};
+    ${| \lnot \phi |\coloneq \phi \to \bot |};
+    ${| \phi_1 \leftrightarrow \phi_2 |\coloneq \paren{\phi_1 \to \phi_2} \land \paren{\phi_2 \to \phi_1} |};
+    ${| \phi_1 \lor \phi_2 |\coloneq \forall p^\omicron. \paren{\paren{\phi_1 \to p} \land \paren{\phi_2 \to p}} \to p |};
+    ${| \exists x^\tau.\phi |\coloneq \forall p^\omicron. \paren{\forall x^\tau. \phi \to p} \to p |};
+    ${| \uexists x^\tau.\phi |\coloneq \exists x^\tau.\phi \land \forall y^\tau. \paren{\lambda x^\tau.\phi}y \to x \doteq y |};
   ];
+}
++p{
+  この論理結合子の定義を用いると命題外延性と関数外延性の規則がなぜそう呼ばれるかがわかります．
+  命題外延性の規則を追加することは以下の公理を仮定することと同値です．
+
+  \eqn(${
+    \paren{\phi_1 \leftrightarrow \phi_2} \leftrightarrow \paren{\phi_1 \doteq \phi_2}
+  });
+
+  これは「(証明可能性で)区別できないものは同じである」というまさに(命題についての)外延性そのものです．
+  同様に，関数外延性の規則を追加することは以下の公理を仮定することと同値です．
+
+  \eqn(${
+    \paren{\forall x^\tau. \mathop{f_1} x \doteq \mathop{f_2} x} \leftrightarrow \paren{f_1 \doteq f_2}
+  });
+
+  これもまさに「(適用によって)区別できないものは同じである」という(関数についての)外延性に他なりません．
 }
 >
 
@@ -1679,9 +1712,8 @@ let wasabiz-article = '<
 +p{
   ついに高階論理を実装します．
   特に，対話的証明が行えることを確認します．
-  \ref-subsection(`hol`);と違い定数は考えません．
-  \footnote{表現能力は変わりません．}
   高階論理の項は単純型付きラムダ計算に${\omicron}型と${\doteq}という項が増えただけです．
+  \footnote{\ref-subsection(`hol`);と違い定数は考えませんが表現能力は変わりません．}
   実装は\ref-section(`stlc`);の各種の定義をほんの少し変更するだけで済みます．
   \footnote{実はこれはたまたまです．
   PHOASによるエンコーディングは実装が綺麗に行く場合とそうでない場合がかなりはっきり分かれているのですが，今回実装した範囲ではたまたまほんの少しの変更で済みました．}
@@ -1750,17 +1782,17 @@ let wasabiz-article = '<
 }
 +p{
   と言ってもこれだけだとよくわからないので，実際に証明を書いてみます．
-  たとえば，${\phi \vdash_{\phi : \omicron} \top \doteq \phi}を証明してみます．
+  たとえば，${p \vdash_\set{p : \omicron} \top \doteq p}を証明してみます．
   答えを先に述べると，以下の証明木を構成し，Leanの型検査が通ればその証明が正しい証明であることがわかるという寸法です．
 
   \eqn(${
     \derive?:{\text!{\ 命題外延性}}{
-    | \derive?:{\text!{\ 仮定}}{||}{\top, \phi \vdash_{\phi : \omicron} \phi}
-    | \derive?:{\text!{\ ${\doteq}導入}}{| |}{\phi, \phi \vdash_{\phi : \omicron} \top}
-    |}{ \phi \vdash_{\phi : \omicron} \top \doteq \phi }
+    | \derive?:{\text!{\ 仮定}}{||}{\top, p \vdash_\set{p : \omicron} p}
+    | \derive?:{\text!{\ ${\doteq}導入}}{| |}{p, p \vdash_\set{p : \omicron} \top}
+    |}{ p \vdash_\set{p : \omicron} \top \doteq p }
   });
 
-  判断${\phi \vdash_{\phi : \omicron} \top \doteq \phi}に対応するLeanの命題は\code(`@proof [prop] [var here] (eq (weak top) (var here))`);です．
+  判断${p \vdash_\set{p : \omicron} \top \doteq p}に対応するLeanの命題は\code(`@proof [prop] [var here] (eq (weak top) (var here))`);です．
   \code(`@proof`);は命題\code(`proof`);の暗黙の引数を明示的に与えるという構文です．
   この場合，\code(`@proof [prop] ...`);で判断の型環境${\Gamma}が${\omicron}型の一つの変数からなるという意味になります．
   よって，Leanの中で以下の\code(`...`);を埋めれば証明が完了します．
@@ -1820,7 +1852,7 @@ let wasabiz-article = '<
   end
   `);
 
-  Lean自体のタクティック\code(`simp`);と\code(`canonicity`);はそれぞれ条件${\phi \in \sqbracket{\top, \phi}}と${\paren{\lambda x^\omicron.x} =_{\beta\eta} \paren{\lambda x^\omicron.x}}を証明するために用いました．
+  Lean自体のタクティック\code(`simp`);と\code(`canonicity`);はそれぞれ条件${p \in \sqbracket{\top, p}}と${\paren{\lambda p^\omicron.p} =_{\beta\eta} \paren{\lambda p^\omicron.p}}を証明するために用いました．
 }
 +p{
   最後にもう少し実用的な例として，${\Phi \vdash_\emptyset \phi_1 \land \phi_2}ならば${\Phi \vdash_\emptyset \phi_1}を証明します．
@@ -1877,7 +1909,7 @@ let wasabiz-article = '<
 }
 +p{
   ちなみに，今回は実装言語として定理証明支援系を選んだので作成した定理証明支援系自体を検証したいと思うわけですが，残念ながらそれはできません．
-  理由は\code(`judgment1`);で説明したのと同じで，今回は色々と省コードにするためにかなり飛び道具を使っており，Leanの中では証明できないLeanの性質を用いてオブジェクト言語の健全性を保証しているからです．
+  理由は\ref-subsection(`judgment1`);で説明したのと同じで，今回は色々と省コードにするためにかなり飛び道具を使っており，Leanの中では証明できないLeanの性質を用いてオブジェクト言語の健全性を保証しているからです．
   結局，PHOASを使うのをやめて普通に頑張って実装したほうが後々の拡張のためには良いかもしれません．
 }
 +p{
@@ -1892,3 +1924,5 @@ let wasabiz-article = '<
 >
 >
 >
+
+end

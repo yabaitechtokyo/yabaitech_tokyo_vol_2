@@ -1,6 +1,7 @@
 @import: ../main/book-class
 @import: maswag-math
 @require: deco
+@require: HDecoSet
 
 let path-to-root = `../MasWag/`
 
@@ -41,8 +42,8 @@ let-math \Loc = ${Q}
 let-math \loc = ${q}
 let-math \InitLoc = ${Q_0}
 let-math \AccLoc = ${Q_F}
-let-math \Edge = ${E}
-let-math \edge = ${e}
+let-math \Edge = ${\Delta}
+let-math \edge = ${\delta}
 let-math \edgeInside = ${\paren{\loc, \guard, \event, \resets,\loc'}}
 let-math \edgei i si = ${\paren{\loc_{#i}, \guard_{#si}, \event_{#si}, \resets_{#si},\loc_{#si}}}
 let-math \Autom = ${\mathcal{A}}

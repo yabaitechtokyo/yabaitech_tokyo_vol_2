@@ -8,7 +8,7 @@ let membership = '<+section{所属性判定} <
  {文字集合${\alphabet}上の時間オートマトン${\Autom}とtimed word ${\word}}
  {${\word \in \Lg{\Autom}} であるかどうかを判定する。}
 +subsection{所属性判定問題の計算量}<
-+theorem {
++theorem ?* ?:(`theorem:NP-complete`) {
 時間オートマトンの所属性判定問題はNPに属する。
 }
 +proof {
@@ -19,10 +19,11 @@ let membership = '<+section{所属性判定} <
         \mathcal{C} = \paren{\nu_0 = \initcval} \land \bigwedge_{i \in \set{1,2,\ldots,n}} \paren{\paren{\cval_{i-1} + \tsi{i} - \tsi{i-1} \models \guard_i} \land \paren{\cval_{i} = \reset{\cval_{i-1} + \tsi{i} - \tsi{i-1}}{\resets_i}}}
 });
 を考える。制約${\mathcal{C}}が充足可能であるとき${\word \in \Lg{\Autom}}が成立し、充足不能であるとき${\word \nin \Lg{\Autom}}となる。
-制約${\mathcal{C}}は線形計画問題であるので、例えばカーマーカーのアルゴリズム\cite([`journals/combinatorica/Karmarkar84`]); を用いることで制約の大きさについて多項式時間で解くことができる。\footnote{筆者は線形計画問題について詳しくないので、具体的にどの様に充足判定を行うことができるのかはわかりませんが、少なくとも多項式時間で解くことができるということは良く知られています。}今回制約の大きさはtimed word ${\word}の長さと各状態遷移 ${\edge \in \Edge}に含まれる制約${\guard}の大きさ、及びクロック変数${\Clock}の個数についての多項式で表わすことができる。従って時間オートマトンの所属性判定問題はNPに属する。
+制約${\mathcal{C}}は線形計画問題であるので、例えばカーマーカーのアルゴリズム\cite([`journals/combinatorica/Karmarkar84`]); を用いることで制約の大きさについて多項式時間で解くことができる。
+\footnote{線形計画問題の充足可能性問題は線形計画法で解くことができます。例えば${Ax \geq b}の充足可能性問題は制約${Ax + \paren{y y \cdots y}^{T} \geq b}の元で${y}を最小化することで線形計画法に帰着することができます。具体的には${y}の最小値が${0}以下のときに${Ax \geq b}が充足可能となります。}今回制約の大きさはtimed word ${\word}の長さと各状態遷移 ${\edge \in \Edge}に含まれる制約${\guard}の大きさ、及びクロック変数${\Clock}の個数についての多項式で表わすことができる。従って時間オートマトンの所属性判定問題はNPに属する。
 }
-+theorem {
-時間オートマトンの所属性判定問題は任意のNP問題に帰着できる。
++theorem ?* ?:(`theorem:NP-hard`) {
+任意のNP問題は時間オートマトンの所属性判定問題に帰着できる。
 }
 +problem{ハミルトニアン閉路問題} 
 {有向グラフ ${G = \paren{V,E}}}
@@ -31,18 +32,40 @@ let membership = '<+section{所属性判定} <
 TODO: ハミルトニアン閉路問題の定義と説明
 }
 +proof {
-TODO
+ハミルトニアン閉路問題を時間オートマトンの所属性判定問題に多項式時間帰着させることで\ref-theorem(`theorem:NP-complete`);を示す。
+ハミルトニアン閉路問題の入力の有向グラフを${G = \paren{V,E}}とする。
+時間オートマトン${\AutomWith}を以下の様に定義する。
+\listing {
+* ${\alphabet = \set{\event}}
+* ${\Loc = V \sqcup \set{\loc_f}}
+* ${\InitLoc = V}
+* ${\AccLoc = \set{\loc_f}}
+* ${\Clock = \setsep{\clock_v}{v \in V} \sqcup \set{y , z}}
+* ${\Edge = \Edge_E \sqcup \Edge_f}
+* ${\Edge_E = \setsep{\paren{v, \set{y = 1}, \event, \set{y, \clock_v}, v'}}{\paren{v,v'} \in E}}
+* ${\Edge_f = \setsep{\paren{v, \set{y = 1, v = z = \abs{V}, \bigwedge_{v' \in V \setminus\set{v}} v' < \abs{V}}, \event, \emptyset, \loc_f}}{v \in V}}
+}
+有向グラフ${G = \paren{V,E}}がハミルトニアン閉路を持つことは、
+timed word \eqn(${\word = \paren{\event, 1},\paren{\event, 2},\ldots,\paren{\event, \abs{V}}}); が ${\word \in \Lg{\Autom}}を充たすことの必要十分条件である。
+また、${\Autom}及び${\word}の大きさは${G}の多項式で抑えることができる。従って、ハミルトニアン閉路問題を時間オートマトンの所属性判定問題に多項式時間帰着させることができる。
 }
 +example {
 TODO: hamiltonial circuit problemをmembership problemで解く例を書く。
 }
++p {
+\ref-theorem(`theorem:NP-complete`); 及び \ref-theorem(`theorem:NP-hard`); より、以下が成り立ちます。
+}
 +corollary {
 時間オートマトンの所属性判定問題はNP完全問題である。
 }
->
 +p {
-TODO: Membership problem, complexity, proof
+\figure ?:(`fig:membership-algorithm`){所属性判定問題を解くアルゴリズムの例}<
+   +image-frame{
+   \insert-pdf-image(12cm)(`../MasWag/figs/algorithm.pdf`)(1);
 }
+>
+}
+>
 +subsection{オートマトンを固定したときの所属性判定問題}<
 +theorem {
 入力の時間オートマトンを固定したとき、時間オートマトンの所属性はtimed word の長さについて多項式時間で判定することができる。

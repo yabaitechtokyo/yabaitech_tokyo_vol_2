@@ -1,0 +1,58 @@
+\RequirePackage{luatex85}
+\documentclass{standalone}
+\usepackage[ruled,lined,linesnumbered,noend]{algorithm2e}
+\usepackage{luatexja-fontspec}
+\SetKw{KwPush}{push}
+\SetKw{KwPop}{pop}
+\SetKw{KwFrom}{from}
+\SetKw{KwCompute}{compute}
+
+\newcommand{\Autom}{\mathcal{A}}
+\newcommand{\alphabet}{\Sigma}
+\newcommand{\loc}{q}
+\newcommand{\Loc}{Q}
+\newcommand{\InitLoc}{Q_0}
+\newcommand{\AccLoc}{Q_F}
+\newcommand{\Clock}{C}
+\newcommand{\Edge}{\Delta}
+\newcommand{\AutomWith}{\Autom = (\alphabet,\Loc,\InitLoc,\AccLoc,\Clock,\Edge)}
+\newcommand{\event}{\sigma}
+\newcommand{\eventi}[1]{\event_{#1}}
+\newcommand{\ts}{\tau}
+\newcommand{\tsi}[1]{\ts_{#1}}
+\newcommand{\word}{w}
+\newcommand{\wordWith}{\word = (\event_1,\tsi{1}),(\event_2, \tsi{2}),\ldots,(\event_n,\tsi{n})}
+\newcommand{\cval}{\nu}
+
+\newcommand{\guard}{g}
+\newcommand{\resets}{R}
+\newcommand{\edgeInside}{(\loc, \guard, \event, \resets,\loc')}
+\newcommand{\CurrConf}{\mathit{CurrConf}}
+\newcommand{\NextConf}{\mathit{NextConf}}
+\newcommand{\initcval}{0_{\Clock}}
+
+\begin{document}
+
+\begin{algorithm}[H]
+\SetAlgoLined
+\KwIn{時間オートマトン $\AutomWith$, timed word $\wordWith$}
+\KwOut{$\word \in \Autom$ であるかどうかを返す}
+$\CurrConf \gets \{(\loc_0,\initcval) \mid \loc_0 \in \InitLoc\};\; \NextConf \gets \emptyset$\;
+\For{$i \in \{1,2,\dots,n\}$} {
+ \For{$(\loc,\cval) \in \CurrConf$} {
+ \For{$\edgeInside \in \Edge$} {
+ \If{$\cval \models \guard$} {
+ \KwPush $(\loc,\langle \cval \rangle_{\resets})$ \KwTo $\NextConf$
+}
+}
+}
+$\CurrConf \gets \NextConf;\; \NextConf \gets \emptyset$\;
+}
+\eIf{$\exists (\loc,\cval) \in \CurrConf.\, \loc \in \AccLoc$}{
+\KwRet $\word \in \Autom$ である
+}{
+\KwRet $\word \in \Autom$ ではない
+}
+\end{algorithm}
+
+\end{document}

@@ -1,2 +1,4 @@
+@import: ../main/book-class
+
 let zpt-bibliography = [
 ]

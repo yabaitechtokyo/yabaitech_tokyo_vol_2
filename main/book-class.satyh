@@ -278,7 +278,7 @@ end = struct
       |> set-font Kana           font-cjk-mincho
       |> set-font HanIdeographic font-cjk-mincho
       |> set-font Latin          font-latin-roman
-      |> set-math-font `lmodern`
+      |> set-math-font `Asana-Math`
       |> set-hyphen-penalty 1000
       |> set-space-ratio 0.275 0.08 0.12
 
@@ -460,6 +460,7 @@ end = struct
     let () = num-section <- 0 in
     let () = num-subsection <- 0 in
     let () = num-figure <- 0 in
+    let () = num-theorems <- 0 in
     let s-num = arabic (!num-chapter) in
     let () = register-cross-reference (`chapter:` ^ label ^ `:num`) s-num in
     let () = toc-acc-ref <- (TOCElementChapter(label, title, author)) :: !toc-acc-ref in
@@ -546,7 +547,6 @@ end = struct
     let ctx-title = make-section-title ctx in
     let () = increment num-section in
     let () = num-subsection <- 0 in
-    let () = num-theorems <- 0 in
     let s-num = arabic (!num-section) in
     let () = register-cross-reference (`section:` ^ label ^ `:num`) s-num in
 %    let () = toc-acc-ref <- (TOCElementSection(label, title)) :: !toc-acc-ref in
