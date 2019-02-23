@@ -124,6 +124,7 @@ let article = '<
     ** \ref-subsection(`judgment2`);\ \ 型判断の実装 (その2)
     * \ref-section(`hol`);\ \ 高階論理
     ** \ref-subsection(`hol`);\ \ 高階論理
+    ** \ref-subsection(`hol-nd`);\ \ 高階論理の演繹体系
     ** \ref-subsection(`hol-impl`);\ \ 高階論理の実装
     * \ref-section(`conclusion`);\ \ まとめ
   }
