@@ -66,7 +66,7 @@ let wasabiz-bibliography = [
 
   (`SterlingS18`, WebSite(|
     author = {| Jonathan Sterling | Bas Spitters |};
-    title  = {Normalization by gluing for free 𝜆-theories};
+    title  = {Normalization by gluing for free ${\lambda}-theories};
     url    = `https://www.jonmsterling.com/pdfs/gluing-note.pdf`;
     year   = 2018;
   |));
@@ -90,7 +90,7 @@ let wasabiz-bibliography = [
   |));
 
   (`HagiyaN07`, Book(|
-    author = {| 萩谷 昌巳 | 西崎 真也 |};
+    author = {| 萩谷 昌己 | 西崎 真也 |};
     title  = {論理と計算のしくみ};
     publisher = {岩波書店};
     year   = 2007;

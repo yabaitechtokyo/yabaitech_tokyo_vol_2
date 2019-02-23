@@ -893,6 +893,8 @@ end = struct
     let label = make-label `example:` labelopt in
       theorem-scheme ctx (fun x -> x) {記法} wordopt label inner
 
+  let-math \QED = math-char MathOrd `∎`
+
   let-block ctx +proof ?:wordopt inner =
     let ib-heading =
       let ctx = ctx |> set-latin-font font-latin-italic in
@@ -900,7 +902,7 @@ end = struct
         | None    -> read-inline ctx {Proof.}
         | Some(w) -> read-inline ctx {Proof of #w;.}
     in
-    let ib-box = read-inline ctx {▪} in
+    let ib-box = read-inline ctx {${\QED}} in
       line-break true true ctx
         (ib-heading ++ inline-skip (get-font-size ctx) ++ read-inline ctx inner ++ inline-fil ++ ib-box)
 

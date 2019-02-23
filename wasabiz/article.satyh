@@ -20,24 +20,29 @@ let-math \Brack m = ${\lBrack #m \rBrack} % FIXME
 
 let cyr it ctx =
   read-inline (ctx |> set-font OtherScript (`CambriaMath` , 1., 0.)) it % FIXME
-let-math \fresh = text-in-math MathOrd (cyr (embed-string `И`))
+let-math \forfresh = text-in-math MathOrd (cyr (embed-string `И`))
+let-math \fresh = ${\mathrel{\#}}
 let-math \fv m = ${\app{\mathop{\mathrm{fv}}}{#m}}
 let-math \subst m1 m2 = ${\mathord{\sqbracket{#m1/#m2}}}
-let-math \Var = ${\mathcal{Var}}
-let-math \Tm = ${\mathcal{Tm}}
-let-math \Ty m = ${\app{\mathop{\mathcal{Ty}}}{#m}}
+let-math \Var = ${\mathrm{Var}}
+let-math \Tm = ${\mathrm{Tm}}
+let-math \Ty m = ${\app{\mathop{\mathrm{Ty}}}{#m}}
+let-math \NF = ${\mathrm{NF}}
+let-math \NE = ${\mathrm{NE}}
+let-math \PVar = ${\mathrm{PVar}}
+let-math \Hyp = ${\mathrm{Hyp}}
+let-math \Ito = ${\mathrm{I}\mathord{\to}}
+let-math \Eto = ${\mathrm{E}\mathord{\to}}
 let-math \base = ${\mathbb{B}}
 let-math \dom m = ${\app{\mathop{\mathrm{dom}}}{#m}}
 let-math \E = ${\mathcal{E}}
 let-math \W = ${\mathcal{W}}
 let-math \A = ${\mathcal{A}}
 let-math \PsLam = ${\Lambda_{\Ty{\base}}}
-let-math \NF = ${\mathcal{NF}}
-let-math \NE = ${\mathcal{NE}}
 let-math \IPC = ${\mathrm{IPC}}
-let-math \PVar = ${\mathcal{PVar}}
 let-math \M = ${\mathcal{M}}
 let-math \den m = ${\Brack{#m}}
+let-math \H = ${\mathcal{H}}
 
 let article = '<
 +chapter ?:(`wasabiz-article`) (|
@@ -147,13 +152,13 @@ let article = '<
   まず，ラムダ項${M}の\dfn{自由変数}の集合${\fv{M} \subseteq \Var}を以下のように構造に関する帰納法により定義します．
 
   \align[
-  ${| \fv{x} |= \set{x} |};
-  ${| \fv{\lambda x.M} |= \fv{M} \setminus \set{x} |};
-  ${| \fv{MN} |= \fv{M} \cup \fv{N} |};
+  ${| \fv{x} |\coloneq \set{x} |};
+  ${| \fv{\lambda x.M} |\coloneq \fv{M} \setminus \set{x} |};
+  ${| \fv{MN} |\coloneq \fv{M} \cup \fv{N} |};
   ];%
 
   変数${x}が${\fv{M}}に属するとき，${x}は${M}について\dfn{自由である (free)}と言います．
-  変数${x}が${\fv{M}}に属さない時，${x}は${M}について\dfn{自由でない (non-free)}とか\dfn{新鮮である (fresh)}と言い，${x \mathrel{\#} M}と書きます．
+  変数${x}が${\fv{M}}に属さない時，${x}は${M}について\dfn{自由でない (non-free)}とか\dfn{新鮮である (fresh)}と言い，${x \fresh M}と書きます．
   また，${\fv{M} = \emptyset}であるとき，${M}を\dfn{閉じている (closed)}といい，閉じていない項を\dfn{開いている (open)}といいます．
   閉じた項は\dfn{閉項}とも呼ばれます．
 }
@@ -169,21 +174,21 @@ let article = '<
   互換${\pi}について，${\Tm}から${\Tm}への写像${\pi\cdot\paren{-}}を構造に関する帰納法により定義します．
 
   \align[
-  ${| \pi\cdot x |= \app{\pi}{x} |};
-  ${| \pi\cdot\paren{\lambda z.M} |= \lambda \app{\pi}{x}.\pi\cdot M |};
-  ${| \pi\cdot\paren{MN} |= \paren{\pi\cdot M} \paren{\pi\cdot N} |};
+  ${| \pi\cdot x |\coloneq \app{\pi}{x} |};
+  ${| \pi\cdot\paren{\lambda z.M} |\coloneq \lambda \app{\pi}{x}.\pi\cdot M |};
+  ${| \pi\cdot\paren{MN} |\coloneq \paren{\pi\cdot M} \paren{\pi\cdot N} |};
   ];
 
   また，${\app{\pi}{x}}のことも${\pi\cdot x}と書きます．
-  ${\alpha}同値性を定義するために新しい量化子${\fresh}を導入します．
+  ${\alpha}同値性を定義するために新しい量化子${\forfresh}を導入します．
 
   \eqn(${
-    \fresh x \in X.\ \app{\phi}{x} \mathrel{:\iff} X \setminus \setsep{x \in X}{\app{\phi}{x}} \ \text!{is finite}
+    \forfresh x \in X.\ \app{\phi}{x} \mathrel{:\iff} X \setminus \setsep{x \in X}{\app{\phi}{x}} \ \text!{is finite}
   });
 
-  ${\fresh x \in X.\ \app{\phi}{x}}は数学的には「有限個を除く全ての${x \in X}について${\app{\phi}{x}}が成立する (${\app{\phi}{x}} holds for all but finitely many ${x \in X})」という意味になります．
+  ${\forfresh x \in X.\ \app{\phi}{x}}は数学的には「有限個を除く全ての${x \in X}について${\app{\phi}{x}}が成立する (${\app{\phi}{x}} holds for all but finitely many ${x \in X})」という意味になります．
   以下では特に${X}として${\Var}を取り，${\phi}としてラムダ項についての命題を取ります．
-  その場合，実は${\fresh x.\ \app{\phi}{x}}は「新鮮な変数xについて${\app{\phi}{x}}が成り立つ」ことと同値になります．
+  その場合，実は${\forfresh x.\ \app{\phi}{x}}は「新鮮な変数xについて${\app{\phi}{x}}が成り立つ」ことと同値になります．
   より正確には「${\phi}に出現する全ての項に対して新鮮な${x}について${\app{\phi}{x}}が成り立つ」ことと同値になります．
   \footnote{ここでは「『全ての』新鮮な変数xについて」なのか「『ある』新鮮な変数xについて」なのかを明示しませんでしたが，実はどちらと思って読んでも同値になることが知られています．詳しくは\cite[`Pitts13`];の定理3.9を参照してください．}
 }
@@ -193,7 +198,7 @@ let article = '<
 
   \math-list(${
   | \derive{| |}{ x =_\alpha x }
-  | \derive{| \fresh y.\ \paren{x\ y} \cdot M =_\alpha \paren{x'\ y} \cdot M' |}{ \lambda x.M =_\alpha \lambda x'.M' }
+  | \derive{| \forfresh y.\ \paren{x\ y} \cdot M =_\alpha \paren{x'\ y} \cdot M' |}{ \lambda x.M =_\alpha \lambda x'.M' }
   | \derive{| M_1 =_\alpha M_2 | N_1 =_\alpha N_2 |}{ M_1 N_1 =_\alpha M_2 N_2 }
   |});
 
@@ -214,7 +219,7 @@ let article = '<
   ${f_1}が\dfn{${\fv{f_1}}を持つ}とは
 
   \eqn(${
-    \fresh x,x'.\ \forall y.\ \paren{x\ x'} \cdot \app{f_1}{y} = \app{f_1}{\paren{x\ x'}\cdot y}
+    \forfresh x,x'.\ \forall y.\ \paren{x\ x'} \cdot \app{f_1}{y} = \app{f_1}{\paren{x\ x'}\cdot y}
   });
 
   が成り立つことであるとします．
@@ -233,7 +238,7 @@ let article = '<
   さらに，以下の条件を満たすとする．
 
   \eqn(${
-    x \nin \fv{f_1},\fv{f_2},\fv{f_3} \Longrightarrow \forall M.\ x \mathrel{\#} \app{f_3}{x,M}
+    x \nin \fv{f_1},\fv{f_2},\fv{f_3} \Longrightarrow \forall M.\ x \fresh \app{f_3}{x,M}
   });
 
   すると写像${f : \Lambda \to \Lambda}であって，
@@ -279,7 +284,7 @@ let article = '<
   特に${M_0}を明示して，\dfn{${M_0}の簡約列}とも言います．
   ある簡約列が無限列であることを\dfn{発散する}と言います．
   ${M}の長さ2以上の簡約列が存在しない時，${M}を\dfn{${\beta}正規形 (${\beta}-normal form)}あるいは単に\dfn{正規形 (normal form)}と言います．
-  ${\beta}正規形でない項を\dfn{${\beta}-redex}と言います．
+  ${\beta}正規形でない項を\dfn{${\beta}簡約基 (${\beta}-redex)}と言います．
   また，${M}の無限簡約列が存在しない時，${M}は\dfn{強正規化可能である}と言います．
   ${\to_\beta}の反射推移対称閉包を${=_\beta}を書きます．
   定義より，${=_\beta}は${\Lambda}上の同値関係です．
@@ -344,8 +349,8 @@ let article = '<
   たとえば，${\mathrm{isapp}}なる(メタ言語の)関数を以下のように定義します
 
   \align[
-    ${| \app{\mathrm{isapp}}{\app{\mathrm{app}}{M,N}} |= t |};
-    ${| \app{\mathrm{isapp}}{\app{\mathrm{lam}}{f}} |= f |};
+    ${| \app{\mathrm{isapp}}{\app{\mathrm{app}}{M,N}} |\coloneq t |};
+    ${| \app{\mathrm{isapp}}{\app{\mathrm{lam}}{f}} |\coloneq f |};
   ];
 
   ただし，${t,f}はそれぞれ真と偽をChurch encodingで表したラムダ項とします．
@@ -615,7 +620,7 @@ let article = '<
 +subsection?:(`curry-style`){Curry流の単純型付きラムダ計算} <
 +p{
   Curry流の単純型付きラムダ計算を定義します．
-  まず，\dfn{基底型}の集合${\base}を固定します．
+  まず，\dfn{基底型}の空でない集合${\base}を固定します．
   そして，\dfn{型}の集合${\Ty{\base}}を以下の規則により帰納的に定義します．
 
   \math-list(${
@@ -630,7 +635,7 @@ let article = '<
   すべての型環境からなる集合を${\E}で表します．
 }
 +p{
-  さて，三項関係${\W \subseteq \E \times \Lambda \times \Ty{\base}}を定義します．
+  三項関係${\W \subseteq \E \times \Lambda \times \Ty{\base}}を定義します．
   ${\paren{\Gamma, M, \tau} \in \W}であることを${\Gamma \vdash M : \tau}と書きます．
   また，この形の命題を${M}についての\dfn{型判断 (type judgment)}と呼びます．
   ${\W}は以下の規則により帰納的に定義されます．
@@ -643,8 +648,8 @@ let article = '<
   |});
 
   ラムダ項${M}と型${\tau}について，適当な環境${\Gamma}が存在して${\Gamma \vdash M : \tau}であるとき，${M}は\dfn{型${\tau}を持つ (has type ${\tau})}と言います．
-  また，${M}が何らかの型を持つとき${M}を\dfn{型付け可能 (typeable)}と言います．
-  すると，以下の事実が成り立ちます．
+  また，${M}が何らかの型を持つとき${M}は\dfn{型付け可能である (typeable)}と言います．
+  このとき，以下の事実が成り立ちます．
 }
 +theorem?*?:(`curry-prop`){
   \listing{
@@ -658,7 +663,7 @@ let article = '<
   ${\eta}展開は以下の規則に加えて${\beta}簡約のときと同様の追加規則により定義されます．
 
   \eqn(${
-    \derive{| \text!{${M} has ${\tau \to \sigma}} | x \mathrel{\#} M |}{ M \to_\eta \lambda x.M x }
+    \derive{| \text!{${M} has ${\tau \to \sigma}} | x \fresh M |}{ M \to_\eta \lambda x.M x }
   });
 
   ${\mathord{\to_\beta} \cup \mathord{\to_\eta}}の反射推移対称閉包を${=_{\beta\eta}}と書きます．
@@ -683,8 +688,8 @@ let article = '<
   ${\to_{\eta'}}は以下のように帰納的に定義されます．
 
   \math-list(${|
-  | \derive{| \text!{${y} has ${\tau \to \sigma}} | x \mathrel{\#} y |}{ y \to_{\eta'} \lambda x.y x }
-  | \derive{| \text!{${M N} has ${\tau \to \sigma}} | x \mathrel{\#} M N |}{ M N \to_{\eta'} \lambda x .\paren{M N} x }
+  | \derive{| \text!{${y} has ${\tau \to \sigma}} | x \fresh y |}{ y \to_{\eta'} \lambda x.y x }
+  | \derive{| \text!{${M N} has ${\tau \to \sigma}} | x \fresh M N |}{ M N \to_{\eta'} \lambda x .\paren{M N} x }
   | \derive{| M \to_{\eta'} M' |}{ \lambda x.M \to_{\eta'} \lambda x.M' }
   | \derive{| M \to_{\eta'} M' |}{ N M \to_{\eta'} N M' }
   |});
@@ -778,7 +783,7 @@ let article = '<
   Church流のラムダ計算にも置換や${\beta}簡約，${\eta}展開を定義することができます．
   また，Curry流の場合と同様の性質が成り立ちます．
   Church流では標準形を帰納法を用いたより簡潔な方法で定義できます．
-  各型${\tau}ごとに\dfn{標準形}の集合${\NF_\tau \subseteq \Lambda_\tau}と\dfn{neutral form}の集合${\NE_\tau \subseteq \Lambda_\tau}を相互再帰で定義します．
+  各型${\tau}ごとに集合${\NF_\tau \subseteq \Lambda_\tau}と${\NE_\tau \subseteq \Lambda_\tau}を相互再帰で定義します．
 
   \math-list(${
   | \derive{| M \in \NE_\tau |}{ M \in \NF_\tau }
@@ -787,7 +792,8 @@ let article = '<
   | \derive{| M \in \NE_{\tau \to \sigma} | N \in \NF_\tau |}{ M N \in \NE_\sigma }
   |});
 
-  すると，${\NF_\tau}は${\tau}型を持つ長${\eta}${\beta}正規形の集合と一致します．
+  すると，${\NF_\tau}は${\tau}型を持つ標準形の集合と一致します．
+  また，${\NE_\tau}の元を\dfn{中立形 (neutral form)}と呼びます．
 }
 >
 
@@ -833,7 +839,7 @@ let article = '<
   より詳しい議論は\cite[`Hofmann99`;`SterlingS18`];を参照してください．}
   各コンストラクタに現れる\code(`term`);という型の引数がうまく設定されているので正しく型がついた項しか作成できないようになっています．
   \footnote{素のHOASに型だけ導入することも可能です．
-  今回採用している方式はHOASをParametricとTypefulの両方の面で一般化したものです．
+  今回採用している方式はHOASをParametricとTypefulの両方の面で拡張したものです．
   より詳しい議論は\cite[`Chlipala08`];を参照してください．}
 }
 +p{
@@ -916,7 +922,7 @@ let article = '<
 }
 +p{
   \code(`domain`);型を使えば\code(`eval`);は簡単に定義できます．
-  \code(`subst`);と同じく\code(`ν`);をうまく実態化させることで実装を行います．
+  \code(`subst`);と同じく\code(`ν`);をうまく実体化して実装します．
 
   \d-code(`
   def eval' : Π {t : type}, term (domain ν) t → domain ν t
@@ -929,8 +935,8 @@ let article = '<
   `);
 }
 +p{
-  また，\code(`domain`);型があれば\code(`reify`);と\code(`reflect`);はほぼ黒板通りに記述できます．
-  \footnote{文献によっては\code(`reify`);の終域を標準形を表す型に，\code(`reflect`);の定義域をneutral formを表す型にしている場合もあります．\cite[`DanvyKP14`];
+  \code(`reify`);と\code(`reflect`);はほぼ黒板通りに記述できます．
+  \footnote{文献によっては\code(`reify`);の終域を標準形を表す型に，\code(`reflect`);の定義域を中立形を表す型にしている場合もあります．\cite[`DanvyKP14`];
   その場合，\code(`reify`);の結果が標準形であることが自明になるというメリットがあります．}
   \footnote{
   実際には，この定義はLean version 3.4.2ではコンパイルが通りません．
@@ -968,7 +974,7 @@ let article = '<
   `);
 }
 +p{
-  \code(`reify`);が定義できると，正規化を行う関数\code(`normalize`);は直ちに定義できます．
+  \code(`eval`);と\code(`reify`);が定義できたので，正規化を行う関数\code(`normalize`);は直ちに定義できます．
 
   \d-code(`
   def normalize : Term t → Term t :=
@@ -1005,7 +1011,7 @@ let article = '<
 +p{
   二つの項が${\beta\eta}同値であることをLeanで記号${\approx}を用いて記述できると便利です．
   そのために，型クラス\code(`setoid`);のインスタンスを作成します．
-  \footnote{正確には記法\code(`≈`);は型クラス\code(`has_equiv`);を定義すると使用できます．
+  \footnote{正確には記法\code(`≈`);は型クラス\code(`has_equiv`);のインスタンスを定義すると使用できます．
   一方で型クラス\code(`setoid`);を持つ型は自動的に\code(`has_equiv`);を持つように(標準ライブラリで)定義されています．}
 
   \d-code(`
@@ -1015,14 +1021,15 @@ let article = '<
   `);
 
   これで，\code(`m n : Term t`);について\code(`m ≈ n`);と書くと\code(`normalize m = normalize n`);を意味するようになります．
-  \code(`m ≈ n`);の証明は常に定義を展開した上で反射性を使うことが(メタ的な議論により)わかるのでそのような証明を自動化するためにタクティックを定義します．
+}
++p{
+  Leanで\code(`m ≈ n`);を証明するときは常に定義を展開した上で反射性を使うことが(メタ的な議論により)わかるのでそのような証明を自動化するためにタクティックを定義します．
 
   \d-code(``
   meta def canonicity : tactic unit :=
   `[ try { unfold has_equiv.equiv setoid.r inv_image }, try { reflexivity } ]
   ``);
-}
-+p{
+
   実際にこのタクティックを使用してみます．
 
   \d-code(`
@@ -1061,9 +1068,6 @@ let article = '<
   | \derive{| x : \tau, \Gamma \vdash M : \sigma |}{ \Gamma \vdash \lambda x^\tau.M : \tau \to \sigma }
   | \derive{| \Gamma \vdash M : \tau \to \sigma | \Gamma \vdash N : \tau |}{ \Gamma \vdash M N : \sigma }
   |});
-
-  Curry流とは異なり，Church流の型判断では証明の唯一性が成立します．
-  すなわち，${\Delta,\Delta'}がいずれも${\Gamma \vdash M : \tau}の証明のとき，${\Delta = \Delta'}が成り立ちます．
 }
 +p{
   \ref-subsection(`church-style1`);での定義とここでの定義の関連はつぎの通りです．
@@ -1073,12 +1077,12 @@ let article = '<
 }
 +p{
   また，Curry流とChurch流は次のように関連づけられます．
-  擬項を前項に送る\emph{忘却}写像${\abs{\cdot} : \PsLam \to \Lambda}を構造に関する帰納法で以下のように定義します．
+  擬項を前項に送る忘却写像${\abs{\cdot} : \PsLam \to \Lambda}を構造に関する帰納法で以下のように定義します．
 
   \align([
-    ${| \abs{x^\tau} |= x |};
-    ${| \abs{\lambda x^\tau.M} |= \lambda x.\abs{M} |};
-    ${| \abs{M N} |= \abs{M} \abs{N} |};
+    ${| \abs{x^\tau} |\coloneq x |};
+    ${| \abs{\lambda x^\tau.M} |\coloneq \lambda x.\abs{M} |};
+    ${| \abs{M N} |\coloneq \abs{M} \abs{N} |};
   ]);
 
   すると，Church流の型判断${\Gamma \vdash M : \tau}が成り立つとき，Curry流の型判断${\Gamma \vdash \abs{M} : \tau}が成り立ちます．
@@ -1086,7 +1090,7 @@ let article = '<
 }
 +p{
   型判断に対する様々な操作を定義するために${\IPC^\to}という直観主義命題論理の断片を紹介します．
-  型付きラムダ計算と${\IPC^\to}の自然演繹はCurry-Howard同型対応を通じて対応しており，型判断の概念は論理学の用語を用いることで簡潔に説明されます．
+  型付きラムダ計算と${\IPC^\to}の自然演繹はCurry-Howard同型対応を通じて対応しており，型判断についての様々な概念は論理学の用語を用いることで簡潔に説明されます．
 }
 +p{
   ${\PVar = \set{P,Q,\cdots}}を\dfn{命題変数 (propositional variable)}の集合とします．
@@ -1096,47 +1100,90 @@ let article = '<
     \phi \Coloneq P \mid \phi \to \phi
   });
 
-  論理式の有限列\footnote{今後の節のために有限集合ではなく有限列として定義します．}を${\Phi,\cdots}で表します．
-  論理式の有限列と論理式との間の二項関係${\vdash}を以下の規則で帰納的に定義します．
+  通常であればここで論理式の意味を決定するために論理式の\dfn{解釈 (interpretation)}を定義しますが，本筋から逸れてしまうのでここでは定義しないことにします．
+  代わりに，演繹体系のみを与えます．
+}
++p{
+  ${\IPC^\to}の演繹体系として${\IPC^\to}の自然演繹を導入します．
+  ここからは証明そのものを数学的対象として扱うことに注意してください．
+  \footnote{たとえば，ここまでで登場した型判断は命題でしたが，今から扱う判断は構造です．}
+}
++p{
+  論理式の有限集合${\Phi}と論理式${\phi}の組${\paren{\Phi,\phi}}を\dfn{仮説的判断 (hypothetical judgment)}あるいは単に\dfn{判断 (judgment)}と呼びます．
+  判断${\paren{\Phi,\phi}}をしばしば${\Phi \vdash \phi}と書きます．
+  また，${\set{\phi_1, \cdots, \phi_n} \vdash \phi}をしばしば${\phi_1, \cdots, \phi_n \vdash \phi}と書きます．
+  判断の左辺に並ぶ論理式を\dfn{仮定 (hypothesis)}，右辺の論理式を\dfn{結論 (conclusion)}と呼びます．
+  判断の有限集合${\Xi}と判断${\H}の組${\paren{\Xi,\H}}を\dfn{推論規則 (inference rule)}あるいは単に\dfn{規則 (rule)}と呼びます．
+  規則${\paren{\set{\H_1, \cdots, \H_n}, \H}}をしばしば
+
+  \eqn(${
+    \derive{| \H_1 | \cdots | \H_n |}{\H}
+  });
+
+  と書きます．
+  ${P}をなんらかの述語とするとき，規則の集合${\setsep{\paren{\set{\H_1, \cdots, \H_n}, \H}}{\app{P}{\H_1,\cdots,\H_n,\H}}}を\dfn{規則図式 (rule schema)}と呼び，以下のように書きます．
+
+  \eqn(${
+    \derive?:{\app{P}{\H_1,\cdots,\H_n,\H}}{|\H_1 | \cdots | \H_n|}{\H}
+  });
+
+  規則図式${\Hyp}，${\Ito}，${\Eto}を以下のように定めます．
 
   \math-list(${
-  | \derive{| \phi \in \Phi |}{ \Phi \vdash \phi }
+  | \derive?:{\ \phi \in \Phi} {| |}{ \Phi \vdash \phi }
   | \derive{| \phi, \Phi \vdash \psi |}{ \Phi \vdash \phi \to \psi }
   | \derive{| \Phi \vdash \phi \to \psi | \Phi \vdash \phi |}{ \Phi \vdash \psi }
   |});
 
-  ${\Phi \vdash \phi}の形の命題を\dfn{仮説的判断 (hypothetical judgment)}あるいは単に\dfn{判断 (judgment)}と言います．
-  判断の左辺に並ぶ論理式を\dfn{仮定 (hypothesis)}，右辺の論理式を\dfn{結論 (conclusion)}と呼びます．
+  ${\Hyp}，${\Ito}，${\Eto}の元を順に\dfn{仮定 (hypothesis)}，\dfn{${\to}導入 (${\to}-introduction)}，\dfn{${\to}除去 (${\to}-elimination)}と呼びます．  
+  判断の有限集合${\Xi}と判断${\H}について，述語${\Xi \vdash \H}\footnote{判断を表す${\vdash}とは異なります．}を次の規則\footnote{ここでの規則は単なる命題です．}によって帰納的に定義します．
+
+  \math-list(${
+  | \derive{| \paren{\Xi, \H} \in \Hyp \cup \Ito \cup \Eto |}{ \Xi \vdash \H }
+  | \derive{| \Xi_1 \vdash \H_1 | \cdots | \Xi_n \vdash \H_n | \H_1, \cdots, \H_n \vdash \H |}{ \Xi_1 \cup \cdots \cup \Xi_n \vdash \H }
+  |});
+
+  ${\Xi \vdash \H}が成り立つとき，規則${\paren{\Xi,\H}}は\dfn{導出可能である (derivable)}と言います．
+  導出可能な規則を\dfn{派生規則 (derived rule)}とも呼びます．
+  ${\paren{\emptyset, \H}}が導出可能であるとき，${\H}を\dfn{定理 (theorem)}と呼びます．
+  ${\H}が定理であるとき，${\H}が\dfn{成り立つ (holds)}と言います．
+  判断${\H_1, \cdots, \H_n, \H}について，全ての${i}について${\H_i}が定理ならば${\H}も定理であるとき，規則${\paren{\set{\H_1,\cdots,\H_n}, \H}}は\dfn{許容可能である (admissible)}と言います．
+  導出可能な規則は許容可能です．
 }
 +p{
-  仮説的判断について以下の補題が成立します．
-  ここで，${\app{\pi}{\Phi}}は${\Phi}の中身を並べ替えたものです．
+  許容可能な規則の代表例をいくつか挙げます．
+  まず，以下の二つの規則は許容可能です．
 
   \math-list(${
   | \derive{| \Phi \vdash \phi | \phi, \Phi \vdash \psi |}{ \Phi \vdash \psi }
   | \derive{| \Phi \vdash \phi |}{ \psi, \Phi \vdash \phi }
-  | \derive{| \Phi \vdash \phi | \app{\pi}{\Phi} = \Phi' |}{ \Phi' \vdash \phi }
+  |});
+
+  この二つは順に\dfn{置換 (substitution)}，\dfn{弱化 (weakening)}という名前で呼ばれる規則です．
+  実は，ここまでの話は判断の左辺を仮定の集合ではなく仮定のリストとしても成り立ちます．
+  その場合，以下の二つの規則が許容可能になります．
+
+  \math-list(${
+  | \derive{| \Phi \vdash \phi |}{ \app{\pi}{\Phi} \vdash \phi }
   | \derive{| \psi, \psi, \Phi \vdash \phi |}{ \psi, \Phi \vdash \phi }
   |});
 
-  これらの補題のように結論が${\Phi \vdash \phi}の形をしたものを\dfn{派生規則 (derived rule)}と呼びます．
-  特に，上記の4つは順に\dfn{置換 (substitution)}，\dfn{弱化 (weakening)}，\dfn{交換 (exchange)}，\dfn{縮約 (contraction)}という名前で呼ばれる派生規則です．
+  ここで，${\app{\pi}{\Phi}}は${\Phi}の中身を並べ替えたものです．
+  これら二つは順に\dfn{交換 (exchange)}，\dfn{縮約 (contraction)}と呼ばれる規則です．
+  交換規則と縮約規則のおかげで，仮説的判断の左辺を実質的に集合と見做すことができるため，リストとして定義しても集合として定義しても証明可能性は実質的には変わりません．
+
+  以上の四つの規則のように特定の論理結合子について言及しない規則を\dfn{構造規則 (structural rule)}と呼びます．
+  通常，単に構造規則といえば上記の4つを指します．
 }
 +p{
-  交換規則と縮約規則のおかげで，仮説的判断の左辺を集合と見做すことができます．
-  つまり，論理式の有限集合${\Phi'}について${\Phi' \vdash' \phi}を，なんらかの${\Phi}について${\abs{\Phi} = \Phi'}かつ${\Phi \vdash \phi}と定義します．
-  ここで，${\abs{\cdot}}は有限列を(順序と重複を無視することで)有限集合に送る写像です．
-  すると，${\abs{\Phi} \vdash' \phi}と${\Phi \vdash \phi}は同値です．
-}
-+p{
-  また，${\IPC^\to}では以下の同値性が成り立ちます．
+  また，${\IPC^\to}では以下の二つの規則が許容可能です．
 
   \math-list(${
   | \derive{| \psi, \Phi \vdash \phi |}{ \Phi \vdash \psi \to \phi }
   | \derive{| \Phi \vdash \psi \to \phi |}{ \psi, \Phi \vdash \phi }
   |});
 
-  一つ目は判断の定義より明らかです．
+  一つ目は${\to}導入です．
   二つ目は\dfn{演繹定理 (deduction theorem)}と呼ばれます．
   これら二つは論理結合子${\to}の特徴付けになっています．
 }
@@ -1144,11 +1191,10 @@ let article = '<
   型付きラムダ計算と${\IPC^\to}の間の関係について説明します．
   ここでは${\base = \PVar}を仮定します．
   型環境をその終域に送る関数を${\abs{\cdot}}とします．
-  型判断${\Gamma \vdash M : \tau}が成り立つとき，${\abs{\Gamma} \vdash' \tau}が成り立ちます．
-  よって，適当な式の有限列${\Gamma'}であって${\abs{\Gamma'} = \abs{\Gamma}}となるものが存在し，${\Gamma' \vdash \tau}が成り立ちます．
-  逆に，${\Phi \vdash \tau}が成り立つとき，${\abs{\Phi} \vdash' \tau}も成り立ちますが，このとき適当な型環境${\Gamma}と項${M}であって${\abs{\Gamma} = \abs{\Phi}}であるものが存在して，${\Gamma \vdash M : \tau}が成り立ちます．
+  型判断${\Gamma \vdash M : \tau}が成り立つとき，${\abs{\Gamma} \vdash \tau}が成り立ちます．
+  逆に，${\Phi \vdash \tau}が成り立つとき，き適当な型環境${\Gamma}と項${M}であって${\abs{\Gamma} = \Phi}であるものが存在して，${\Gamma \vdash M : \tau}が成り立ちます．
   この事実は${\IPC^\to}の\dfn{Curry-Howard同型対応}と呼ばれています．
-  また，この議論から型付きラムダ計算においても${\IPC^\to}の置換，弱化，交換，縮約，あるいは演繹定理に相当するものが成り立つことがわかります．
+  また，この議論から型付きラムダ計算においても型環境をリストとしてみなすことができ，かつ置換，弱化，交換，縮約，演繹定理に相当するものが成り立つことがわかります．
   以降の文章では，型判断を表すのにそれに対応する仮説的判断を用いることがあります．
 }
 >
@@ -1161,6 +1207,7 @@ let article = '<
   具体的には，\ref-subsection(`typeful-phoas`);で定義した項に加えて型判断を実装し，それらの間に適切な相互変換を定義することで，開いた項をうまく扱うことを試みます．
   \footnote{この問題に対する他のアプローチとして文脈様相型を持つプログラミング言語(例えばBeluga \cite[`beluga`];)を用いる手法があります．}
   先に予告しておくと，この方針は(最後の最後で)失敗します．
+  (なので，この節は読み飛ばしてしまっても構いません．)
 }
 +p{
   型判断を表す\code(`judgment₁`);型を定義します．
@@ -1185,40 +1232,42 @@ let article = '<
   ``);
 }
 +p{
-  型付きラムダ計算の派生規則を実装してみます．
-  交換規則を実装するために，リストの置換を表す型と補題を一つ証明しておきます．
-  \footnote{\code(`perm`);もLeanで既に実装されたものがあるのですが，やはり\code(`Prop`);型なので\code(`Type`);として再実装しました．}
-  \footnote{補題と書いていますが，proof relevantなので\code(`lemma`);ではなく\code(`def`);を用います．}
+  型付きラムダ計算の構造規則を実装してみます．
+  最終的に以下の補題を証明することが目標です．
+  \footnote{補題と書いていますが，後々の都合上proof relevantにしています．
+  なので，\code(`lemma`);ではなく\code(`def`);を用いています．}
+  それぞれの型が構造規則にちょうど対応していることがわかります．
 
   \d-code(`
-  inductive perm : list α → list α → Type -- proof relevant version
+  def xchg  : (Γ₁ ~ Γ₂) → judgment₁ Γ₁ t → judgment₁ Γ₂ t
+  def weak  : judgment₁ Γ t₁ → judgment₁ (t₂ :: Γ) t₁
+  def subst : judgment₁ (t₁ :: Γ) t₂ → judgment₁ Γ t₁ → judgment₁ Γ t₂
+  def contr : judgment₁ (t₁ :: t₁ :: Γ) t₂ → judgment₁ (t₁ :: Γ) t₂
+  `);
+
+  ただし，\code(`Γ₁ ~ Γ₂`);は\code(`Γ₁`);と\code(`Γ₂`);がリストとして並べ替えになっていることを表しています．
+  \footnote{\code(`perm`);もLeanで既に実装されたものがあるのですが，やはり\code(`Prop`);型なので\code(`Type`);として再実装しました．}
+
+  \d-code(`
+  inductive perm : list α → list α → Type
   | nil   : perm [] []
   | skip  : Π {x : α} {l₁ l₂ : list α}, perm l₁ l₂ → perm (x :: l₁) (x :: l₂)
   | swap  : Π {x y : α} {l : list α}, perm (y :: x :: l) (x :: y :: l)
   | trans : Π {l₁ l₂ l₃ : list α}, perm l₁ l₂ → perm l₂ l₃ → perm l₁ l₃
 
   local infix ~ := perm
-
-  def mem_perm {t : α} : Π {Γ₁ Γ₂}, Γ₁ ~ Γ₂ → t ∈' Γ₁ → t ∈' Γ₂
-  | _ _ perm.nil h := h
-  | _ _ (perm.skip _) here := here
-  | _ _ (perm.skip p) (there h) := there (mem_perm p h)
-  | _ _ perm.swap here := there here
-  | _ _ perm.swap (there here) := here
-  | _ _ perm.swap (there (there h)) := there (there h)
-  | _ _ (perm.trans p₁ p₂) h := mem_perm p₂ (mem_perm p₁ h)
   `);
-
-  補題から交換規則\code(`xchg`);が直ちに定義できます．
+}
++p{
+  さきに簡単なものから実装します．
+  もし置換規則が証明できていれば，縮約規則はそれを用いて直ちに定義できます．
 
   \d-code(`
-  def xchg : Π {Γ₁ Γ₂ t}, (Γ₁ ~ Γ₂) → judgment₁ Γ₁ t → judgment₁ Γ₂ t
-  | _ _ _ p (var h) := var (mem_perm p h)
-  | _ _ _ p (lam m) := lam (xchg (perm.skip p) m)
-  | _ _ _ p (app m₁ m₂) := app (xchg p m₁) (xchg p m₂)
+  def contr : judgment₁ (t₁ :: t₁ :: Γ) t₂ → judgment₁ (t₁ :: Γ) t₂ :=
+  λ m, subst m (var here)
   `);
 
-  \code(`xchg`);を用いると弱化規則\code(`weak`);もすぐに定義できます．
+  同様に，交換規則があれば弱化規則は直ちに証明できます．
 
   \d-code(`
   def weak : Π {Γ t₁ t₂}, judgment₁ Γ t₁ → judgment₁ (t₂ :: Γ) t₁
@@ -1227,28 +1276,72 @@ let article = '<
   | _ _ _ (app m₁ m₂) := app (weak m₁) (weak m₂)
   `);
 
-  同様に，\code(`xchg`);を用いると置換規則\code(`subst`);も簡単に記述できます．
+  この補題は，証明木で考えると以下のような証明木の間の変換を定義しています．
+
+  \eqn(${
+    \derive{| \phi_1, \Gamma \vdash \phi_2 |}{ \Gamma \vdash \phi_1 \to \phi_2 }
+    \mapsto
+    \derive{| \derive{| \psi, \phi_1, \Gamma \vdash \phi_2 |}{ \phi_1, \psi, \Gamma \vdash \phi_2 } |}{ \psi, \Gamma \vdash \phi_1 \to \phi_2 }
+  });
+}
++p{
+  交換規則についても以下の補題があれば簡単に定義できます．
   \footnote{
-  が，実際には現行のLeanはこれが停止することを自動で証明できず，エラーが出てしまいます．
-  そこで，やや本質的でないのですが，\code(`subst`);が停止することを証明するために型判断の\dfn{高さ (height)}の概念を定義します．
-  そして，交換規則により型判断を変換しても高さが変わらないことを示します．
+    ちなみに，補題の証明は以下の通りです．
+    \d-code(`
+    def mem_perm {t : α} : Π {Γ₁ Γ₂}, Γ₁ ~ Γ₂ → t ∈' Γ₁ → t ∈' Γ₂
+    | _ _ perm.nil h := h
+    | _ _ (perm.skip _) here := here
+    | _ _ (perm.skip p) (there h) := there (mem_perm p h)
+    | _ _ perm.swap here := there here
+    | _ _ perm.swap (there here) := here
+    | _ _ perm.swap (there (there h)) := there (there h)
+    | _ _ (perm.trans p₁ p₂) h := mem_perm p₂ (mem_perm p₁ h)
+    `);
+  }
+
+  \d-code(`
+  def mem_perm : Γ₁ ~ Γ₂ → t ∈' Γ₁ → t ∈' Γ₂
+  `);
+
+  この補題は「リストの並び替えが所属関係を保つ」ことを主張しています．
+  これを用いた交換規則の具体的な証明は以下のようになります．
+
+  \d-code(`
+  def xchg : Π {Γ₁ Γ₂ t}, (Γ₁ ~ Γ₂) → judgment₁ Γ₁ t → judgment₁ Γ₂ t
+  | _ _ _ p (var h) := var (mem_perm p h)
+  | _ _ _ p (lam m) := lam (xchg (perm.skip p) m)
+  | _ _ _ p (app m₁ m₂) := app (xchg p m₁) (xchg p m₂)
+  `);
+}
++p{
+  さて，残る最後の規則である置換規則についても，以下のように交換規則を用いることで簡単に証明できると予想されます．
+
+  \d-code(`
+  def subst : Π {Γ t₁ t₂}, judgment₁ (t₁ :: Γ) t₂ → judgment₁ Γ t₁ → judgment₁ Γ t₂
+  | _ _ _ (var here) m := m
+  | _ _ _ (var (there h)) m := var h
+  | _ _ _ (app m₁ m₂) m := app (subst m₁ m) (subst m₂ m)
+  | _ _ _ (lam m₁) m := lam (subst (xchg perm.swap m₁) (weak m))
+  `);
+
+  しかし残念ながら，実際には現行のLeanは上の定義が停止することを自動で証明できず，エラーが出てしまいます．
+  そこで，やや本質的でないのですが，\code(`subst`);が停止することを証明するために型判断の\dfn{高さ (height)}という概念を導入します．
 
   \d-code(`
   def heightof : Π {Γ t}, judgment₁ Γ t → ℕ
   | _ _ (var h) := 1
   | _ _ (lam m) := 1 + heightof m
   | _ _ (app m₁ m₂) := 1 + max (heightof m₁) (heightof m₂)
-
-  lemma height_xchg_eq_height {m : judgment₁ Γ₁ t} : Π {Γ₂} {p : Γ₁ ~ Γ₂}, heightof (xchg p m) = heightof m :=
-  begin
-    induction m with _ _ _ _ _ _ _ ih₁ _ _ _ _ _ ih₂ ih₃,
-    { intros, refl },
-    { intros, unfold xchg heightof, rw ih₁ },
-    { intros, unfold xchg heightof, rw [ih₂, ih₃] }
-  end
   `);
 
-  この補題を用いて，\code(`subst`);が停止することを証明したものが以下になります．
+  そして，交換規則を用いても型判断の高さが変わらないことを示します．
+
+  \d-code(`
+  lemma height_xchg_eq_height {p : Γ₁ ~ Γ₂} {m : judgment₁ Γ₁ t} : heightof (xchg p m) = heightof m
+  `);
+
+  この補題を用いて\code(`subst`);が停止することを証明したものが以下になります．
   Leanは\code(`subst`);を\dfn{well-founded recursion}により定義しようとします．
   その際に引数が減少していることを\code(`have`);を用いて明示しています．
   \code(`subst`);が実装するアルゴリズム自体は上のものと全く同じです．
@@ -1274,22 +1367,6 @@ let article = '<
   using_well_founded
   { rel_tac := λ _ _, `[exact ⟨_, measure_wf (λ v, heightof v.snd.snd.snd.fst)⟩] }
   ``);
-  }
-
-  \d-code(`
-  def subst : Π {Γ t₁ t₂}, judgment₁ (t₁ :: Γ) t₂ → judgment₁ Γ t₁ → judgment₁ Γ t₂
-  | _ _ _ (var here) m := m
-  | _ _ _ (var (there h)) m := var h
-  | _ _ _ (app m₁ m₂) m := app (subst m₁ m) (subst m₂ m)
-  | _ _ _ (lam m₁) m := lam (subst (xchg perm.swap m₁) (weak m))
-  `);
-
-  縮約の規則は置換規則から直ちに定義できます．
-
-  \d-code(`
-  def contr : judgment₁ (t₁ :: t₁ :: Γ) t₂ → judgment₁ (t₁ :: Γ) t₂ :=
-  λ m, subst m (var here)
-  `);
 }
 +p{
   項\code(`term`);と型判断\code(`judgment₁`);の間の相互変換を定義します．
@@ -1365,29 +1442,26 @@ let article = '<
   \code(`WF t m`);は全ての\code(`m`);が満たしていてほしい性質です．
   実際，様々な具体的な\code(`m : Term t`);に対して\code(`WF t m`);を(Leanの中で)証明をすることができます．
   \footnote{メタ的な議論を用いれば${\forall \text!{\code(`m : Term t`);}. \text!{\code(`WF t m`); is inhabited}}が証明できると予想されています．\cite[`CPDT`];}
-  もし，全ての項に対して\code(`WF t m`);が成り立つことをLeanの中で証明できれば，それを用いて\code(`to_judgment₁`);を用いて定義できます．
-  \footnote{
-    \code(`term_wf`);の存在を仮定した場合の\code(`to_judgment₁`);の定義の例を以下に掲載します．
-
-    \d-code(`
-    constant term_wf : Π t m, WF t m
-
-    def to_judgment₁_var : Π {Γ t} {x₁ : ν₁ t} {x₂ : ν₂ t}, (sigma.mk t (prod.mk x₁ x₂)) ∈' Γ → t ∈' (list.map (λ x, sigma.fst x) Γ)
-    | _ _ _ _ here := here
-    | _ _ _ _ (there h) := there (to_judgment₁_var h)
-
-    def to_judgment₁' : Π {Γ t} {m₁ : term (λ x, unit) t} {m₂ : term (λ x, unit) t}, wf Γ m₁ m₂ → judgment₁ (list.map (λ x, sigma.fst x) Γ) t
-    | _ _ _ _ (wf.var h) := var (to_judgment₁_var h)
-    | _ _ _ _ (wf.lam f) := lam (to_judgment₁' (f () ()))
-    | _ _ _ _ (wf.app m₁ m₂) := app (to_judgment₁' m₁) (to_judgment₁' m₂)
-
-    noncomputable def to_judgment₁ : Term t → judgment₁ [] t := 
-    λ m, to_judgment₁' (term_wf _ m _ _)
-    `);
-  }
+  もし，全ての項に対して\code(`WF t m`);が成り立つことを表す以下の項をLeanの中で証明できれば，それを用いて\code(`to_judgment₁`);を用いて定義できます．
 
   \d-code(`
   def term_wf : Π t m, WF t m := ???
+  `);
+
+  \code(`term_wf`);を仮定した場合の\code(`to_judgment₁`);の定義は以下のようになるでしょう．
+
+  \d-code(`
+  def to_judgment₁_var : Π {Γ t} {x₁ : ν₁ t} {x₂ : ν₂ t}, (sigma.mk t (prod.mk x₁ x₂)) ∈' Γ → t ∈' (list.map (λ x, sigma.fst x) Γ)
+  | _ _ _ _ here := here
+  | _ _ _ _ (there h) := there (to_judgment₁_var h)
+
+  def to_judgment₁' : Π {Γ t} {m₁ : term (λ x, unit) t} {m₂ : term (λ x, unit) t}, wf Γ m₁ m₂ → judgment₁ (list.map (λ x, sigma.fst x) Γ) t
+  | _ _ _ _ (wf.var h) := var (to_judgment₁_var h)
+  | _ _ _ _ (wf.lam f) := lam (to_judgment₁' (f () ()))
+  | _ _ _ _ (wf.app m₁ m₂) := app (to_judgment₁' m₁) (to_judgment₁' m₂)
+
+  def to_judgment₁ : Term t → judgment₁ [] t := 
+  λ m, to_judgment₁' (term_wf _ m _ _)
   `);
 
   しかし，\code(`term_wf`);は定義できないはずです．
@@ -1475,24 +1549,9 @@ let article = '<
 
   型判断の定義に現れる最も基本的な三つの規則も素直に定義されます．
   \footnote{
-    ちなみに，以下のようなコードになります．
+    たとえば\code(`app`);は以下のようなコードになります．
 
     \d-code(`
-    def var' : Π {Γ}, judgment₂ ν (t :: Γ) t
-    | [] := λ x, var x
-    | (t :: Γ) := λ x y, var' x
-
-    def var : Π {Γ}, t ∈' Γ → Judgment₂ Γ t
-    | _ here := λ ν, var' ν
-    | _ (there h) := weak (var h)
-
-    def lam' : Π {Γ}, judgment₂ ν (t₁ :: Γ) t₂ → judgment₂ ν Γ (arrow t₁ t₂)
-    | [] m := lam (λ x, m x)
-    | (t :: Γ) f := λ x, lam' (λ y, f y x)
-
-    def lam : Judgment₂ (t₁ :: Γ) t₂ → Judgment₂ Γ (arrow t₁ t₂) :=
-    λ m ν, lam' ν (m ν)
-
     def app' : Π {Γ}, judgment₂ ν Γ (arrow t₁ t₂) → judgment₂ ν Γ t₁ → judgment₂ ν Γ t₂
     | [] m₁ m₂ := app m₁ m₂
     | (t :: Γ) f m := λ x, app' (f x) (m x)
@@ -1503,7 +1562,7 @@ let article = '<
   }
 
   \d-code(`
-  def var : Π {Γ}, t ∈' Γ → Judgment₂ Γ t
+  def var : t ∈' Γ → Judgment₂ Γ t
   def lam : Judgment₂ (t₁ :: Γ) t₂ → Judgment₂ Γ (arrow t₁ t₂)
   def app : Judgment₂ Γ (arrow t₁ t₂) → Judgment₂ Γ t₁ → Judgment₂ Γ t₂
   `);
@@ -1535,25 +1594,24 @@ let article = '<
 >
 
 +section?:(`hol`){高階論理}<
-+subsection?:(`hol`){高階論理}<
++subsection?:(`hol`){高階論理の意味論}<
 +p{
   \dfn{高階論理 (Higher-order logic, HOL)}を導入します．
   高階論理と呼ばれるものには様々な変種があり確立された唯一の定義があるわけではありません．
-  例えば，Churchの\emph{Simple type theory (STT)}\cite[`Church40`];やCoquandとHuetの\emph{Calculus of construction (CoC)}\cite[`CoquandH88`];が有名です．
+  例えば，Churchの\emph{Simple Type Theory (STT)}\cite[`Church40`];やCoquandとHuetの\emph{Calculus of Constructions (CoC)}\cite[`CoquandH88`];が有名です．
   この節では高階論理のなかでも特に小さくわかりやすい等号に基づく定義を紹介します．
-}
-+p{
-  定義に移る前に，ひとつ注意を述べます．
-  この節で導入する高階論理は\dfn{古典高階論理 (Classical HOL)}と呼ばれる種類の古典論理です．
-  一方で，次節\ref-subsection(`hol-impl`);で実際に実装する高階論理は\dfn{直観主義高階論理 (Intuitionistic HOL)}として分類されるものです．
-  両者はアイデアはほぼ同じですが直観主義高階論理の方が意味論の定義が大変なのでここでは古典論理を説明します．
-  証明論的には両者の違いはそこまでややこしいものではなく，直観主義高階論理の演繹体系は古典高階論理の演繹体系を直観主義にするだけで得られます．\cite[`BenzmullerM14`];
-  \ref-subsection(`hol-impl`);で用いる定義はとくに\emph{HOL Light}\cite[`hol-light`];のコア言語から多相型を除いたもの，あるいは\emph{初等トポスの内部言語}\cite[`LambekS86`];を冪対象でなく指数対象で形式化したものと考えられます．
 }
 +p{
   高階論理の構文論を定義します．
   高階論理はChurch流の型付きラムダ計算を拡張したような構文を持ちます．
-  基底型の集合として${\set{\iota, \omicron}}という二点集合をとります．
+  ただし，基底型や関数型に加えて${\omicron}で表される型を持ちます．
+  つまり，高階論理の型の集合は以下のBNFで表せます．
+
+  \eqn(${
+    \tau \Coloneq \iota \mid \omicron \mid \tau \to \tau
+  });
+
+  ただし，${\iota}は${\base}の元を表すとします．
   一階述語論理とのアナロジーで言えば，${\iota}が項が動く領域で，${\omicron}が命題が動く領域です．
   ${\omicron}型を持つ変数をしばしば${p,q,\cdots}というメタ変数で表します．
   高階論理の\dfn{言語 (language)}あるいは\dfn{シグニチャ (signature)}とは型で添字づけられた集合${\paren{\Sigma_\tau}_{\tau \in \Ty{\base}}}のこととします．
@@ -1563,9 +1621,18 @@ let article = '<
   \math-list(${
   | \derive{| c \in \Sigma_\tau |}{ c^\tau \in \PsLam }
   | \derive{| M \in \PsLam | N \in \PsLam |}{ M \doteq N \in \PsLam }
+  |});
+
+  \math-list(${
   | \derive{| c \in \Sigma_\tau |}{ c^\tau \in \Lambda_\tau }
   | \derive{| M \in \Lambda_\tau | N \in \Lambda_\tau |}{ M \doteq N \in \Lambda_\omicron }
   |});
+
+  つまり，高階論理の擬項の集合は以下のBNFで表せます．
+
+  \eqn(${
+    M \Coloneq x^\tau \mid c^\tau \mid \lambda x^\tau. M \mid M M \mid M \doteq M
+  });
 
   ${\Sigma_\tau}の要素であるような項を\dfn{定数 (constant)}と呼びます．
   ${\beta}簡約や${\eta}展開は定数や${\doteq}に対してcongruentに振る舞うとします．
@@ -1592,16 +1659,16 @@ let article = '<
   ];
 
   を満たすものとします．
-  \footnote{${D_\iota}を決めれば残りの${D_\tau}は自動的に決まります．}
+  \footnote{全ての基底型${\iota}に対して${D_\iota}を決めれば残りの${D_\tau}は自動的に決まります．}
   構造${\M}についての\dfn{付値 (valuation)}とは各変数${x \in \Var}に対して${D_{\app{\A}{x}}}の要素を割り当てる写像です．
   構造${\M}による項の\dfn{解釈 (interpretation)}を型${\tau}と付値${\theta}を添字にとる写像${\den{\cdot}^\M_{\tau,\theta} : \Lambda_\tau \to D_\tau}として以下の帰納法で定めます．
 
   \align[
-    ${| \den{x^\tau}^\M_{\tau,\theta} |= \app{\theta}{x} |};
-    ${| \den{c^\tau}^\M_{\tau,\theta} |= \app{\M_\tau}{c} |};
-    ${| \app{\den{\lambda x^\tau.M}^\M_{\tau\to\sigma,\theta}}{v} |= \den{M}^\M_{\sigma,\subst{v}{x} \theta} |};
-    ${| \den{MN}^\M_{\sigma,\theta} |= \app{\den{M}^\M_{\tau\to\sigma,\theta}}{\den{N}^\M_{\tau,\theta}} |};
-    ${| \den{M \doteq N}^\M_{\omicron,\theta} |= \cases![
+    ${| \den{x^\tau}^\M_{\tau,\theta} |\coloneq \app{\theta}{x} |};
+    ${| \den{c^\tau}^\M_{\tau,\theta} |\coloneq \app{\M_\tau}{c} |};
+    ${| \app{\den{\lambda x^\tau.M}^\M_{\tau\to\sigma,\theta}}{v} |\coloneq \den{M}^\M_{\sigma,\subst{v}{x} \theta} |};
+    ${| \den{MN}^\M_{\sigma,\theta} |\coloneq \app{\den{M}^\M_{\tau\to\sigma,\theta}}{\den{N}^\M_{\tau,\theta}} |};
+    ${| \den{M \doteq N}^\M_{\omicron,\theta} |\coloneq \cases![
       (${0}, {(${\den{M}^\M_{\tau,\theta} = \den{N}^\M_{\tau,\theta}})});
       (${1}, {otherwise})
     ] |}
@@ -1611,14 +1678,87 @@ let article = '<
   また，任意の付値${\theta}について${\M,\theta \vDash \phi}であるとき，${\M \vDash \phi}と書きます．
   任意の構造${\M}について${\M \vDash \phi}であるとき，${\vDash \phi}と書き，${\phi}は\dfn{恒真である (valid)}と言います．
   ある構造${\M}と付値${\theta}が存在して${\M,\theta \vDash \phi}となるとき，${\phi}は\dfn{充足可能である (satisfiable)}と言います．
+  ${\phi_1}と${\phi_2}を論理式とします．
+  任意の構造${\M}と任意の付値${\theta}について${\den{\phi_1}^\M_{\omicron,\theta} = \den{\phi_2}^\M_{\omicron,\theta}}となるとき，${\phi_1}と${\phi_2}は\dfn{論理同値である (logically equivalent)}と言い，${\phi_1 \simeq \phi_2}と書きます．
   文の集合${E}について，任意の${E}の要素${A}が${\M \vDash A}を満たすとき，${\M}を${E}の\dfn{モデル (model)}と呼びます．
   また，理論${T = \paren{\Sigma,E}}の\dfn{モデル}とは${E}のモデルのことです．
   論理式${\phi}と文の集合${E}について，任意の${E}のモデル${\M}が${\M \vDash \phi}を満たすとき，${E \vDash \phi}と書き，${\phi}を${E}の\dfn{論理的帰結 (logical consequence)}と呼びます．
 }
 +p{
-  高階論理の証明体系を与えます．
-  ここでは自然演繹を採用します．
-  高階論理の判断は${\Phi \vdash_\Gamma \phi}という形です．
+  高階論理の表現能力について簡単に触れます．
+  高階論理が持つ論理式の構成子は${\doteq}だけです．
+  これでは一見，高階論理が非常に表現力の弱い論理に見えます．
+  \footnote{たとえば，論理結合子が${\land}しかない命題論理を考えると，それはかなり表現力の弱い論理であると言えるでしょう．}
+  しかし，実はラムダ抽象をうまく用いることで通常用いられる種々の論理結合子を高階論理の中で定義することができます．
+  たとえば，論理式${\phi_1}と${\phi_2}に対して以下のような論理式を考えます．
+
+  \eqn(${
+    \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \paren{f \doteq f} \paren{f \doteq f}} \doteq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \phi_1 \phi_2}
+  });
+
+  この論理式を${\phi_1 \mathrel{\diamond} \phi_2}と書くことにします．
+  すると，以下が成り立ちます．
+}
++lemma{
+  任意の構造${\M}と付値${\theta}について，${\M,\theta \vDash \phi_1 \mathrel{\diamond} \phi_2}であるとき，かつそのときに限り${\M,\theta \vDash \phi_1}かつ${\M,\theta \vDash \phi_2}
+}
++p{
+  よって，上で定義した${\mathrel{\diamond}}は通常の論理で言うconjunctionと見なせます．
+  これと同じことがより一般に直観主義論理の基本的な論理結合子\footnote{線形論理でいうところのnegativeな結合子．あるいは，圏論的意味論で右随伴によって意味が定められる結合子．}について成り立ちます．\cite[`Farmer08`];
+  論理結合子${\top}，${\land}，${\to}，${\forall}を以下のように定義します．
+
+  \align[
+    ${| \top |\coloneq \paren{\lambda p^\omicron.p} \doteq \paren{\lambda p^\omicron.p} |};
+    ${| \phi_1 \land \phi_2 |\coloneq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \top \top} \doteq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \phi_1 \phi_2} |};
+    ${| \phi_1 \to \phi_2 |\coloneq \paren{\phi_1 \land \phi_2} \doteq \phi_1 |};
+    ${| \forall x^\tau.\phi |\coloneq \paren{\lambda x^\tau.\phi} \doteq \paren{\lambda x^\tau.\top} |};
+  ];
+
+  すると，以下の補題が成り立ちます．
+}
++lemma{
+  任意の構造${\M}と付値${\theta}について
+  \listing{
+    * ${\M,\theta \vDash \top}
+    * ${\M,\theta \vDash \phi_1 \land \phi_2}であるとき，かつそのときに限り，${\M,\theta \vDash \phi_1}かつ${\M,\theta \vDash \phi_2}
+    * ${\M,\theta \vDash \phi_1 \to \phi_2}であるとき，かつそのときに限り，${\M,\theta \vDash \phi_1}ならば${\M,\theta \vDash \phi_2}
+    * ${\M,\theta \vDash \forall x^\tau.\phi}であるとき，かつそのときに限り，任意の元${a \in D_\tau}について${\M,\subst{a}{x} \theta \vDash \phi}
+  }
+  が成り立つ．
+}
++p{
+  以上の論理結合子を用いることで，他の様々な論理結合子も定義することができます．
+
+  \align[
+    ${| \bot |\coloneq \forall p^\omicron.p |};
+    ${| \lnot \phi |\coloneq \phi \to \bot |};
+    ${| \phi_1 \leftrightarrow \phi_2 |\coloneq \paren{\phi_1 \to \phi_2} \land \paren{\phi_2 \to \phi_1} |};
+    ${| \phi_1 \lor \phi_2 |\coloneq \forall p^\omicron. \paren{\paren{\phi_1 \to p} \land \paren{\phi_2 \to p}} \to p |};
+    ${| \exists x^\tau.\phi |\coloneq \forall p^\omicron. \paren{\forall x^\tau. \phi \to p} \to p |};
+    ${| \uexists x^\tau.\phi |\coloneq \exists x^\tau.\phi \land \forall y^\tau. \subst{y}{x}\phi \to x \doteq y |};
+  ];
+
+  ここでの命題の上の量化${\forall p^\omicron.\phi}を用いましたが，このテクニックはGirardのSystem F(二階命題論理)で論理結合子を定義する際に使われるテクニックと同じものです．
+  一連の議論により，高階論理が論理として十分強力な表現力を持つことがわかります．
+}
+>
+
++subsection?:(`hol-nd`){高階論理の演繹体系}<
++p{
+  本節では高階論理の証明体系を与えます．
+  証明体系の与え方には様々な流儀がありますが，この記事では(私の個人的な好みによって)自然演繹を採用します．
+}
++p{
+  本題に移る前に，ひとつ注意を述べます．
+  前節\ref-subsection(`hol`);で導入した高階論理は\dfn{古典高階論理 (Classical HOL)}と呼ばれる種類の高階論理です．
+  一方で，本節\ref-subsection(`hol-nd`);で定義する高階論理の証明体系は\dfn{直観主義高階論理 (Intuitionistic HOL)}に対応する証明体系です．
+  古典公開論理と直観主義高階論理はアイデアはほぼ同じですが直観主義高階論理の方が意味論の定義が大変なので先に古典論理を説明しました．
+  証明論的には両者の違いはそこまでややこしいものではなく，古典高階論理の演繹体系は直観主義高階論理の演繹体系を通常のやり方で古典にする(例えば，排中律を仮定する)だけで得られます．\cite[`BenzmullerM14`];
+  本節で導入する演繹体系は\emph{HOL Light}\cite[`hol-light`];のコア言語から多相型を除いたもの，あるいは\emph{初等トポスの内部言語}\cite[`LambekS86`];を冪対象でなく指数対象で形式化したものと考えても良いです．
+}
++p{
+  それでは，高階論理の自然演繹を導入します．
+  高階論理の自然演繹の判断は${\Phi \vdash_\Gamma \phi}という形です．
   ただしこのとき，${\Gamma}は型環境，${\phi}は論理式，${\Phi = \set{\phi_1,\cdots,\phi_n}}は論理式の有限集合で，各論理式について以下の型判断が成り立つとします．
 
   \math-list(${
@@ -1628,83 +1768,94 @@ let article = '<
   | \Gamma \vdash \phi_n : \omicron
   |});
 
-  高階論理の証明(つまり判断の定義)は以下の三つの規則で表されます．
+  高階論理の導出は以下の三つの規則図式を基に定義されます．
 
   \math-list(${
-  | \derive{| \phi \in \Phi |}{ \Phi \vdash_\Gamma \phi }
-  | \derive{| M =_{\beta\eta} N |}{ \Phi \vdash_\Gamma M \doteq N }
+  | \derive?:{\ \phi \in \Phi}{| |}{ \Phi \vdash_\Gamma \phi }
+  | \derive?:{\ M =_{\beta\eta} N}{| |}{ \Phi \vdash_\Gamma M \doteq N }
   | \derive{| \Phi \vdash_\Gamma M_1 \doteq M_2 | \Phi \vdash_\Gamma \subst{M_1}{x} N |}{ \Phi \vdash_\Gamma \subst{M_2}{x} N }
   |});
 
-  これらの規則を順に\dfn{仮定 (assumption)}，\dfn{${\doteq}導入 (${\doteq}-introduction)}，\dfn{${\doteq}除去 (${\doteq}-elimination)}と呼びます．
-  場合によっては以下の二つの規則を加えることもあります．
+  これらの図式に当てはまる規則を順に\dfn{仮定 (hypothesis)}，\dfn{${\doteq}導入 (${\doteq}-introduction)}，\dfn{${\doteq}除去 (${\doteq}-elimination)}と呼びます．
+  通常，上記の三つの規則図式に加えて以下の二つの規則図式を加えます．
 
   \math-list(${
   | \derive{| \phi_1, \Phi \vdash_\Gamma \phi_2 | \phi_2, \Phi \vdash_\Gamma \phi_1 |}{ \Phi \vdash_\Gamma \phi_1 \doteq \phi_2 }
-  | \derive{| \Phi \vdash_{\set{x : \tau} \cup \Gamma} M \doteq N | x \mathrel{\#} \Phi |}{ \Phi \vdash_\Gamma \paren{\lambda x^\tau.M} \doteq \paren{\lambda x^\tau.N}}
+  | \derive?:{\ x \fresh \Phi}{| \Phi \vdash_{\set{x : \tau} \cup \Gamma} M \doteq N |}{ \Phi \vdash_\Gamma \paren{\lambda x^\tau.M} \doteq \paren{\lambda x^\tau.N}}
   |});
 
-  この二つの規則はそれぞれ\dfn{命題外延性 (propositional extensionality)}，\dfn{関数外延性 (functional extensionality)}と呼ばれます．
-  型付きラムダ計算の場合と同様の理由で高階論理の判断の左辺は集合ではなく(有限の)リストとして定義しても証明可能性は変わりません．
-  その場合，弱化，置換，交換，縮約，演繹定理が成り立ちます．
-  さらに，集合論的意味論に対して健全性が成り立ちます．
+  これら二つの規則図式はそれぞれ\dfn{命題外延性 (propositional extensionality)}，\dfn{関数外延性 (functional extensionality)}と呼ばれます．
+}
++p{
+  この体系では，自然演繹に通常要請される性質が問題なく成立します．
+  たとえば，証明の構造規則として弱化と置換の規則が許容可能になります．
+}
++lemma{
+  以下の規則は許容可能である．
+  \math-list(${
+  | \derive{| \Phi \vdash_\Gamma \phi |}{ \psi, \Phi \vdash_\Gamma \phi }
+  | \derive{| \Phi \vdash_\Gamma \psi | \psi, \Phi \vdash_\Gamma \phi |}{ \Phi \vdash_\Gamma \phi }
+  |});
+}
++p{
+  また，仮定についてのみならず型環境についても期待される性質が成り立ちます．
+}
++lemma{
+  以下の規則は許容可能である．
+  \math-list(${
+  | \derive{| \Phi \vdash_\Gamma \phi |}{ \Phi \vdash_{\set{x : \app{\A}{x}} \cup \Gamma} \phi }
+  | \derive{| \Gamma \vdash M : \tau | \Phi \vdash_{\set{x : \tau} \cup \Gamma} \phi |}{ \subst{M}{x} \Phi \vdash_\Gamma \subst{M}{x} \phi }
+  |});
+}
++p{
+  ${\IPC^\to}の場合と同様の理由で高階論理の判断の左辺は集合ではなく(有限の)リストとして定義しても証明可能性は変わりません．
+  その場合，交換規則と縮約規則が許容可能になります．
+  同様に，型環境をリストとして定義することも可能です．
+}
++p{
+  この演繹体系は集合論的意味論に対して(強い)健全性を持ちます．
 }
 +theorem{
   ${E \vdash_\Gamma \phi}のとき${E \vDash \phi}が成り立つ．
 }
 +p{
-  高階論理の表現能力について簡単に触れます．
-  高階論理が持つ論理式の構成子は${\doteq}だけです．
-  これでは一見高階論理が非常に表現力の弱い論理に見えます．
-  \footnote{たとえば，論理結合子が${\land}しかない命題論理を考えると，それはかなり表現力の弱い論理であると言えるでしょう．}
-  しかし，実は高階論理ではラムダ抽象をうまく用いることで通常用いられる種々の論理結合子を高階論理の中で定義することができます．
-  たとえば，論理式${\phi_1}と${\phi_2}に対して以下のような論理式を考えます．
+  一方でその逆，つまり集合論的意味論に対する完全性は成立しません．
+  \footnote{一般に，高階論理の集合論的意味論に対して健全性・完全性・実効性(証明体系のある種の有限性)の全てを満たす演繹体系は存在しないことが知られています．
+  今回の体系は健全性と実効性を持つので完全性を持ちません．
+  一方で，トポス意味論に対しては今回の演繹体系は健全性・完全性・実効性の全てを満たします．}
+  しかし，基本的な推論は行うことができます．
+  例えば，\ref-subsection(`hol`);で導入した基本的な論理結合子について，その導入則と除去則が許容可能になります．
 
-  \eqn(${
-    \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \paren{f \doteq f} \paren{f \doteq f}} \doteq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \phi_1 \phi_2}
-  });
+  \math-list(${
+  | \derive{| |}{ \Phi \vdash_\Gamma \top }
+  | \derive{| \Phi \vdash_\Gamma \phi_1 | \Phi \vdash_\Gamma \phi_2 |}{ \Phi \vdash_\Gamma \phi_1 \land \phi_2 }
+  | \derive{| \Phi \vdash_\Gamma \phi_1 \land \phi_2 |}{ \Phi \vdash_\Gamma \phi_1 }
+  | \derive{| \Phi \vdash_\Gamma \phi_1 \land \phi_2 |}{ \Phi \vdash_\Gamma \phi_2 }
+  | \derive{| \phi_1, \Phi \vdash_\Gamma \phi_2 |}{ \Phi \vdash_\Gamma \phi_1 \to \phi_2 }
+  | \derive{| \Phi \vdash_\Gamma \phi_1 \to \phi_2 | \Phi \vdash_\Gamma \phi_1 |}{ \Phi \vdash_\Gamma \phi_2 }
+  | \derive?:{\ x \fresh \Phi}{| \Phi \vdash_{\set{x : \tau} \cup \Gamma} \phi |}{ \Phi \vdash_\Gamma \forall x^\tau. \phi }
+  | \derive{| \Phi \vdash_\Gamma \forall x^\tau. \phi | \Gamma \vdash M : \tau |}{ \Phi \vdash_\Gamma \subst{M}{x} \phi }
+  |});
 
-  この論理式を${\phi_1 \land \phi_2}と書くことにします．
-  すると，以下が成り立ちます．
-}
-+lemma{
-  ${E \vDash \phi_1 \land \phi_2}であるときかつその時に限り${E \vDash \phi_1}かつ${E \vDash \phi_2}
-}
-+p{
-  先ほど与えた証明体系でも同様の(より強い)主張が成り立ちます．
-  \footnote{今回の証明体系は集合論的意味論に対して完全性を持たないので，別途証明する必要があります．}
-  よって，上で定義した${\land}は通常の論理で言うconjunctionと見なせます．
-  このように高階論理では等式${\doteq}とラムダ抽象を用いて様々な論理結合子を定義することができます．\cite[`Farmer08`];
-
-  \align[
-    ${| \top |\coloneq \paren{\lambda p^\omicron.p} \doteq \paren{\lambda p^\omicron.p} |};
-    ${| \phi_1 \land \phi_2 |\coloneq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \top \top} \doteq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \phi_1 \phi_2} |};
-    ${| \forall x^\tau.\phi |\coloneq \paren{\lambda x^\tau.\phi} \doteq \paren{\lambda x^\tau.\top} |};
-    ${| \bot |\coloneq \forall p^\omicron.p |};
-    ${| \phi_1 \to \phi_2 |\coloneq \paren{\phi_1 \land \phi_2} \doteq \phi_1 |};
-    ${| \lnot \phi |\coloneq \phi \to \bot |};
-    ${| \phi_1 \leftrightarrow \phi_2 |\coloneq \paren{\phi_1 \to \phi_2} \land \paren{\phi_2 \to \phi_1} |};
-    ${| \phi_1 \lor \phi_2 |\coloneq \forall p^\omicron. \paren{\paren{\phi_1 \to p} \land \paren{\phi_2 \to p}} \to p |};
-    ${| \exists x^\tau.\phi |\coloneq \forall p^\omicron. \paren{\forall x^\tau. \phi \to p} \to p |};
-    ${| \uexists x^\tau.\phi |\coloneq \exists x^\tau.\phi \land \forall y^\tau. \paren{\lambda x^\tau.\phi}y \to x \doteq y |};
-  ];
+  ただし${\land}，${\to}，${\forall}の導入則が許容可能であるためには命題外延性と関数外延性が必要です．
+  \footnote{いずれも2，3行で証明できるので，興味がある方は証明してみてください．}
 }
 +p{
-  この論理結合子の定義を用いると命題外延性と関数外延性の規則がなぜそう呼ばれるかがわかります．
-  命題外延性の規則を追加することは以下の公理を仮定することと同値です．
+  さて，論理結合子を用いることで命題外延性と関数外延性の規則図式がなぜそう呼ばれるかがわかります．
+  命題外延性の規則図式を追加することは以下の公理図式を仮定することと同値です．
 
   \eqn(${
     \paren{\phi_1 \leftrightarrow \phi_2} \leftrightarrow \paren{\phi_1 \doteq \phi_2}
   });
 
-  これは「(証明可能性で)区別できないものは同じである」というまさに(命題についての)外延性そのものです．
-  同様に，関数外延性の規則を追加することは以下の公理を仮定することと同値です．
+  これは「(解釈で)区別できないもの(命題)は同じである」というまさに(命題についての)外延性そのものです．
+  同様に，関数外延性の規則図式を追加することは以下の公理図式を仮定することと同値です．
 
   \eqn(${
     \paren{\forall x^\tau. \mathop{f_1} x \doteq \mathop{f_2} x} \leftrightarrow \paren{f_1 \doteq f_2}
   });
 
-  これもまさに「(適用によって)区別できないものは同じである」という(関数についての)外延性に他なりません．
+  これもまさに「(適用によって)区別できないもの(関数)は同じである」という(関数についての)外延性に他なりません．
 }
 >
 
@@ -1769,12 +1920,12 @@ let article = '<
   最後に高階論理の証明を定義して，全ての定義が終わりです．
 
   \d-code(`
-  inductive proof : Π {Γ}, list (Judgment Γ prop) → Judgment Γ prop → Prop
-  | assump : Π {Γ Φ} {φ : Judgment Γ prop}, φ ∈ Φ → proof Φ φ
-  | refl : Π {Γ Φ t} {m₁ m₂ : Judgment Γ t}, m₁ ≈ m₂ → proof Φ (eq m₁ m₂)
-  | cong : Π {Γ Φ t} (m : Judgment (t :: Γ) prop) (m₂ m₁ : Judgment Γ t), proof Φ (eq m₁ m₂) → proof Φ (subst m m₁) → proof Φ (subst m m₂)
-  | prop_ext : Π {Γ Φ} {φ₁ φ₂ : Judgment Γ prop}, proof (φ₁ :: Φ) φ₂ → proof (φ₂ :: Φ) φ₁ → proof Φ (eq φ₁ φ₂)
-  | fun_ext : Π {Γ Φ t₁ t₂} (m₁ m₂ : Judgment (t₁ :: Γ) t₂), proof (list.map weak Φ) (eq m₁ m₂) → proof Φ (eq (lam m₁) (lam m₂))
+  inductive theorem : Π {Γ}, list (Judgment Γ prop) → Judgment Γ prop → Prop
+  | hyp : Π {Γ Φ} {φ : Judgment Γ prop}, φ ∈ Φ → theorem Φ φ
+  | refl : Π {Γ Φ t} {m₁ m₂ : Judgment Γ t}, m₁ ≈ m₂ → theorem Φ (eq m₁ m₂)
+  | cong : Π {Γ Φ t} (m : Judgment (t :: Γ) prop) (m₂ m₁ : Judgment Γ t), theorem Φ (eq m₁ m₂) → theorem Φ (subst m m₁) → theorem Φ (subst m m₂)
+  | prop_ext : Π {Γ Φ} {φ₁ φ₂ : Judgment Γ prop}, theorem (φ₁ :: Φ) φ₂ → theorem (φ₂ :: Φ) φ₁ → theorem Φ (eq φ₁ φ₂)
+  | fun_ext : Π {Γ Φ t₁ t₂} (m₁ m₂ : Judgment (t₁ :: Γ) t₂), theorem (list.map weak Φ) (eq m₁ m₂) → theorem Φ (eq (lam m₁) (lam m₂))
   `);
 
   これで定理証明支援系が完成しました．
@@ -1792,19 +1943,19 @@ let article = '<
     |}{ p \vdash_\set{p : \omicron} \top \doteq p }
   });
 
-  判断${p \vdash_\set{p : \omicron} \top \doteq p}に対応するLeanの命題は\code(`@proof [prop] [var here] (eq (weak top) (var here))`);です．
-  \code(`@proof`);は命題\code(`proof`);の暗黙の引数を明示的に与えるという構文です．
-  この場合，\code(`@proof [prop] ...`);で判断の型環境${\Gamma}が${\omicron}型の一つの変数からなるという意味になります．
+  判断${p \vdash_\set{p : \omicron} \top \doteq p}に対応するLeanの命題は\code(`@theorem [prop] [var here] (eq (weak top) (var here))`);です．
+  \code(`@theorem`);は命題\code(`theorem`);の暗黙の引数を明示的に与えるという構文です．
+  この場合，\code(`@theorem [prop] ...`);で判断の型環境${\Gamma}が${\omicron}型の一つの変数からなるという意味になります．
   よって，Leanの中で以下の\code(`...`);を埋めれば証明が完了します．
 
   \d-code(`
-  def proof1 : @proof [prop] [var here] (eq (weak top) (var here)) := ...
+  def theorem1 : @theorem [prop] [var here] (eq (weak top) (var here)) := ...
   `);
 
   ここで，普通にプログラミングしてLeanの項を作るのではなく，Leanのタクティック言語を用います．
 
   \d-code(`
-  def proof1 : @proof [prop] [var here] (eq (weak top) (var here)) :=
+  def theorem1 : @theorem [prop] [var here] (eq (weak top) (var here)) :=
   begin
     -- ここを埋める
   end
@@ -1814,16 +1965,16 @@ let article = '<
 
   \d-code(`
   Tactic State:
-  ⊢ proof [var here] (eq (weak top) (var here))
+  ⊢ theorem [var here] (eq (weak top) (var here))
   `);
 
   出来上がるべき証明木は根が命題外延性なので\code(`prop_ext`);を用います．
-  もし普通にLeanの証明を書くのであればここで単に\code(`prop_ext`);と書くのですが，今回はLeanの上で実装された演繹体系の証明を書いているので\code(`apply proof.prop_ext`);と書くのが正解です．
+  もし普通にLeanの証明を書くのであればここで単に\code(`prop_ext`);と書くのですが，今回はLeanの上で実装された演繹体系の証明を書いているので\code(`apply theorem.prop_ext`);と書くのが正解です．
 
   \d-code(`
-  example : @proof [prop] [var here] (eq (weak top) (var here)) :=
+  example : @theorem [prop] [var here] (eq (weak top) (var here)) :=
   begin
-    apply proof.prop_ext,
+    apply theorem.prop_ext,
     -- ここを埋める
   end
   `);
@@ -1833,21 +1984,21 @@ let article = '<
   \d-code(`
   Tactic State:
   2 goals
-  ⊢ proof [weak top, var here] (var here)
+  ⊢ theorem [weak top, var here] (var here)
 
-  ⊢ proof [var here, var here] (weak top)
+  ⊢ theorem [var here, var here] (weak top)
   `);
 
   このように，Lean自体のタクティック言語を用いることで今回作成した論理の証明を対話的に記述することができます．
   この証明を最後まで書くと以下のようになります．
 
   \d-code(`
-  example : @proof [prop] [var here] (eq (weak top) (var here)) :=
+  example : @theorem [prop] [var here] (eq (weak top) (var here)) :=
   begin
-    apply proof.prop_ext,
-    { apply proof.assump,
+    apply theorem.prop_ext,
+    { apply theorem.hyp,
       simp },
-    { apply proof.refl,
+    { apply theorem.refl,
       canonicity }
   end
   `);
@@ -1859,35 +2010,35 @@ let article = '<
   詳細は省きますが，この証明支援系での証明がどのような雰囲気かがわかると思います．
 
   \d-code(`
-  example {φ₁ φ₂} {Φ : list (Judgment [] prop)} : proof Φ (app (app and φ₁) φ₂) → proof Φ φ₁ :=
+  example {φ₁ φ₂} {Φ : list (Judgment [] prop)} : theorem Φ (app (app and φ₁) φ₂) → theorem Φ φ₁ :=
   begin
     intro p,
-    apply proof.cong
+    apply theorem.cong
       (var here)
       φ₁
       (λ ν, app (lam (λ f, app (app (var f) (φ₁ ν)) (φ₂ ν))) (lam (λ p₁, lam (λ p₂, var p₁)))),
-    { apply proof.refl,
+    { apply theorem.refl,
       canonicity, },
-    { apply proof.cong
+    { apply theorem.cong
         (@id (Judgment [arrow _ prop] prop) $ λ ν f, app (var f) (lam (λ p₁, lam (λ p₂, var p₁))))
         (λ ν, lam (λ f, app (app (var f) (φ₁ ν)) (φ₂ ν)))
         (@id (Judgment [] (arrow _ prop)) $ λ ν, lam (λ f, app (app (var f) (top ν)) (top ν))),
-      { apply proof.cong
+      { apply theorem.cong
           (var here)
           (eq
             (@id (Judgment [] (arrow _ prop)) $ λ ν, lam (λ f, app (app (var f) (top ν)) (top ν)))
             (λ ν, lam (λ f, app (app (var f) (φ₁ ν)) (φ₂ ν))))
           (λ ν, app (app (lam (λ p₁, lam (λ p₂, eq (lam (λ f : ν (arrow _ (arrow _ prop)), app (app (var f) (top ν)) (top ν))) (lam (λ f, app (app (var f) (var p₁)) (var p₂)))))) (φ₁ ν)) (φ₂ ν)),
-        { apply proof.refl,
+        { apply theorem.refl,
           canonicity },
         { from p } },
-      { apply proof.cong
+      { apply theorem.cong
           (var here)
           (@id (Judgment [] _) $ λ ν, app (lam (λ f, app (app (var f) (top ν)) (top ν))) (lam (λ p₁, lam (λ p₂, var p₁))))
           top,
-        { apply proof.refl,
+        { apply theorem.refl,
           canonicity },
-        { apply proof.refl,
+        { apply theorem.refl,
           canonicity } } }
   end
   `);
