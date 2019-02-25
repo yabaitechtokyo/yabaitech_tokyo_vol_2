@@ -11,10 +11,10 @@ type semantics =
   | MNat(int)
   | MAbs(semantics => semantics);
 
+type env = string => semantics;
+
 type exn +=
   | Undefined_variable;
-
-type env = string => semantics;
 
 let envEmpty: env = _ => raise(Undefined_variable);
 

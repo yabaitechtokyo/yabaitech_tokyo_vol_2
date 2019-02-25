@@ -21,7 +21,7 @@ let-math \subst m x n = ${#m \sqbracket{#x \coloneq #n}}
 let article = '<
   +chapter ?:(`zpt-article`) (|
     bibliography = zpt-bibliography;
-    title = {Belugaによる定理証明};
+    title = {Belugaによるメタプログラミング入門};
     author = {zeptometer};
     |) <
     +section {はじめに} <
@@ -89,7 +89,73 @@ type term =
     +definition{
     ${\br}が\dfn{強正規化性}を満たす ${\Leftrightarrow} 無限簡約列 ${M_1 \br M_2 \br \ldots}が存在しない
     }
-    +p{合流性と強正規化性の帰結として、「STLC上で導出可能な項\footnote{厳密には「STLCの導出規則によって導出された型判断を伴う項」ですかね}は対応する正規形をただ一つもつ」ということが言えます。}
+    +p{合流性と強正規化性の帰結として、「STLC上で導出可能な項\footnote{厳密には「STLCの導出規則によって導出された型判断を伴う項」ですかね}は対応する正規形をただ一つもつ」ということが言えます。そうであればある項の正規形を得るプログラムを書きたいというのはごく自然な考えですね。
+    \listing {
+    * プログラム
+    ** 入力: STLCの項
+    ** 出力: 入力の項に対応する正規形
+    ** 実装: ??
+    }}
+    +p{定義に対応する素朴な実装方針として「正規形を得るまで項にβ簡約を繰り返し適用する」というものが考えられます。でも実はこれが結構面倒くさいんです。
+    面倒くささの一つは変数束縛の管理です。例えば以下のような型判断を考えてみましょう。
+    \math-list(${| \judgeStlc{y \colon \arr{A}{B}}{\app{\paren{\lam{x}{\arr{A}{B}}{\lam{y}{A}{\app{\var{x}}{\var{y}}}}}}{y}}{\arr{A}{B}} |});
+    定義によるとこの項は以下のようにβ簡約できます。
+    \math-list(${| \app{\paren{\lam{x}{\arr{A}{B}}{\lam{y}{A}{\app{\var{x}}{\var{y}}}}}}{y} \br \subst{\paren{\lam{y}{A}{\app{\var{x}}{\var{y}}}}}{x}{y} |});
+    ここで${\subst{M}{x}{N}}は\math(${});${M}中の${x}を${N}に置き換えた項だったわけですが、${\subst{\paren{\lam{y}{A}{\app{\var{x}}{\var{y}}}}}{x}{y}}の場合、λ抽象によって導入された${y}と${x}を置き換えた後に入る${y}で変数名が衝突してしまいます。
+    \align[${| \subst{\paren{\lam{y}{A}{\app{\var{x}}{\var{y}}}}}{x}{y} | \neq \lam{y}{A}{\app{\var{y}}{\var{y}}}| \text!{// ダメ!}|}];
+    こういった事態は\dfn{意図しない変数補足}と呼ばれたりします。こういった事態を避けるために、変数名の衝突が起きる場合にはλ抽象の束縛変数を衝突しないものに置き換える必要がでてきます。
+    \align[
+    ${| \subst{\paren{\lam{y}{A}{\app{\var{x}}{\var{y}}}}}{x}{y} | = \subst{\paren{\lam{z}{A}{\app{\var{x}}{\var{z}}}}}{x}{y} || \text!{// 束縛変数のyをzに置き換えると} |};
+    ${| | = \lam{z}{A}{\app{\var{y}}{\var{z}}} || \text!{// オーケー} |}
+    ];
+    このようにちゃんとした置換を実装するためには意図しない変数補足が起きないように確認しつつ必要であれば束縛変数の名前を書き換えていく必要があるわけです\footnote{この束縛変数の名前の書き換えのことを\dfn{α変換}と呼びますが詳細は割愛します}。これをきちんと実装するのが一つ目の面倒くさいポイントです。β簡約に関してあまり本質的でない部分に実装を割かないといけないのがよろしくないですね。
+    }
+    +p{もう一つの面倒くさいポイントは「そもそもβ簡約を定義通りに実装するのがあまり直観的ではない」という点です\footnote{ほんまかこれ}。}
+    +p{それに比べるとλ項が与えられた時にそれを評価する関数(いわゆるeval関数)を書くのは(少なくとも一部の人にとっては)かなり直観的で実装も楽に思われます。実際に書いてみましょう。}
+    +Code.code(`
+type semantics =
+  | MNat(int)
+  | MAbs(semantics => semantics);
+    `);
+
+    +Code.code(`
+type env = string => semantics;
+
+type exn +=
+  | Undefined_variable;
+
+let envEmpty: env = _ => raise(Undefined_variable);
+
+let envExt: (string, semantics, env) => env =
+  (name, sem, env, name2) =>
+    if (name === name2) {
+      sem;
+    } else {
+      env(name2);
+    };
+    `);
+
+    +Code.code(`
+type exn +=
+  | Wrong_application;
+
+let rec evaluate: (term, env) => semantics =
+  (m, e) => {
+    switch (m) {
+    | Var(name) => e(name)
+    | Abs(name, _, n) => MAbs(sem => evaluate(n, envExt(name, sem, e)))
+    | App(n1, n2) =>
+      let sem1 = evaluate(n1, e);
+      let sem2 = evaluate(n2, e);
+
+      switch (sem1) {
+      | MAbs(f) => f(sem2)
+      | MNat(_) => raise(Wrong_application)
+      };
+    };
+  };
+    `);
+    
     >
     +section {BelugaでNbEを書く} <
       +math (${});
