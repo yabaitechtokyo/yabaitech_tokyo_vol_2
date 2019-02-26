@@ -65,8 +65,8 @@ end = struct
 
 
   let set-code-font ctx =
-    ctx |> set-font Latin (`inconsolata`, 1.,0.)
-        |> set-font OtherScript (`inconsolata`, 1.,0.)
+    ctx |> set-font Latin (`DejaVuSansMono`, 1.,0.)
+        |> set-font OtherScript (`DejaVuSansMono`, 1.,0.)
         |> set-hyphen-penalty 100000
 
 
