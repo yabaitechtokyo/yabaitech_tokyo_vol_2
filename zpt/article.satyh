@@ -111,13 +111,13 @@ type term =
     このようにちゃんとした置換を実装するためには意図しない変数補足が起きないように確認しつつ必要であれば束縛変数の名前を書き換えていく必要があるわけです\footnote{この束縛変数の名前の書き換えのことを\dfn{α変換}と呼びますが詳細は割愛します}。これをきちんと実装するのが一つ目の面倒くさいポイントです。β簡約に関してあまり本質的でない部分に実装を割かないといけないのがよろしくないですね。
     }
     +p{もう一つの面倒くさいポイントは「そもそもβ簡約を定義通りに実装するのがあまり直観的ではない」という点です\footnote{ほんまかこれ}。}
-    +p{それに比べるとλ項が与えられた時にそれを評価する関数(いわゆるeval関数)を書くのは(少なくとも一部の人にとっては)かなり直観的で実装も楽に思われます。実際に書いてみましょう。}
+    +p{それに比べるとλ項が与えられた時にそれを評価する関数(いわゆるeval関数)を書くのは(少なくとも一部の人にとっては)かなり直観的で実装も楽に思われます。実際に書いてみましょう。最初に\code(`semantics`);という型を定義します。これはeval関数で評価することで得られる値を表します。今回は基底型に対応する値として\code(`MNat`);と関数型に対応する値として\code(`MAbs`);を用意します\footnote{今回は便宜上基底型をintとして扱っていますが特にintである必要はないです}。}
     +Code.code(`
 type semantics =
   | MNat(int)
   | MAbs(semantics => semantics);
     `);
-
+    +p{STLCの項を評価するためには評価される項の他に自由変数に対応する値を持つ環境が必要です。これを\code(`env`);という型として定義しましょう。これは変数名を与えた時に対応する\code(`semantics`);を返す関数として実装できます。空の環境\code(`envEmpty`);は必ず\code(`Undefined_variable`);を例外として投げます。また\code(`envExt`);は変数名と\code(`semantics`);のペアを受け取って既存の環境を拡張します。}
     +Code.code(`
 type env = string => semantics;
 
@@ -134,7 +134,7 @@ let envExt: (string, semantics, env) => env =
       env(name2);
     };
     `);
-
+    +p{然る後に\code(`eval`);の本体を書くことができます。項の構造に関する再帰を用いて素直に実装できます。}
     +Code.code(`
 type exn +=
   | Wrong_application;
@@ -143,7 +143,8 @@ let rec evaluate: (term, env) => semantics =
   (m, e) => {
     switch (m) {
     | Var(name) => e(name)
-    | Abs(name, _, n) => MAbs(sem => evaluate(n, envExt(name, sem, e)))
+    | Abs(name, _, n) =>
+      MAbs(sem => evaluate(n, envExt(name, sem, e)))
     | App(n1, n2) =>
       let sem1 = evaluate(n1, e);
       let sem2 = evaluate(n2, e);
@@ -155,7 +156,8 @@ let rec evaluate: (term, env) => semantics =
     };
   };
     `);
-    
+    +p{というわけですんなりと\code(`eval`);を実装することができました。いいですね。人生もこうすんなりといってほしいものです。\code(`eval`);の実装がβ簡約より楽と言われてもそもそもやってることが違うから関係ないじゃないか、と思われるかもしれません。ところがどっこい、この\code(`eval`);を使うことで実はSTLCの項の正規形を得ることができてしまうのです。それが今から紹介するNomalization by Evaluationなのです。}
+    +p{Normalization by Evaluationはその名前の通り、eval関数(数学的に言えば表示的意味論)を用いてλ項の正規化を行うテクニックのことです。}
     >
     +section {BelugaでNbEを書く} <
       +math (${});
