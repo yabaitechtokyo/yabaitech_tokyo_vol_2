@@ -1,4 +1,5 @@
 @require: math
+@require: color
 @import: bib
 @import: moreproof
 @import: ../main/book-class
@@ -18,6 +19,12 @@ let-math \br = ${\rightarrow_{\beta}}
 let-math \brm = ${\rightarrow_{\beta}^{*}}
 let-math \subst m x n = ${#m \sqbracket{#x \coloneq #n}}
 
+let-inline ctx \todo inner =
+  let ctx-todo =
+    ctx |> set-text-color Color.red
+  in
+    read-inline ctx-todo {[TODO: #inner;]}
+
 let article = '<
   +chapter ?:(`zpt-article`) (|
     bibliography = zpt-bibliography;
@@ -35,10 +42,10 @@ let article = '<
     }
     >
     +section {インストール} <
-    +p{GithubのREADMEを読め。}
+    +p{GithubのREADMEを読め。\todo{真面目に書く必要あるかなこれ}}
     >
-    +section {Normalization by Evaluationことはじめ} <
-    +p{\dfn{Normalization by Evaluation}とは、λ計算やその亜種の項が与えられた時にその表示的意味論(あるいはeval関数)を経由して正規形を得るテクニックです。今回は対象として単純型付きλ計算(Simply Typed Lambda Calculus, STLC)を扱います\footnote{厳密にはChurch-styleです}。STLCの型は\dfn{基底型}${\base}と\dfn{関数型}${\arr{A}{B}}からなります。
+    +section {背景の背景: 正規形と簡約による正規化} <
+    +p{\todo{構成が変わったので序文を書き直す}\dfn{Normalization by Evaluation}とは、λ計算やその亜種の項が与えられた時にその表示的意味論(あるいはeval関数)を経由して正規形を得るテクニックです。今回は対象として単純型付きλ計算(Simply Typed Lambda Calculus, STLC)を扱います\footnote{厳密にはChurch-styleです}。STLCの型は\dfn{基底型}${\base}と\dfn{関数型}${\arr{A}{B}}からなります。
     \math-list(${| A, B \coloncoloneq \base \mid \arr{A}{B} |});
 
     STLCの項は\dfn{変数}${\var{x}}、\dfn{関数}${\lam{x}{A}{M}}、\dfn{関数適用}${\app{M}{N}}からなります。
@@ -80,7 +87,7 @@ type term =
     ${| \app{M}{L} | \br \app{N}{L} | \text!{if\ } M \br N |};
     ${| \app{L}{M} | \br \app{L}{N} | \text!{if\ } M \br N |};
     ];
-    ここで${\subst{M}{x}{N}}は「項M中における変数xの使用を項Nに置き換えて得られる項」を表しています。厳密な定義は実は結構面倒くさいのでここでは省略します。}
+    ここで${\subst{M}{x}{N}}は「項M中における変数xの使用を項Nに置き換えて得られる項」を表しています。厳密な定義は実は結構面倒くさいのでここでは省略します。\todo{η正規形についてもちゃんと説明したい}}
     +p{さて、STLCに関する重要な性質として今しがた定義したβ簡約の合流性と強正規化性があります。以降において二項関係${\brm}は${\br}の反射推移閉包とします。}
     +definition{項${M}が正規形である ${\Leftrightarrow} ${M \br N}を満たす項${N}が存在しない}
     +definition{
@@ -110,8 +117,10 @@ type term =
     ];
     このようにちゃんとした置換を実装するためには意図しない変数補足が起きないように確認しつつ必要であれば束縛変数の名前を書き換えていく必要があるわけです\footnote{この束縛変数の名前の書き換えのことを\dfn{α変換}と呼びますが詳細は割愛します}。これをきちんと実装するのが一つ目の面倒くさいポイントです。β簡約に関してあまり本質的でない部分に実装を割かないといけないのがよろしくないですね。
     }
-    +p{もう一つの面倒くさいポイントは「そもそもβ簡約を定義通りに実装するのがあまり直観的ではない」という点です\footnote{ほんまかこれ}。}
-    +p{それに比べるとλ項が与えられた時にそれを評価する関数(いわゆるeval関数)を書くのは(少なくとも一部の人にとっては)かなり直観的で実装も楽に思われます。実際に書いてみましょう。最初に\code(`semantics`);という型を定義します。これはeval関数で評価することで得られる値を表します。今回は基底型に対応する値として\code(`MNat`);と関数型に対応する値として\code(`MAbs`);を用意します\footnote{今回は便宜上基底型をintとして扱っていますが特にintである必要はないです}。}
+    +p{もう一つの面倒くさいポイントは「そもそもβ簡約を定義通りに実装するのがあまり直観的ではない」という点です\todo{ほんまかこれ}。}
+    >
+    +section {背景: Normalization by Evaluationによる正規化} <
+    +p{\todo{NbEについてのざっくりした説明を最初にする}それに比べるとλ項が与えられた時にそれを評価する関数(いわゆるeval関数)を書くのは(少なくとも一部の人にとっては)かなり直観的で実装も楽に思われます。実際に書いてみましょう。最初に\code(`semantics`);という型を定義します。これはeval関数で評価することで得られる値を表します。今回は基底型に対応する値として\code(`MNat`);と関数型に対応する値として\code(`MAbs`);を用意します\footnote{今回は便宜上基底型をintとして扱っていますが特にintである必要はないです}。}
     +Code.code(`
 type semantics =
   | MNat(int)
@@ -157,10 +166,10 @@ let rec evaluate: (term, env) => semantics =
   };
     `);
     +p{というわけですんなりと\code(`eval`);を実装することができました。いいですね。人生もこうすんなりといってほしいものです。\code(`eval`);の実装がβ簡約より楽と言われてもそもそもやってることが違うから関係ないじゃないか、と思われるかもしれません。ところがどっこい、この\code(`eval`);を使うことで実はSTLCの項の正規形を得ることができてしまうのです。それが今から紹介するNomalization by Evaluationなのです。}
-    +p{Normalization by Evaluationはその名前の通り、eval関数(数学的に言えば表示的意味論)を用いてλ項の正規化を行うテクニックのことです。}
+    +p{Normalization by Evaluationは先程も説明したように\code(`eval`);(数学的に言えば表示的意味論)を用いてλ項の正規化を行うテクニックのことです。基本的\code(`eval`);の他に評価された値からもとのλ項の正規形をひき戻す関数\code(`reify`);\footnote{「具象化」という意味です}を定義すると\todo{reifyの定義を与える}}
     >
     +section {BelugaでNbEを書く} <
-      +math (${});
+      +p{\todo{説明を書いていく}}
 
       +Code.code(`
 LF tp : type =
@@ -252,6 +261,8 @@ fn env ⇒ fn tm ⇒ reify (eval tm env)
     `);
     >
     +section {理論的背景について} <
+    >
+    +section {補遺} <
     >
   >
 >
