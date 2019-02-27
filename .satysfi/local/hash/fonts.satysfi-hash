@@ -1,0 +1,16 @@
+{
+  "cmuntt" : <Single: {"src": "local/fonts/CMU/cmuntt.otf"}>,
+  "cmunrm" : <Single: {"src": "local/fonts/CMU/cmunrm.otf"}>,
+  "cmunit" : <Single: {"src": "local/fonts/CMU/cmunit.otf"}>,
+  "cmunmono" : <Single: {"src": "local/fonts/CMU/cmunmono.otf"}>,
+  "Inconsolata-Regular" : <Single: {"src": "local/fonts/Inconsolata/Inconsolata-Regular.ttf"}>,
+  "Inconsolata-Bold" : <Single: {"src": "local/fonts/Inconsolata/Inconsolata-Bold.ttf"}>,
+  "NotoSerif-Regular" : <Single: {"src": "local/fonts/NotoSerif/NotoSerif-Regular.ttf"}>,
+  "NotoSerif-Italic" : <Single: {"src": "local/fonts/NotoSerif/NotoSerif-Italic.ttf"}>,
+  "NotoSerif-Bold" : <Single: {"src": "local/fonts/NotoSerif/NotoSerif-Bold.ttf"}>,
+  "NotoSans-Regular" : <Single: {"src": "local/fonts/NotoSans/NotoSans-Regular.ttf"}>,
+  "NotoSansMono-Regular" : <Single: {"src": "local/fonts/NotoSansMono/NotoSansMono-Regular.ttf"}>,
+  "DejaVuSansMono" : <Single: {"src": "local/fonts/DejaVu/DejaVuSansMono.ttf"}>,
+  "DejaVuSans" : <Single: {"src": "local/fonts/DejaVu/DejaVuSans.ttf"}>,
+  "RobotoMono-Regular" : <Single: {"src": "local/fonts/RobotoMono/RobotoMono-Regular.ttf"}>
+}

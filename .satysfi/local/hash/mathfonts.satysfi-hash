@@ -1,0 +1,7 @@
+{
+  "CambriaMath": <Single: {"src": "local/mathfonts/CambriaMath.ttf"}>,
+  "DejaVuMathTeXGyre": <Single: {"src": "local/mathfonts/DejaVuMathTeXGyre.ttf"}>,
+  "STIX2Math": <Single: {"src": "local/mathfonts/STIX2Math.otf"}>,
+  "Asana-Math": <Single: {"src": "local/mathfonts/Asana-Math.otf"}>,
+  "XITSMath-Regular": <Single: {"src": "local/mathfonts/XITSMath-Regular.otf"}>
+}
