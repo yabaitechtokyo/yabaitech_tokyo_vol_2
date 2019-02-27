@@ -17,9 +17,10 @@ let-math \rBrack = math-char MathOrd `⟧`
 let-math \uexists = math-char MathOrd `∃!`
 
 let-math \Brack m = ${\lBrack #m \rBrack} % FIXME
+let-math \spadesuit = math-char MathOrd `♠`
 
 let cyr it ctx =
-  read-inline (ctx |> set-font OtherScript (`CambriaMath` , 1., 0.)) it % FIXME
+  read-inline (ctx |> set-font OtherScript (`cmunrm` , 1., 0.)) it
 let-math \forfresh = text-in-math MathOrd (cyr (embed-string `И`))
 let-math \fresh = ${\mathrel{\#}}
 let-math \fv m = ${\app{\mathop{\mathrm{fv}}}{#m}}
@@ -123,7 +124,7 @@ let article = '<
     ** \ref-subsection(`judgment1`);\ \ 型判断の実装 (その1)
     ** \ref-subsection(`judgment2`);\ \ 型判断の実装 (その2)
     * \ref-section(`hol`);\ \ 高階論理
-    ** \ref-subsection(`hol`);\ \ 高階論理
+    ** \ref-subsection(`hol`);\ \ 高階論理の意味論
     ** \ref-subsection(`hol-nd`);\ \ 高階論理の演繹体系
     ** \ref-subsection(`hol-impl`);\ \ 高階論理の実装
     * \ref-section(`conclusion`);\ \ まとめ
@@ -293,11 +294,11 @@ let article = '<
 }
 >
 
-+subsection?:(`hoas`){高階抽象構文 (Higher-order abstract syntax, HOAS)} <
++subsection?:(`hoas`){高階抽象構文} <
 +p{
   \ref-subsection(`ulc`);でラムダ計算の形式的定義を行う際に${\alpha}変換を定義するのに苦労しました．
   これはラムダ計算をコンピュータ上で実装する場合でも同様で，束縛の構造を正しく表現するためには(特に効率よく実装するためには)それなりの量と複雑さを持つコードを書かなければなりません．
-  そこでこの記事では\dfn{高階抽象構文(HOAS)}と呼ばれる手法を用いてラムダ計算を実装し，\emph{束縛の構造に関するコードをほとんど記述しないまま実装します}．
+  そこでこの記事では\dfn{高階抽象構文(Higher-Order Abstract Syntax, HOAS)}と呼ばれる手法を用いてラムダ計算を実装し，\emph{束縛の構造に関するコードをほとんど記述しないまま実装します}．
   直観的には，HOASはメタ言語(今回の場合はLean(の処理系))に束縛関係の管理を外注してしまうという手法です．
   この手法ではオブジェクト言語(今回の場合はラムダ計算)は必然的にメタ言語の中でDSLとして実装されます．
   そのため，ある意味ではパーサーもメタ言語の処理系に外注していると言えます．
@@ -329,7 +330,7 @@ let article = '<
   \code(`inductive`);を用いてデータ型を定義すると帰納法を行うためのコードが自動で生成されます．
   しかし\code(`preterm`);に対しては停止する帰納法が定義されないのです．
   これは直観的には，集合論的モデルではこのような不動点(解)であって非自明なものが存在しないためです．
-  \footnote{集合${X}に関する方程式${X \cong \[X, X\]}の解は一点集合のみです．
+  \footnote{集合${X}に関する方程式${X \cong \set{f : X \to X}}の解は一点集合のみです．
   これの数学的基礎付けについては\dfn{領域理論 (Domain theory)}の教科書が良い導入になるかも知れません．
   (たとえば\cite[`Yokouchi94`];など)}
   Leanの仕様では一般的にどのような帰納的データ型の定義が許されているかがもう少しわかりやすく定められています．
@@ -1280,9 +1281,9 @@ let article = '<
   この補題は，証明木で考えると以下のような証明木の間の変換を定義しています．
 
   \eqn(${
-    \derive{| \phi_1, \Gamma \vdash \phi_2 |}{ \Gamma \vdash \phi_1 \to \phi_2 }
+    \paren{\derive{| \phi_1, \Gamma \vdash \phi_2 |}{ \Gamma \vdash \phi_1 \to \phi_2 }}
     \mapsto
-    \derive{| \derive{| \psi, \phi_1, \Gamma \vdash \phi_2 |}{ \phi_1, \psi, \Gamma \vdash \phi_2 } |}{ \psi, \Gamma \vdash \phi_1 \to \phi_2 }
+    \paren{\derive{| \derive{| \psi, \phi_1, \Gamma \vdash \phi_2 |}{ \phi_1, \psi, \Gamma \vdash \phi_2 } |}{ \psi, \Gamma \vdash \phi_1 \to \phi_2 }}
   });
 }
 +p{
@@ -1697,14 +1698,14 @@ let article = '<
     \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \paren{f \doteq f} \paren{f \doteq f}} \doteq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \phi_1 \phi_2}
   });
 
-  この論理式を${\phi_1 \mathrel{\diamond} \phi_2}と書くことにします．
+  この論理式を${\phi_1 \mathrel{\spadesuit} \phi_2}と書くことにします．
   すると，以下が成り立ちます．
 }
 +lemma{
-  任意の構造${\M}と付値${\theta}について，${\M,\theta \vDash \phi_1 \mathrel{\diamond} \phi_2}であるとき，かつそのときに限り${\M,\theta \vDash \phi_1}かつ${\M,\theta \vDash \phi_2}
+  任意の構造${\M}と付値${\theta}について，${\M,\theta \vDash \phi_1 \mathrel{\spadesuit} \phi_2}であるとき，かつそのときに限り${\M,\theta \vDash \phi_1}かつ${\M,\theta \vDash \phi_2}
 }
 +p{
-  よって，上で定義した${\mathrel{\diamond}}は通常の論理で言うconjunctionと見なせます．
+  よって，上で定義した${\mathrel{\spadesuit}}は通常の論理で言う論理積 (conjunction)と見なせます．
   これと同じことがより一般に直観主義論理の基本的な論理結合子\footnote{線形論理でいうところのnegativeな結合子．あるいは，圏論的意味論で右随伴によって意味が定められる結合子．}について成り立ちます．\cite[`Farmer08`];
   論理結合子${\top}，${\land}，${\to}，${\forall}を以下のように定義します．
 
@@ -1741,6 +1742,8 @@ let article = '<
 
   ここでの命題の上の量化${\forall p^\omicron.\phi}を用いましたが，このテクニックはGirardのSystem F(二階命題論理)で論理結合子を定義する際に使われるテクニックと同じものです．
   一連の議論により，高階論理が論理として十分強力な表現力を持つことがわかります．
+  \footnote{個人的には，等号(${\doteq})で全ての論理結合子が表現できることは本質的ではなく，たまたまそうなっているだけな気がしています．
+  等号だけあればよいという事実は技術的におもしろいですし実際今回の記事のように実装を目的としたケースでも役に立つのは間違いですが，私自身はこの事実に特に深遠な理由があるとは考えていません．}
 }
 >
 
@@ -2068,10 +2071,12 @@ let article = '<
   さて，完走した感想ですが，今回の企画の趣旨である「\emph{省エネ・省コード}で定理証明支援系を実装」というのは自分が楽して省エネで記事を完成させるという意味もありました．
   実際，Leanのコードを書き始めてから最後の節の最後の大きな証明を書くまでには1週間かかっていなかったはずです．
   しかし，記事を書くにあたって理論的背景を本気で書き始めてしまったことと，説明をわかりやすくしようと色々工夫するうちにコード量と執筆料が膨大になったことで，まったく省エネではありませんでした．
-  しかも，この記事はSatysfiで書いているのですが，その学習にも結構な時間が取られました．
-  Satysfiは意味論は美しく不満はないのですが，構文にまだ改善の余地があり，またなにぶん機能が足りない部分も多く，ハマった時の対処法が大変でした．
-  とはいえ，自分にとっても非常に勉強になったので書いてよかったと思います．
-  高階論理，ラムダ計算，Lean，その他諸々，初めて知った人でもそうでない人でも，この記事の内容が少しでも心に残れば幸いです．
+  また，この記事は\SATySFi;で書いているのですが，今回は初めてそれなりの量の文章を\SATySFi;で記述するとあって，その学習にもそれなりに時間が取られました．
+  \SATySFi;は設計や意味論が美しく概ね不満はないのですが，ドキュメントが足りなかったり，処理系のバグにそれなりの頻度で遭遇するなど，まだまだハマった時の対処法が大変な印象でした．
+  自分の場合は\SATySFi;の神であるところのgfn氏に直接質問をしたり相談ができる環境だったのでまだよかったですが，独学で本格的に\SATySFi;を使うにはまだもう少し苦労が必要なようです．
+  とはいえ，組版の品質は\TeX;に匹敵しますし，基本的な機能に絞ればすでに実用にも耐えられると思うので，あとは時間の問題かと思います．
+  今回の執筆は自分にとっても非常に勉強になるとてもよい機会でした．
+  高階論理，ラムダ計算，Lean，その他諸々，これらを初めて知った人でもそうでない人でも，この記事の内容が少しでも心に残れば幸いです．
 }
 >
 >
