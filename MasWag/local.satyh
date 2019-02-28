@@ -132,3 +132,4 @@ let-inline ctx \promote-linebreak ib0 ib1 ib2 =
     discretionary (0-100000) (read-inline ctx ib0) (read-inline ctx ib1) (read-inline ctx ib2)
 let-inline ctx \promote-linebreak =
     discretionary (0-100000) inline-nil inline-nil inline-nil
+let-math \lb-math = text-in-math MathOrd (fun ctx -> read-inline ctx {\promote-linebreak;})

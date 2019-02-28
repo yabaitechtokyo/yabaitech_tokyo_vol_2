@@ -4,24 +4,24 @@
 @import: bib
 
 let timedAutomata = '<+section{時間オートマトン} <
-+subsection{Timed word} <
-+definition ?:({timed word}) ?:(`def:timedWord`)
++subsection{時刻付きワード} <
++definition ?:({時刻付きワード}) ?:(`def:timedWord`)
 {
   ${\alphabet}を有限の文字集合とする。
   各 ${i \in \set{1,2,\ldots,n-1}}について${\ts_i < \ts_{i+1}}を満たす様な
   有限列${\word = \paren{\event_1,\ts_1},\paren{\event_2,\ts_2},\ldots,\paren{\event_n,\ts_n} \in \sequence{\alphabet \times \Rp}}
-  を\dfn{timed word}と言う。
+  を\dfn{時刻付きワード (timed word)}と言う。
 }
 +example ?* ?:(`example:timedWord`)
 {
   文字集合${\alphabet} を ${\alphabet = \set{\eventstyle{a}, \eventstyle{b}}}とする。
-  このとき、${\word = \paren{\eventstyle{a}, 0.1},\paren{\eventstyle{b}, 0.2},\paren{\eventstyle{a}, 0.8}}は timed wordである。
+  このとき、${\word = \paren{\eventstyle{a}, 0.1},\paren{\eventstyle{b}, 0.2},\paren{\eventstyle{a}, 0.8}}は 時刻付きワードである。
   一方で${\word' = \paren{\eventstyle{a}, 0.2},\paren{\eventstyle{b}, 0.1},\paren{\eventstyle{a}, 0.8}}や
-   ${\word'' = \paren{\eventstyle{a}, 0},\paren{\eventstyle{b}, 0.1},\paren{\eventstyle{a}, 0.8}}は timed wordではない。
-  \footnote{定義によっては${\word''}の様にタイムスタンプが0のものや、タイムスタンプが広義単調増加のものもをtimed wordに含める場合もある。}
+   ${\word'' = \paren{\eventstyle{a}, 0},\paren{\eventstyle{b}, 0.1},\paren{\eventstyle{a}, 0.8}}は 時刻付きワードではない。
+  \footnote{定義によっては${\word''}の様にタイムスタンプが0のものや、タイムスタンプが広義単調増加のものもを時刻付きワードに含める場合もある。}
 }
 >
-+subsection{時間オートマトン (構文)} <
++subsection{時間オートマトン (構文論)} <
 +p {クロック変数の集合${\Clock}について、以下のBNFで定義される制約の集合を${\Guard}で表わす。
    但し${\clock \in \Clock}、${\bowtie \in \set{\geq, >, =, <, \leq}}、${k \in \Z}である。
 }
@@ -38,10 +38,29 @@ let timedAutomata = '<+section{時間オートマトン} <
 }
 +example ?* ?:(`example:TA`)
 {
-        TODO: Timed Automatonの例。ここで使う例をrunning exampleにしたいので後で考える
+\figure ?:(`fig:TA`){時間オートマトンの例}<
+   +image-frame{
+   \insert-pdf-image(8cm)(`../MasWag/figs/timed_automaton.pdf`)(1);
 }
 >
-+subsection{時間オートマトン (意味)} <
+\ref-figure(`fig:TA`); は時間オートマトンの例 ${\AutomWith}である。但し、
+${\alphabet = \set{a,b}}、
+${\Loc = \set{\loc_0,\loc_1,\loc_2}}、
+${\InitLoc = \set{\loc_0}}、
+${\AccLoc = \set{\loc_2}}、
+${\Clock = \set{x,y}}、
+${\Edge = \set{\paren{\loc_0, x < 1 \land y < 5, a, \emptyset,\loc_1},\lb-math
+               \paren{\loc_1, x < 1 \land y < 5, b, \set{x},\loc_0},               
+               \paren{\loc_0, y \geq 5, a, \emptyset,\loc_2},               
+               \paren{\loc_1, y \geq 5, b, \emptyset,\loc_2}}} である。
+以後、
+${\edge_1 = \paren{\loc_0, x < 1 \land y < 5, a, \emptyset,\loc_1}}、
+${\edge_2 = \paren{\loc_1, x < 1 \land y < 5, b, \set{x},\loc_0}}、
+${\edge_3 = \paren{\loc_0, y \geq 5, a, \emptyset,\loc_2}}、
+${\edge_4 = \paren{\loc_1, y \geq 5, b, \emptyset,\loc_2}}と表記する。
+}
+>
++subsection{時間オートマトン (意味論)} <
 +p{
 クロック変数の集合 ${\Clock}について、関数${\cval\colon \Clock \to \Rnn}を\dfn{クロック割り当て} (clock valuation) と呼ぶ。
 クロック割り当て${\cval}と${\duration \in \Rnn}について、${\cval + \duration}を${\app{\paren{\cval + \duration}}{\clock} = \app{\cval}{\clock} + \duration}を充たすクロック割り当てと定義する。
@@ -68,7 +87,15 @@ ${\Transition \subseteq \State \times \State}は以下で定義される状況�
 });
 }
 +example ?* ?:(`example:TTS`) {
-TODO: \ref-example(`example:TA`);と同様の例を使うので後で書く
+\ref-figure(`fig:TA`); の時間オートマトン${\AutomWith}について、
+例えば
+${\paren{\paren{\loc_0,\cval},\paren{\loc_1,\cval}}}や、
+${\paren{\paren{\loc_1,\cval},\paren{\loc_0,\cval'}}}は${\Transition}に含まれるが、
+${\paren{\paren{\loc_1,\cval},\paren{\loc_2,\cval'}}}は${\Transition}に含まれない。
+但し${\cval,\cval'}はそれぞれ、
+${\app{\cval}{x} = 0.2},${\app{\cval}{y} = 3.1}
+${\app{\cval'}{x} = 0},${\app{\cval'}{y} = 3.1}
+を充たすクロック割り当てである。
 }
 +definition ?:({動作}) ?:(`def:run`) {
 時間オートマトン${\AutomWith}の
@@ -76,16 +103,24 @@ TODO: \ref-example(`example:TA`);と同様の例を使うので後で書く
 状況${\paren{\loc,\cval} \in \State}と状態遷移${\edgeInside \in \Edge}が交互に表れる列、 
 \eqn(${\path = \rstatei{0},\edgei{0}{1},\rstatei{1},\ldots,\edgei{n-1}{n},\rstatei{n}});
 が${\rstatei{0} \in \InitState}、及び各${i \in \set{1,2,\ldots,n}}について${\paren{\rstatei{i-1},\rstatei{i}} \in \Transition}を充たすとき、${\path}を${\TTS}上の\dfn{動作} (run)と定義する。
-上記の動作${\path}と、${\alphabet}上のtimed word${\wordWith}が、各${i \in \set{1,2,\ldots,n}}について、${\cval_i = \reset{\cval_{i-1} + \tsi{i}}{\resets_i}}を充たすとき、${\word}が${\path}に\dfn{対応する}と言う。
+上記の動作${\path}と、${\alphabet}上の時刻付きワード${\wordWith}が、各${i \in \set{1,2,\ldots,n}}について、${\cval_i = \reset{\cval_{i-1} + \tsi{i}}{\resets_i}}を充たすとき、${\word}が${\path}に\dfn{対応する}と言う。
 時間状態遷移システム${\TTS = \paren{\State, \InitState, \AccState, \Transition}}上の動作${\path = \state_{0},\edge_{1},\state_{1},\ldots,\edge_{n},\state_{n}}が${\state_n \in \AccState}を充たすとき、${\path}を\dfn{受理動作} (accepting run)と定義する。
 }
 +definition ?:({言語}) ?:(`def:language`) {
 時間オートマトン${\Autom}の時間状態遷移システムを${\TTS}とする。
-時間オートマトン${\Autom}の言語${\Lg{\Autom}}を以下で定義されるtimed wordの集合と定義する。
+時間オートマトン${\Autom}の言語${\Lg{\Autom}}を以下で定義される時刻付きワードの集合と定義する。
 \eqn(${\Lg{\Autom} = \setsep{\word}{\text!({${\word}に対応する${\TTS}の受理動作${\path}が存在する})}});
 }
 +example ?* ?:(`example:language`) {
-TODO: \ref-example(`example:TA`);及び\ref-example(`example:TTS`);と同様の例を使うので後で書く
+\ref-figure(`fig:TA`); の時間オートマトン${\AutomWith}について、
+\eqn(${\path = \paren{\loc_0,\cval_0}, \edge_1, \paren{\loc_1,\cval_1}, \edge_2, \paren{\loc_0,\cval_2}, \edge_3,\paren{\loc_2,\cval_3}});
+は${\Autom}の受理動作である。但し${\cval_0,\cval_1,\cval_2,\cval_3}は
+${\app{\cval_0}{x} = 0},${\app{\cval_0}{y} = 0}
+${\app{\cval_1}{x} = 0.3},${\app{\cval_1}{y} = 0.3}
+${\app{\cval_2}{x} = 0},${\app{\cval_2}{y} = 1.2}
+${\app{\cval_3}{x} = 0.5},${\app{\cval_3}{y} = 1.7}
+を充たすクロック割り当てである。
+時刻付きワード${\paren{a,0.3},\paren{b,1.2},\paren{a,1.7}}は、動作${\path}に対応する。
 }
 >
 >
