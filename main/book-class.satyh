@@ -114,7 +114,7 @@ module Book : sig
   direct \figure : [string?; inline-text; block-text] inline-cmd
   direct \table : [string?; inline-text; block-text] inline-cmd
   direct +p : [inline-text] block-cmd
-  direct +chapter : [string?; 'a; block-text] block-cmd
+  direct +chapter : [string?; inline-text?; 'a; block-text] block-cmd
     constraint 'a :: (|
       title : inline-text;
       author : inline-text;
@@ -139,7 +139,7 @@ module Book : sig
 end = struct
 
   type toc-element =
-    | TOCElementChapter    of string * inline-text * inline-text
+    | TOCElementChapter    of string * inline-text * inline-text option * inline-text
     % | TOCElementSection    of string * inline-text
     % | TOCElementSubsection of string * inline-text
 
@@ -213,6 +213,7 @@ end = struct
   let font-size-title   = 32pt
   let font-size-author  = 16pt
   let font-size-chapter = 24pt
+  let font-size-chapter-subtitle = 20pt
   let font-size-chapter-author = 18pt
   let font-size-section = 18pt
   let font-size-subsection = 16pt
@@ -298,6 +299,11 @@ end = struct
         |> set-font Latin font-latin-bold
         |> set-cjk-font font-cjk-gothic
 
+  let make-chapter-subtitle ctx =
+    ctx |> set-font-size font-size-chapter-subtitle
+        |> set-font Latin font-latin-bold
+        |> set-cjk-font font-cjk-gothic
+
   let make-chapter-author ctx =
     ctx |> set-font-size font-size-chapter-author
         |> set-font Latin font-latin-bold
@@ -338,15 +344,16 @@ end = struct
     in
       bb +++ line-break false false ctx (ib-title ++ inline-fil) +++ block-skip 36pt
 
-  let chapter-heading-with-author ctx ib-num-opt ib-title ib-author =
+  let chapter-heading-with-author ctx ib-num-opt ib-title ib-subtitle ib-author =
     let bb-num-opt =
       match ib-num-opt with
       | None         -> block-nil
       | Some(ib-num) -> line-break false false ctx (ib-num ++ inline-fil)
     in
     let bb-title = line-break false false ctx (ib-title ++ inline-fil) in
+    let bb-subtitle = line-break false false ctx (inline-fil ++ ib-subtitle ) in
     let bb-author = line-break false false ctx (inline-fil ++ ib-author) in
-      bb-num-opt +++ bb-title +++ bb-author +++ block-skip 18pt
+      bb-num-opt +++ bb-title +++ bb-subtitle +++ bb-author +++ block-skip 18pt
 
   let section-heading ctx ib-heading =
     line-break true false (ctx |> set-paragraph-margin section-top-margin section-bottom-margin) ib-heading
@@ -454,7 +461,7 @@ end = struct
   let footer-width = text-width
   let footnote-indent = 6mm
 
-  let chapter-scheme ctx label bibliography title author inner =
+  let chapter-scheme ctx label bibliography title subtitle author inner =
     let txtwid = text-width in
     let () = increment num-chapter in
     let () = num-section <- 0 in
@@ -463,8 +470,9 @@ end = struct
     let () = num-theorems <- 0 in
     let s-num = arabic (!num-chapter) in
     let () = register-cross-reference (`chapter:` ^ label ^ `:num`) s-num in
-    let () = toc-acc-ref <- (TOCElementChapter(label, title, author)) :: !toc-acc-ref in
+    let () = toc-acc-ref <- (TOCElementChapter(label, title, subtitle, author)) :: !toc-acc-ref in
     let ctx-title = make-chapter-title ctx in
+    let ctx-subtitle = make-chapter-subtitle ctx in
     let ctx-author = make-chapter-author ctx in
     let ctx-doc =
       get-standard-context txtwid
@@ -477,9 +485,12 @@ end = struct
         ++ hook-page-break (fun pbinfo _ ->
              register-cross-reference (`chapter:` ^ label ^ `:page`) (arabic pbinfo#page-number))
     in
-    let ib-title = read-inline ctx-title title in
+    let ib-title = (read-inline ctx-title title) in
+    let ib-subtitle = match subtitle with
+          | None    -> inline-nil
+          | Some(st) -> (read-inline ctx-subtitle {―}) ++ (read-inline ctx-subtitle st) ++ (read-inline ctx-subtitle {―}) in
     let ib-author = read-inline ctx-author author in
-    let bb-title = chapter-heading-with-author ctx (Some(ib-num)) ib-title ib-author in
+    let bb-title = chapter-heading-with-author ctx (Some(ib-num)) ib-title ib-subtitle ib-author in
     let bb-inner = read-block ctx inner in
 
     % -- bibliography --
@@ -644,14 +655,18 @@ end = struct
         let bb-toc-main =
           (!toc-acc-ref) |> List.reverse |> List.fold-left (fun bbacc tocelem -> (
             match tocelem with
-            | TOCElementChapter(label, title, author) ->
+            | TOCElementChapter(label, title, subtitle, author) ->
                 let ctx =
                   ctx-doc |> set-latin-font font-latin-bold
                 in
                 let it-num = embed-string (get-cross-reference-number `chapter:` label) in
                 let it-page = embed-string (arabic ((string-to-int (get-cross-reference-page `chapter:` label)) - 2)) in
                 let ib-title =
-                    read-inline ctx {#title;} ++ inline-skip 3pt
+                    read-inline ctx {#title;} ++ 
+                    (match subtitle with
+                    | None -> inline-nil
+                    | Some(st) -> inline-skip 10pt ++ (read-inline ctx {―}) ++ (read-inline ctx {#st;}) ++ (read-inline ctx {―}))
+                    ++ inline-skip 3pt
                 in
                 let ctx-bf =
                     ctx |> set-font Latin font-latin-bold
@@ -798,13 +813,13 @@ end = struct
     figure-scheme ctx labelopt `table:` {表} caption inner
 
 
-  let-block ctx +chapter ?:labelopt record inner =
+  let-block ctx +chapter ?:labelopt ?:subtitle record inner =
     let label =
       match labelopt with
       | None        -> generate-fresh-label ()
       | Some(label) -> label
     in
-      chapter-scheme ctx label record#bibliography record#title record#author inner
+      chapter-scheme ctx label record#bibliography record#title subtitle record#author inner
 
 
   let-block ctx +section ?:labelopt title inner =

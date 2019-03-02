@@ -106,12 +106,7 @@ ${\app{\cval'}{x} = 0},${\app{\cval'}{y} = 3.1}
 上記の動作${\path}と、${\alphabet}上の時刻付きワード${\wordWith}が、各${i \in \set{1,2,\ldots,n}}について、${\cval_i = \reset{\cval_{i-1} + \tsi{i}}{\resets_i}}を充たすとき、${\word}が${\path}に\dfn{対応する}と言う。
 時間状態遷移システム${\TTS = \paren{\State, \InitState, \AccState, \Transition}}上の動作${\path = \state_{0},\edge_{1},\state_{1},\ldots,\edge_{n},\state_{n}}が${\state_n \in \AccState}を充たすとき、${\path}を\dfn{受理動作} (accepting run)と定義する。
 }
-+definition ?:({言語}) ?:(`def:language`) {
-時間オートマトン${\Autom}の時間状態遷移システムを${\TTS}とする。
-時間オートマトン${\Autom}の言語${\Lg{\Autom}}を以下で定義される時刻付きワードの集合と定義する。
-\eqn(${\Lg{\Autom} = \setsep{\word}{\text!({${\word}に対応する${\TTS}の受理動作${\path}が存在する})}});
-}
-+example ?* ?:(`example:language`) {
++example ?* ?:(`example:run`) {
 \ref-figure(`fig:TA`); の時間オートマトン${\AutomWith}について、
 \eqn(${\path = \paren{\loc_0,\cval_0}, \edge_1, \paren{\loc_1,\cval_1}, \edge_2, \paren{\loc_0,\cval_2}, \edge_3,\paren{\loc_2,\cval_3}});
 は${\Autom}の受理動作である。但し${\cval_0,\cval_1,\cval_2,\cval_3}は
@@ -122,6 +117,28 @@ ${\app{\cval_3}{x} = 0.5},${\app{\cval_3}{y} = 1.7}
 を充たすクロック割り当てである。
 時刻付きワード${\paren{a,0.3},\paren{b,1.2},\paren{a,1.7}}は、動作${\path}に対応する。
 }
++definition ?:({言語}) ?:(`def:language`) {
+時間オートマトン${\Autom}の時間状態遷移システムを${\TTS}とする。
+時間オートマトン${\Autom}の言語${\Lg{\Autom}}を以下で定義される時刻付きワードの集合と定義する。
+\eqn(${\Lg{\Autom} = \setsep{\word}{\text!({${\word}に対応する${\TTS}の受理動作${\path}が存在する})}});
+}
++example ?* ?:(`example:language`) {
+\ref-figure(`fig:TA`); の時間オートマトン${\Autom}の言語${\Lg{\Autom}}は、
+\listing {
+* ${ababab\ldots}という文字の列で、
+* 最後の文字の時刻は${5}以上であり、
+* それ以外の文字の時刻は${5}未満であり、
+* 最後の文字以外の文字について、直近の${b} (直近の${b}が存在しない場合は時刻${0}) からの時間経過が${1}未満である
+}
+ような時刻付きワードの集合である。形式的には${\Lg{\Autom} = \mathcal{L}_a \cup \mathcal{L}_b}である。但し${\mathcal{L}_a}及び${\mathcal{L}_b}は以下。
+
+\math-list([${\mathcal{L}_a =
+                   \setsep{\paren{a, \tsi{1}}, \paren{b, \tsi{2}},\paren{a, \tsi{3}},\ldots,\paren{a, \tsi{2k+1}}}{k \in \Znn, \tau_{2k+1} \geq 5, \tau_{2k} < 5, \forall k' < k. \tau_{2k'+2} - \tau_{2k'} < 1}
+                   };
+            ${\mathcal{L}_b =
+                   \setsep{\paren{a, \tsi{1}}, \paren{b, \tsi{2}},\paren{a, \tsi{3}},\ldots,\paren{b, \tsi{2k}}}{k \in \Zp, \tau_{2k} \geq 5, \tau_{2k-1} - \tau_{2k-2} < 1, \tau_{2k-1} < 5, \lb-math \fill-math \forall k' < k-1. \tau_{2k'+2} - \tau_{2k'} < 1}}]);
+}
+%%% ここひどい。SATySFi側でよしなに対応して欲しい
 >
 >
 >

@@ -5,9 +5,9 @@
 @import: membership
 
 let maswag-article = '<
-  +chapter ?:(`maswag-article`) (|
+  +chapter ?:(`maswag-article`) ?:({vol.1 所属性判定}) (|
     bibliography = maswag-bibliography;
-    title = {時間オートマトン入門 vol.1 ---所属性判定---};
+    title = {モニタリングのための時間オートマトン入門};
     author = {MasWag};
     |) <
     #introduction;

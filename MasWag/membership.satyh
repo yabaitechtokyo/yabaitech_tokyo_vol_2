@@ -5,7 +5,7 @@
 
 let membership = '<+section{所属性判定} <
 +problem{所属性判定問題}
- {文字集合${\alphabet}上の時間オートマトン${\Autom}とtimed word ${\word}}
+ {文字集合${\alphabet}上の時間オートマトン${\Autom}と時刻付きワード ${\word}}
  {${\word \in \Lg{\Autom}} であるかどうかを判定する。}
 +p {
 \figure ?:(`fig:membership-algorithm`){所属性判定問題を解くアルゴリズムの例}<
@@ -19,7 +19,7 @@ let membership = '<+section{所属性判定} <
 時間オートマトンの所属性判定問題はNPに属する。
 }
 +proof {
-所属性判定問題の入力の時間オートマトンを${\AutomWith}、timed wordを${\wordWith}とする。
+所属性判定問題の入力の時間オートマトンを${\AutomWith}、時刻付きワードを${\wordWith}とする。
 まず始めに、時間オートマトン${\Autom}の遷移の列 ${\edgei{0}{1},\edgei{1}{2},\ldots,\edgei{n-1}{n} \in \sequence{\Edge}} で ${\loc_0 \in \InitLoc}、${\loc_n\in \AccLoc} を充たすものを非決定的に選択する。
 次に、制約
 \eqn(${
@@ -27,20 +27,20 @@ let membership = '<+section{所属性判定} <
 });
 を考える。制約${\mathcal{C}}が充足可能であるとき${\word \in \Lg{\Autom}}が成立し、充足不能であるとき${\word \nin \Lg{\Autom}}となる。
 制約${\mathcal{C}}は線形計画問題であるので、例えばカーマーカーのアルゴリズム\cite([`journals/combinatorica/Karmarkar84`]); を用いることで制約の大きさについて多項式時間で解くことができる。
-\footnote{線形計画問題の充足可能性問題は線形計画法で解くことができます。例えば${Ax \geq b}の充足可能性問題は制約${Ax + \paren{y y \cdots y}^{T} \geq b}の元で${y}を最小化することで線形計画法に帰着することができます。具体的には${y}の最小値が${0}以下のときに${Ax \geq b}が充足可能となります。}今回制約の大きさはtimed word ${\word}の長さと各状態遷移 ${\edge \in \Edge}に含まれる制約${\guard}の大きさ、及びクロック変数${\Clock}の個数についての多項式で表わすことができる。従って時間オートマトンの所属性判定問題はNPに属する。
+\footnote{線形計画問題の充足可能性問題は線形計画法で解くことができます。例えば${Ax \geq b}の充足可能性問題は制約${Ax + \paren{y y \cdots y}^{T} \geq b}の元で${y}を最小化することで線形計画法に帰着することができます。具体的には${y}の最小値が${0}以下のときに${Ax \geq b}が充足可能となります。}今回制約の大きさは時刻付きワード ${\word}の長さと各状態遷移 ${\edge \in \Edge}に含まれる制約${\guard}の大きさ、及びクロック変数${\Clock}の個数についての多項式で表わすことができる。従って時間オートマトンの所属性判定問題はNPに属する。
 }
 +theorem ?* ?:(`theorem:NP-hard`) {
 任意のNP問題は時間オートマトンの所属性判定問題に帰着できる。
 }
-+problem{ハミルトニアン閉路問題} 
++problem{ハミルトニアン路問題} 
 {有向グラフ ${G = \paren{V,E}}}
-{有向グラフ${G}がハミルトニアン閉路を持つかどうかを判定する。つまり${G}上の閉路${v_0,e_1,v_1,\ldots,e_n,v_n}で全ての頂点を一度だけ通るものが存在するかどうかを判定する。}
+{有向グラフ${G}がハミルトニアン路を持つかどうかを判定する。つまり${G}上の閉路${v_0,e_1,v_1,\ldots,e_n,v_n}で全ての頂点を一度だけ通るものが存在するかどうかを判定する。}
 +p{
-TODO: ハミルトニアン閉路問題の定義と説明
+TODO: ハミルトニアン路問題の定義と説明
 }
 +proof {
-ハミルトニアン閉路問題を時間オートマトンの所属性判定問題に多項式時間帰着させることで\ref-theorem(`theorem:NP-complete`);を示す。
-ハミルトニアン閉路問題の入力の有向グラフを${G = \paren{V,E}}とする。
+ハミルトニアン路問題を時間オートマトンの所属性判定問題に多項式時間帰着させることで\ref-theorem(`theorem:NP-complete`);を示す。
+ハミルトニアン路問題の入力の有向グラフを${G = \paren{V,E}}とする。
 時間オートマトン${\AutomWith}を以下の様に定義する。
 \listing {
 * ${\alphabet = \set{\event}}
@@ -50,14 +50,33 @@ TODO: ハミルトニアン閉路問題の定義と説明
 * ${\Clock = \setsep{\clock_v}{v \in V} \sqcup \set{y , z}}
 * ${\Edge = \Edge_E \sqcup \Edge_f}
 * ${\Edge_E = \setsep{\paren{v, \set{y = 1}, \event, \set{y, \clock_v}, v'}}{\paren{v,v'} \in E}}
-* ${\Edge_f = \setsep{\paren{v, \set{y = 1, v = z = \abs{V}, \bigwedge_{v' \in V \setminus\set{v}} v' < \abs{V}}, \event, \emptyset, \loc_f}}{v \in V}}
+* ${\Edge_f = \setsep{\paren{v, \set{y = 1, \clock_v = z = \abs{V}, \bigwedge_{v' \in V \setminus\set{v}} \clock_{v'} < \abs{V}}, \event, \emptyset, \loc_f}}{v \in V}}
 }
-有向グラフ${G = \paren{V,E}}がハミルトニアン閉路を持つことは、
-timed word \eqn(${\word = \paren{\event, 1},\paren{\event, 2},\ldots,\paren{\event, \abs{V}}}); が ${\word \in \Lg{\Autom}}を充たすことの必要十分条件である。
-また、${\Autom}及び${\word}の大きさは${G}の多項式で抑えることができる。従って、ハミルトニアン閉路問題を時間オートマトンの所属性判定問題に多項式時間帰着させることができる。
+有向グラフ${G = \paren{V,E}}がハミルトニアン路を持つことは、
+時刻付きワード \eqn(${\word = \paren{\event, 1},\paren{\event, 2},\ldots,\paren{\event, \abs{V}}}); が ${\word \in \Lg{\Autom}}を充たすことの必要十分条件である。
+また、${\Autom}及び${\word}の大きさは${G}の多項式で抑えることができる。従って、ハミルトニアン路問題を時間オートマトンの所属性判定問題に多項式時間帰着させることができる。
 }
 +example {
-TODO: hamiltonial circuit problemをmembership problemで解く例を書く。
+\ref-theorem(`theorem:NP-hard`); の証明で用いたクロック変数の直観は、
+${y}を用いて全ての遷移を時間差${1}で起こる様にし、
+${z}がこれまでに通過した頂点の個数、${\clock_{i}}が頂点${\loc_i}を通過してからの経過時間を表わすというものである。
+従って、${\Autom}の受理動作における各制約は以下のハミルトニアン路の特徴付けと対応する。
+\listing {
+* グラフのどの頂点から始めても良い (${\InitLoc = V})
+* グラフのどの頂点で終わっても良い (各状態${v \in \Loc}から受理状態${v_f}への遷移がある)
+* 頂点を${\abs{V}}回通過している(${z = \abs{V}})
+* 最後に通過した頂点以外は過去に一度以上通過している(${\bigwedge_{v' \in V \setminus\set{v}} \clock_{v'} < \abs{V}})
+* 最後に通過した頂点はこれまで一度も通過していない (${ \clock_{v} = \abs{V}})
+}
+
+\figure ?:(`fig:hamiltonian`){有向グラフ${G} (左) と ${G}がハミルトニアン路を持つことを調べるための時間オートマトン${\Autom} (右)。但し${g_i}は制約${g_i = \paren{y = 1} \land \paren{\clock_i = z = 4} \land \bigwedge_{j \in \set{0,1,2,3}, i \neq j} \paren{\clock_j < 4}}。}<
+   +image-frame{
+   \insert-pdf-image(5cm)(`../MasWag/figs/has_hamiltonian.pdf`)(1);
+   \hspace(33pt);
+   \insert-pdf-image(7.5cm)(`../MasWag/figs/has_hamiltonian_TA.pdf`)(1);
+}
+>
+\ref-figure(`fig:hamiltonian`); に本構成の例がある。
 }
 +p {
 \ref-theorem(`theorem:NP-complete`); 及び \ref-theorem(`theorem:NP-hard`); より、以下が成り立ちます。
@@ -68,7 +87,7 @@ TODO: hamiltonial circuit problemをmembership problemで解く例を書く。
 >
 +subsection{オートマトンを固定したときの所属性判定問題}<
 +theorem {
-入力の時間オートマトンを固定したとき、時間オートマトンの所属性はtimed word の長さについて多項式時間で判定することができる。
+入力の時間オートマトンを固定したとき、時間オートマトンの所属性は時刻付きワードの長さについて多項式時間で判定することができる。
 }
 +proof {
 TODO

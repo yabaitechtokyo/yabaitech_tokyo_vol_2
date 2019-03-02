@@ -15,6 +15,8 @@ let-math \bowtie = ${\Join}
 let-math \colon = ${:}
 let-math \iff = ${\Leftrightarrow}
 let-math \Z = ${\mathbb{Z}}
+let-math \Zp = ${\Z_{>0}}
+let-math \Znn = ${\mathbb{N}}
 let-math \R = ${\mathbb{R}}
 let-math \Rp = ${\mathbb{R}_{> 0}}
 let-math \Rnn = ${\mathbb{R}_{\geq 0}}
@@ -133,3 +135,10 @@ let-inline ctx \promote-linebreak ib0 ib1 ib2 =
 let-inline ctx \promote-linebreak =
     discretionary (0-100000) inline-nil inline-nil inline-nil
 let-math \lb-math = text-in-math MathOrd (fun ctx -> read-inline ctx {\promote-linebreak;})
+
+%%% ここで引数を受け取ることはできないか?
+let-math \fill-math = text-in-math MathOrd (fun _ -> inline-skip 315pt)
+
+let-inline ctx \hspace w = inline-skip w
+
+let-inline ctx \fill = inline-fil
