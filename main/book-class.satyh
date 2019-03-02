@@ -242,6 +242,7 @@ end = struct
   let font-latin-mono   = (`lmmono`    , font-ratio-latin, 0.)
   let font-cjk-mincho   = (`ipaexm`    , font-ratio-cjk  , 0.)
   let font-cjk-gothic   = (`ipaexg`    , font-ratio-cjk  , 0.)
+  let font-otherscript-roman = (`cmunrm` , font-ratio-latin, 0.)
 
 
   let set-latin-font font ctx =
@@ -279,6 +280,7 @@ end = struct
       |> set-font Kana           font-cjk-mincho
       |> set-font HanIdeographic font-cjk-mincho
       |> set-font Latin          font-latin-roman
+      |> set-font OtherScript    font-otherscript-roman
       |> set-math-font `Asana-Math`
       |> set-hyphen-penalty 1000
       |> set-space-ratio 0.275 0.08 0.12
