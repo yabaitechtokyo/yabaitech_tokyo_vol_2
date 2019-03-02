@@ -15,6 +15,7 @@ module Code : sig
 
 end = struct
 
+  let code-text-color = Gray(0.1)
   let code-fill-color = Gray(0.875)
   let code-stroke-color = Gray(0.625)
   let console-fill-color = Gray(0.25)
@@ -67,6 +68,8 @@ end = struct
   let set-code-font ctx =
     ctx |> set-font Latin (`DejaVuSansMono`, 1.,0.)
         |> set-font OtherScript (`DejaVuSansMono`, 1.,0.)
+        |> set-font-size (get-font-size ctx *' .75)
+        |> set-leading 14pt
         |> set-hyphen-penalty 100000
 
 
@@ -108,7 +111,7 @@ end = struct
 
 
   let-block ctx +code code =
-    scheme decoset-code Color.black ctx code
+    scheme decoset-code code-text-color ctx code
 
 
   let-inline ctx \d-code code =
