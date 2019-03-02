@@ -69,7 +69,7 @@ end = struct
     ctx |> set-font Latin (`DejaVuSansMono`, 1.,0.)
         |> set-font OtherScript (`DejaVuSansMono`, 1.,0.)
         |> set-font-size (get-font-size ctx *' .75)
-        |> set-leading 14pt
+        |> set-leading 13.5pt
         |> set-hyphen-penalty 100000
 
 
