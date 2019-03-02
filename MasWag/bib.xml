@@ -28,6 +28,19 @@ http://doi.ieeecomputersociety.org/10.1109/REAL.1998.739751
 <url>db/journals/tcs/tcs126.html#AlurD94</url>
 <ee>https://doi.org/10.1016/0304-3975(94)90010-8</ee>
 </article>
+<incollection key="series/lncs/BartocciFFR18" mdate="2018-11-02">
+<author orcid="0000-0002-8004-6601">Ezio Bartocci</author>
+<author orcid="0000-0002-0114-0641">Yliès Falcone</author>
+<author>Adrian Francalanza</author>
+<author>Giles Reger</author>
+<title>Introduction to Runtime Verification.</title>
+<pages>1-33</pages>
+<year>2018</year>
+<booktitle>Lectures on Runtime Verification</booktitle>
+<ee>https://doi.org/10.1007/978-3-319-75632-5_1</ee>
+<crossref>series/lncs/10457</crossref>
+<url>db/series/lncs/lncs10457.html#BartocciFFR18</url>
+</incollection>
 <inproceedings key="conf/qest/BehrmannDLHPYH06" mdate="2017-05-26">
 <author>Gerd Behrmann</author>
 <author>Alexandre David</author>

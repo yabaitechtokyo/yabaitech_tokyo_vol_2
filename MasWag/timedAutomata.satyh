@@ -11,6 +11,7 @@ let timedAutomata = '<+section{時間オートマトン} <
   各 ${i \in \set{1,2,\ldots,n-1}}について${\ts_i < \ts_{i+1}}を満たす様な
   有限列${\word = \paren{\event_1,\ts_1},\paren{\event_2,\ts_2},\ldots,\paren{\event_n,\ts_n} \in \sequence{\alphabet \times \Rp}}
   を\dfn{時刻付きワード (timed word)}と言う。
+  また、${\ts_0 = 0}と定める。
 }
 +example ?* ?:(`example:timedWord`)
 {
@@ -38,11 +39,6 @@ let timedAutomata = '<+section{時間オートマトン} <
 }
 +example ?* ?:(`example:TA`)
 {
-\figure ?:(`fig:TA`){時間オートマトンの例}<
-   +image-frame{
-   \insert-pdf-image(8cm)(`../MasWag/figs/timed_automaton.pdf`)(1);
-}
->
 \ref-figure(`fig:TA`); は時間オートマトンの例 ${\AutomWith}である。但し、
 ${\alphabet = \set{a,b}}、
 ${\Loc = \set{\loc_0,\loc_1,\loc_2}}、
@@ -103,7 +99,7 @@ ${\app{\cval'}{x} = 0},${\app{\cval'}{y} = 3.1}
 状況${\paren{\loc,\cval} \in \State}と状態遷移${\edgeInside \in \Edge}が交互に表れる列、 
 \eqn(${\path = \rstatei{0},\edgei{0}{1},\rstatei{1},\ldots,\edgei{n-1}{n},\rstatei{n}});
 が${\rstatei{0} \in \InitState}、及び各${i \in \set{1,2,\ldots,n}}について${\paren{\rstatei{i-1},\rstatei{i}} \in \Transition}を充たすとき、${\path}を${\TTS}上の\dfn{動作} (run)と定義する。
-上記の動作${\path}と、${\alphabet}上の時刻付きワード${\wordWith}が、各${i \in \set{1,2,\ldots,n}}について、${\cval_i = \reset{\cval_{i-1} + \tsi{i}}{\resets_i}}を充たすとき、${\word}が${\path}に\dfn{対応する}と言う。
+上記の動作${\path}と、${\alphabet}上の時刻付きワード\promote-linebreak;${\wordWith}が、各${i \in \set{1,2,\ldots,n}}について、${\cval_i = \reset{\cval_{i-1} + \tsi{i} - \tsi{i-1}}{\resets_i}}を充たすとき、${\word}が${\path}に\dfn{対応する}と言う。
 時間状態遷移システム${\TTS = \paren{\State, \InitState, \AccState, \Transition}}上の動作${\path = \state_{0},\edge_{1},\state_{1},\ldots,\edge_{n},\state_{n}}が${\state_n \in \AccState}を充たすとき、${\path}を\dfn{受理動作} (accepting run)と定義する。
 }
 +example ?* ?:(`example:run`) {

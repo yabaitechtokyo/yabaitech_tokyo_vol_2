@@ -35,14 +35,14 @@
 
 \begin{algorithm}[H]
 \SetAlgoLined
-\KwIn{時間オートマトン $\AutomWith$, timed word $\wordWith$}
+\KwIn{時間オートマトン $\AutomWith$, 時刻付きワード $\wordWith$}
 \KwOut{$\word \in \Autom$ であるかどうかを返す}
 $\CurrConf \gets \{(\loc_0,\initcval) \mid \loc_0 \in \InitLoc\};\; \NextConf \gets \emptyset$\;
 \For{$i \in \{1,2,\dots,n\}$} {
  \For{$(\loc,\cval) \in \CurrConf$} {
  \For{$\edgeInside \in \Edge$} {
- \If{$\cval \models \guard$} {
- \KwPush $(\loc,\langle \cval \rangle_{\resets})$ \KwTo $\NextConf$
+ \If{$\cval + \tsi{i} - \tsi{i-1} \models \guard$} {
+ \KwPush $(\loc,\langle \cval + \tsi{i} - \tsi{i-1} \rangle_{\resets})$ \KwTo $\NextConf$
 }
 }
 }

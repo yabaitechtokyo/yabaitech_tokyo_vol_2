@@ -8,6 +8,8 @@ let path-to-root = `../MasWag/`
 let-inline ctx \sample-command it =
   read-inline (ctx |> set-text-color Color.red) it
 
+let-math \mathit m = ${\math-style!(MathItalic){#m}}
+
 %%% Math
 let-math \sequence x = ${\paren{#x}^\ast}
 let-math \powerset set = ${\app{\mathcal{P}}{#set}}
@@ -67,6 +69,9 @@ let-math \initcval = ${\mathbb{0}_{\Clock}}
 let-math \path = ${\pi}
 let-math \Lg a = ${\app{\mathcal{L}}{#a}}
 
+let-math \Conf = ${\mathit-token!(`Conf`)}
+let-math \CurrConf = ${\mathit-token!(`CurrConf`)}
+let-math \NextConf = ${\mathit-token!(`NextConf`)}
 
 let-inline ctx \simple-frame it =
   let pads = (2pt, 2pt, 2pt, 2pt) in
@@ -142,3 +147,26 @@ let-math \fill-math = text-in-math MathOrd (fun _ -> inline-skip 315pt)
 let-inline ctx \hspace w = inline-skip w
 
 let-inline ctx \fill = inline-fil
+
+%% これは良くないが無理やり改段落を挿入する
+let-inline ctx \par = 
+    let font-ratio-cjk = 0.88 in
+    let len = get-font-size ctx *' font-ratio-cjk in
+    inline-fil ++ (discretionary (0-100000) inline-nil inline-nil inline-nil) ++ inline-skip len
+
+% let-math \QED = math-char MathOrd `∎`
+
+% let-block ctx +proof-block ?:wordopt inner =
+%   let ib-heading =
+%     let set-latin-font font ctx =
+%         ctx |> set-font Latin font in
+%     let font-ratio-latin = 1. in
+%     let font-latin-italic = (`Junicode-it`, font-ratio-latin, 0.) in
+%     let ctx = ctx |> set-latin-font font-latin-italic in
+%       match wordopt with
+%       | None    -> read-inline ctx {Proof.}
+%       | Some(w) -> read-inline ctx {Proof of #w;.}
+%   in
+%   let ib-box = read-inline ctx {${\QED}} in
+%     line-break true true ctx
+%       (ib-heading ++ inline-skip (get-font-size ctx) ++ read-block ctx inner ++ inline-fil ++ ib-box)
