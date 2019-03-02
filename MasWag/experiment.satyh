@@ -1,0 +1,7 @@
+@require: itemize
+@import: local
+@import: bib
+
+let experiment = '<+section{実験} <
+>
+>

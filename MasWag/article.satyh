@@ -3,6 +3,7 @@
 @import: introduction
 @import: timedAutomata
 @import: membership
+@import: experiment
 
 let maswag-article = '<
   +chapter ?:(`maswag-article`) ?:({vol.1 所属性判定}) (|
@@ -13,5 +14,6 @@ let maswag-article = '<
     #introduction;
     #timedAutomata;
     #membership;
+    #experiment;
   >
 >

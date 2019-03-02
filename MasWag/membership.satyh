@@ -87,10 +87,28 @@ ${z}がこれまでに通過した頂点の個数、${\clock_{i}}が頂点${\loc
 >
 +subsection{オートマトンを固定したときの所属性判定問題}<
 +theorem {
-入力の時間オートマトンを固定したとき、時間オートマトンの所属性は時刻付きワードの長さについて多項式時間で判定することができる。
+入力の時間オートマトンを固定したとき、時間オートマトンの所属性は時刻付きワード${\word}の長さについて多項式時間で判定することができる。
 }
 +proof {
-TODO
+\ref-figure(`fig:membership-algorithm`); のアルゴリズムが時刻付きワードの長さについて多項式時間で停止することを示す。
+\par;
+まず、疑似コードの2行目から7行目のループの先頭において、以下の式が不変条件となっていることを示す。
+\eqn(${\forall \paren{\loc,\cval} \in \Conf, \clock \in \Clock, \exists j. \app{\cval}{\clock} = \tau_{i-1} - \tau_j});
+${i = 1}のとき、${\CurrConf = \setsep{\paren{\loc_0,\initcval}}{\loc_0\in\InitLoc}}であるので、任意の${\clock \in \Clock}について${\app{\initcval}{\clock} = 0 = \tsi{1 - 1} - \tsi{0}}が成り立つ。
+${i > 1}のとき、
+${\CurrConf}が更新されるのは\ref-figure(`fig:membership-algorithm`);の7行目であるが、ここでは${\NextConf}の内容に更新されているので、6行目で${\NextConf}に追加される${\paren{\loc,\reset{\cval + \tsi{i} - \tsi{i-1}}{\resets}}} について、
+${\forall \clock \in \Clock, \exists j. \app{\reset{\cval + \tsi{i} - \tsi{i-1}}{\resets}}{\clock} = \tau_{i} - \tau_j}が成り立つことを示す。
+各${\clock \in \resets}について、${\app{\reset{\cval + \tsi{i} - \tsi{i-1}}{\resets}}{\clock} = 0 = \tau_{i} - \tau_{i}}となる。
+各${\clock \nin \resets}について、${\app{\reset{\cval + \tsi{i} - \tsi{i-1}}{\resets}}{\clock} = 
+\app{\cval + \tsi{i} - \tsi{i-1}}{\clock} = 
+\app{\cval}{\clock} + \tsi{i} - \tsi{i-1}}となる。
+帰納法の仮定より、
+${\forall \clock \in \Clock, \exists j. \app{\cval}{\clock} = \tau_{i-1} - \tau_j}が成り立つので、
+各${\clock \nin \resets}について
+${\exists j. \app{\reset{\cval + \tsi{i} - \tsi{i-1}}{\resets}}{\clock} = 
+ \tau_{i-1} - \tau_j + \tsi{i} - \tsi{i-1} = \tau_{i} - \tau_{j}}となる。
+\par;
+このとき、${\CurrConf}の要素数は、${\abs{\Loc} \times \paren{\abs{\word} + 1}^{\abs{\Clock}}}で抑えられる。従って2行目から7行目のループの回数は${\paren{\abs{\Loc} \times \paren{\abs{\word} + 1}^{\abs{\Clock}}} \times \abs{\word}}で抑えられる。それ以外の集合演算や${\cval \models\guard}は${\word}の長さに依存しないので、\ref-figure(`fig:membership-algorithm`); のアルゴリズムは時刻付きワードの長さについて多項式時間で判定することができる。
 }
 >
 >
