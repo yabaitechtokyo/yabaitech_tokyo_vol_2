@@ -1,10 +1,33 @@
+@require: itemize
+@require: code
 @import: bib
 @import: ../main/book-class
 
+let-inline ctx \dfnen it-en =
+  read-inline (ctx |> Book.set-latin-font Book.font-latin-italic) {#it-en;}
+
+
 let-inline ctx \dfnjaen it-ja it-en =
   let ib-ja = read-inline (ctx |> Book.set-cjk-font Book.font-cjk-gothic) it-ja in
-  let ib-en = read-inline (ctx |> Book.set-latin-font Book.font-latin-italic) {(#it-en;)} in
-  ib-ja ++ ib-en
+  ib-ja ++ read-inline ctx {(\dfnen{#it-en;})}
+
+let red-letters ctx =
+  ctx |> Book.set-cjk-font Book.font-cjk-gothic
+      |> set-text-color Color.red
+
+let-inline ctx \NEEDSREF =
+  read-inline (red-letters ctx) {［要引用］}
+
+let-inline ctx \REMAINS it =
+  read-inline (red-letters ctx) {［要加筆： #it;］}
+
+let-inline \lambda-circle = {${\lambda^{\bigcirc}}}
+let-inline \lambda-square = {${\lambda^{\text!{□}}}}
+let-inline \MetaML-square = {${\text!{MetaML}^{\text!{□}}_{e}}}
+let-inline \lambda-open-poly =
+%  {${\lambda_{\mathit-token!(`open`)}^{\mathit-token!(`poly`)}}}
+  {${\lambda_{open}^{poly}}}
+
 
 let gfn-article = '<
   +chapter ?:(`gfn-article`) (|
@@ -18,14 +41,225 @@ let gfn-article = '<
       これらを共存させたときに生じる問題と，
       その問題が実行時に生じないように静的な検査によって回避するための型システムについていくつかの既存研究を紹介し，
       またそれらの依然として弱点があると思われる点とそのおおまかな克服の方針について述べたいと思います．
+      『型システム入門』\NEEDSREF;を或る程度読めるくらいの前提知識を想定して書いています．
     }
     +section{多段階計算の基礎}<
       +p{
-        ${\lambda^{\bigcirc}}
+        多段階計算は，概して言えば単純型つき${\lambda}計算のような一般的な計算体系に
+        \dfnjaen{ステージ}{stage}という概念が備わっていて\footnote{
+          細かいことを言うと，
+          多段階計算の比較的早期の研究であるMetaML\NEEDSREF;では
+          stageとlevelという概念が区別されていて，
+          ここで言うstageとはMetaMLでのlevelに相当するのですが，
+          stageという語の方が現在では定着しているように見受けられるので，
+          ここではstageの方を採用します．
+        }，
+        ステージがより低い部分にある式から順に計算が進んでいく，という仕組みをもつ計算体系の総称です．
+        典型的には，各ステージは自然数\footnote{${0} を含みます．}に対応づけられており，
+        第 ${n} ステージから見て ${n < m} なる各第 ${m} ステージは
+        “生成されるコードの世界” に相当します．
+        式の途中で「ここはステージを上げてコードにする」とか
+        「ここはステージを下げて穴を開け，事前に計算しコードを生成して埋め込む」
+        といった指示が書けるようになっており，
+        これを用いてどの段階でどこの計算が進んでほしいかをプログラマが制御します．
       }
-%      +p{
-%        % Curry–Howard同型対応
-%      }
+      +p{
+        多段階の計算体系は，歴史的には
+        与えられたプログラムのうち事前に（卑近な言い方をすればコンパイル時に）
+        計算してよい部分を見つけて計算し実行時にできるだけ無駄な計算をせずに
+        パフォーマンスを上げたいといった動機で研究されている
+        \dfnjaen{部分評価}{partial evaluation}の文脈で登場し，
+        与えられたプログラムの部分式で事前に計算できる部分をより低いステージに，
+        事前には計算できない部分をより高いステージに割り当てる
+        \dfnjaen{束縛時解析}{binding-time analysis}という処理の結果
+        出てくる中間表現として用いられたようですが，
+        プログラマが直接手書きするのにも有用であるとして，
+        それ自体をソース言語或いはソース言語に近い中間表現とする研究が発展してきて今に至るようです．
+        \NEEDSREF;
+      }
+      +p{
+        多段階計算には形式化の方法として様々な可能性があり，
+        多段階プログラムの安全性を保証するための研究としては，
+        既存の言語に適用できる何らかの検証手法を提案する（例えばより強力な型システムを与える）というよりも，
+        保証したい性質に合わせて適切に制限された（それでいてできるだけ柔軟にプログラムが書ける）言語を設計し提案する傾向があります．
+        そのため，研究の数だけ少しずつ異なる（構文と意味論さえ違いのある）言語が用意されているとさえ言えるのですが，
+        構文・意味論・型システムを総合しておおよそ次の3種類のパターンに大別できると筆者は捉えています：
+        \listing{
+          * コードコンビネータ方式
+          * \lambda-circle; \NEEDSREF;やMetaMLに準ずる方式
+          * \lambda-square; \NEEDSREF;や\MetaML-square; \NEEDSREF;に準ずる方式
+        }%
+        以降でこれらの定式化をそれぞれ簡単に紹介したいと思います．
+      }
+      +subsection{コードコンビネータ方式}<
+        +p{
+          コードコンビネータ方式は最も簡素なもので，
+          これまで全く多段階計算について親しみのなかった方にとっても
+          最初の理解のステージに立つのに有用と思われるので真っ先に紹介します．
+          大雑把な定式化を採用するなら，コードを以下で定義されるような
+          代数的データ型\code(`code`);で扱うという方法をとります\footnote{
+            要するに\code(`code`);型は式をデータとして表すための型です．
+            いわゆる函数型言語の言語処理系を実装したことのある方なら
+            ものすごく見慣れた感じの定義かと思います．
+          }．
+          ここでの定式化は（一般の多段階ではなく）
+          ${2} 段階のプログラムを書く用途に特化したものとなっています．
+          実際には ${\lambda U} \NEEDSREF;のように
+          この方式の延長で多段階プログラムを扱うこともできますが，簡単のため省きます：
+
+          \d-code(```
+            type code =
+              | Var   of symbol
+              | Abs   of symbol * code
+              | App   of code * code
+              | Int   of int
+              | Plus  of code * code
+              | Times of code * code
+              …
+          ```);%
+
+          ここで\code(`symbol`);は
+          生成されるコード中での変数である\dfnjaen{シンボル}{symbol}につける型で，
+          番号や文字列など何らかの識別子が実体であると考えてください．
+          具体的に ${2} 段階プログラムを書くにあたっては
+
+          \d-code(```
+            val gensym : unit -> symbol
+          ```);%
+
+          を用いてシンボルを生成します．
+          これは呼び出しのたびにフレッシュなシンボルを生成してくれるプリミティヴです\footnote{
+            Lisp系言語の素養があってマクロを実装する読者の方なら
+            まさに \code(`(gensym)`); という無引数の函数呼び出しで
+            シンボルを生成しているでしょうから馴染みがあるかと思います．
+          }．
+          上に掲げた\code(`code`);型の定義の例には，通常の${\lambda}項に対応する
+          \code(`Var`);，\code(`Abs`);，\code(`App`);に加えて，
+          \code(`Int`);や\code(`Plus`);などの
+          整数に関する算術プリミティヴを表すコンストラクタが備わっていますが，
+          勿論必要に応じて真偽値や文字列など種々のデータ型と
+          それらに関する演算に拡張することもできますし，
+          形式的に扱う上では簡単のため除去してもかまいません．
+        }
+        +p{
+          このような定式化で実際に ${2} 段階プログラムを書いた具体例として，
+          非負整数 ${n} を受け取って「${n}乗函数のコード」を返す函数
+          \code(`genpower`); を挙げます：
+
+          \d-code(```
+            let rec aux n x =
+              if n <= 0 then Int(1) else
+                Times(Var(x), aux (n - 1) x)
+
+            let genpower n =
+              let x = gensym () in
+              Abs(x, aux n x)
+          ```);%
+
+          この\code(`genpower`);は，例えば \code(`3`); を渡すと
+
+          \d-code(```
+            Abs(X, Times(Var(X), Times(Var(X), Times(Var(X), Int(1)))))
+          ```);%
+
+          という，
+          ${\lambda m.\ m \ast m \ast m \ast 1}
+          に相当するコードが生成される，という具合に振舞います．
+        }
+        +p{
+          生成されたコードを用いる方法のひとつとして
+          \dfnjaen{ラン・プリミティヴ}{Run primitive}という機構があります．
+          これは与えられたコード断片を使うために下のステージへと “下ろしてくる” 仕組みで，
+          例えば
+
+          \d-code(```
+            let f = run (genpower n) in
+            …
+          ```);%
+
+          で（\code(`n`);が束縛されている非負整数値を ${n} とすると）
+          \code(`f`);に ${n} 乗函数を束縛して\code(`in`);以降を評価します．
+          重要なのは，上記の実装が，多段階になっていない\code(`power`);函数：
+
+          \d-code(```
+            let rec power n x =
+              if n <= 0 then 1 else x * power (n - 1) x
+          ```);%
+
+          を用いて
+
+          \d-code(```
+            let f = power n in
+            …
+          ```);%
+
+          と書いた場合と比べると（どんな計算結果を得るかに関して振舞いは同一でも）
+          パフォーマンスの改善が見込めるということです．
+          後者だと\code(`f`);が適用されるたびに ${n} 周再帰が回りますが，
+          前者ではコードが生成されるときに再帰が回るのみであり，
+          そのコードが\code(`run`);で下ろされてくるので\code(`f`);は
+
+          \d-code(```
+            (fun x -> x * x * … * x * 1)  (* xがn個並ぶ *)
+          ```);%
+
+          という函数に束縛されることになり，
+          したがって以降\code(`f`);が適用されるときに逐一再帰が回ったりはしないのです．
+          時間計算量に差が現れるというわけではありませんが，
+          前者は後者と違い再帰を終えるかどうかの条件分岐を判定する必要がないため，
+          \code(`f`);の適用が何度も起こるようなプログラムでは
+          その分処理が高速になることが期待できるというわけです．
+          勿論後者のようなステージングしない実装でも
+          最適化が効いてナイーヴで処理の重い再帰にならずに済むことはよくありますが，
+          それでも前者のようなステージングを施した実装の方が概して速く動作することは
+          実験的にも確かめられています\NEEDSREF;．
+          メタプログラミングの動機が必ずしもパフォーマンスにあるとは限りませんが，
+          少なくともパフォーマンスはひとつのわかりやすい動機ではあるということです．
+        }
+      >
+      +subsection{ナイーヴなコードコンビネータ方式の問題点}<
+        +p{
+          多段階計算のおおまかな仕組みは前節で導入したとおりですが，
+          前節のようなナイーヴなコードコンビネータ方式には
+          はっきりと2つの弱点があります：
+
+          \listing{
+            * 生成されるコードが閉じたコードとは限らない
+            * 生成されるコードが型のつくコードとは限らない
+          }%
+
+          まず前者はすなわち\code(`run`);で下ろしたときに
+          束縛されていない変数が現れうるということです．
+          \REMAINS{問題点}
+        }
+      >
+      +subsection{\lambda-circle;・MetaML方式}<
+        +p{
+          あ
+        }
+      >
+      +subsection{\lambda-square;・\MetaML-square;方式}<
+        +p{
+          あ
+        }
+      >
+    >
+    +section{多段階計算＋可変参照}<
+      +subsection{可変参照による問題点の再来}<
+        +p{
+          あ
+        }
+      >
+      +subsection{既存研究1：〈NJ〉}<
+        +p{
+          あ
+        }
+      >
+      +subsection{既存研究2：\lambda-open-poly;}<
+        +p{
+          あ
+        }
+      >
     >
   >
 >
