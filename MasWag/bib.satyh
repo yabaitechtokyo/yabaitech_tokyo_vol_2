@@ -26,8 +26,16 @@ let maswag-bibliography = [
   |));
 
 
+  (`series/lncs/BartocciFFR18`, Book(|
+    author = {|Ezio Bartocci, Yliès Falcone, Adrian Francalanza, Giles Reger|};
+    title = {Introduction to Runtime Verification.};
+    publisher = {};
+    year = 2018;
+  |));
+
+
   (`conf/qest/BehrmannDLHPYH06`, InProceedings(|
-    author = {|Gerd Behrmann, Alexandre David, Kim Guldstrand Larsen, John Hkansson, Paul Pettersson, Wang Yi, Martijn Hendriks|};
+    author = {|Gerd Behrmann, Alexandre David, Kim Guldstrand Larsen, John Håkansson, Paul Pettersson, Wang Yi, Martijn Hendriks|};
     title = {UPPAAL 4.0.};
     booktitle = {QEST};
     series = None; 
