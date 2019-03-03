@@ -26,13 +26,17 @@ let-inline ctx \todo inner =
     read-inline ctx-todo {[TODO: #inner;]}
 
 let article = '<
-  +chapter ?:(`zpt-article`) (|
+  +chapter ?:(`zpt-article`)
+  ?:({依存型と文脈様相型による定理証明})
+   (|
     bibliography = zpt-bibliography;
-    title = {Belugaによるメタプログラミング入門};
+    title = {Belugaによるメタプログラミング};
     author = {zeptometer};
     |) <
     +section {はじめに} <
-    +p {Beluga\footnote{http://complogic.cs.mcgill.ca/beluga/}はMcGill大学のBrigitte Pientkaらによって開発されている定理証明支援系というか関数型プログラミング言語というか、なんかそんなかんじのものです\footnote{Curry-Howard同型が理論的背景にあるから境目が曖昧になるんですわ、しゃーない}。公式サイトによる紹介は以下の通りです。}
+    +p {Beluga\footnote{http://complogic.cs.mcgill
+    
+    .ca/beluga/}はMcGill大学のBrigitte Pientkaらによって開発されている定理証明支援系というか関数型プログラミング言語というか、なんかそんなかんじのものです\footnote{Curry-Howard同型が理論的背景にあるから境目が曖昧になるんですわ、しゃーない}。公式サイトによる紹介は以下の通りです。}
     +p {\> Beluga is a functional programming language designed for reasoning about formal systems. It features direct support for object-level binding constructs using higher order abstract syntax and treats contexts as first class objects.}
     +p {なんかわかるようなわからないようなことが書いてありますね。これの意味するところがわかるところまで持っていくのがこの記事の目標となっております。がんばるぞー。記事の流れは以下のようになっております:
     \listing{
@@ -44,7 +48,8 @@ let article = '<
     +section {インストール} <
     +p{GithubのREADMEを読め。\todo{真面目に書く必要あるかなこれ}}
     >
-    +section {背景の背景: 正規形と簡約による正規化} <
+    +section {背景の背景: λ計算の正規形と簡約による正規化} <
+    +p{本題に入る前にいくらか背景知識の説明をしておく必要があります。}
     +p{\todo{構成が変わったので序文を書き直す}\dfn{Normalization by Evaluation}とは、λ計算やその亜種の項が与えられた時にその表示的意味論(あるいはeval関数)を経由して正規形を得るテクニックです。今回は対象として単純型付きλ計算(Simply Typed Lambda Calculus, STLC)を扱います\footnote{厳密にはChurch-styleです}。STLCの型は\dfn{基底型}${\base}と\dfn{関数型}${\arr{A}{B}}からなります。
     \math-list(${| A, B \coloncoloneq \base \mid \arr{A}{B} |});
 
@@ -119,15 +124,33 @@ type term =
     }
     +p{もう一つの面倒くさいポイントは「そもそもβ簡約を定義通りに実装するのがあまり直観的ではない」という点です\todo{ほんまかこれ}。}
     >
-    +section {背景: Normalization by Evaluationによる正規化} <
-    +p{\todo{NbEについてのざっくりした説明を最初にする}それに比べるとλ項が与えられた時にそれを評価する関数(いわゆるeval関数)を書くのは(少なくとも一部の人にとっては)かなり直観的で実装も楽に思われます。実際に書いてみましょう。最初に\code(`semantics`);という型を定義します。これはeval関数で評価することで得られる値を表します。今回は基底型に対応する値として\code(`MNat`);と関数型に対応する値として\code(`MAbs`);を用意します\footnote{今回は便宜上基底型をintとして扱っていますが特にintである必要はないです}。}
-    +Code.code(`
+    
+    +section {背景: Normalization by Evaluation} <
+      +p{先程紹介したような簡約を用いた正規化以外にもλ項の正規形を得る方法はあります。それがこれから紹介するNormalization by Evaluation(評価による正規化)です。基本的なアイデアは名前の通りで、λ項に対するeval関数を用いて正規形を得るというものです。}
+      +p{一般的にeval関数とはプログラムのコードを受け取ってそれを実行した結果を返す関数のことです\footnote{RubyやPython、Javascriptなどのインタープリタを前提とした言語がサポートしていることが多い印象があります。あとCommon LispとかSchemeとかClojureとか。}。もう少し抽象的な解釈として、ここではeval関数を「λ項の集合からそれに対応する\dfn{意味}\footnote{要はsemanticsのことです。}の集合への関数」と考えることにしましょう。以降λ項の集合を${Term}、意味の集合を${Sem}と呼ぶことにします。
+      \math-list(${| eval: Term \rightarrow Sem |});
+      eval関数に対する妥当な仮定として以下のものを考えます。}
+
+      +theorem?:({evalの健全性1}){${M}と${N}が同じ正規形を持つなら${eval\paren{M} = eval\paren{N}}である。\todo{定理ではない気がする}}
+
+      +theorem?:({evalの健全性2}){${M}と${N}が同じ正規形を持たないなら${eval\paren{M} \neq eval\paren{N}}である。}
+
+      +p{この性質から\emph{同じ正規形を持つ項はその場合に限って同じ意味を持つ}ということが言えるはずです。とすると、ある意味${s}が与えられた時に${eval\paren{M} = s}となるようなMのうちただ一つの正規形を選んでくることができるはずです。この関数は\dfn{reify}(具象化)関数と呼ばれます。以降、正規形からなる集合を${Norm}と呼びます。
+      \math-list(${| reify: Sem \rightarrow Norm |});
+      後は簡単で、このevalとreifyを組み合わせると項の正規形を与える関数になります。
+      \math-list(${| normalize = reify \circ eval: Term \rightarrow Norm |});
+      これがNormalization by Evaluationの基本的なアイデアです。このアイデアのキモはreify関数を如何に実装するかという点ですが、実際にReasonで実装しながらその辺りを見ていくことにしましょう。}
+
+    +p{最初に${Sem}に対応するものとして\code(`semantics`);という型を定義します。今回は基底型に対応する値として\code(`MBase`);と関数型に対応する値として\code(`MAbs`);を用意します。
+
+    \Code.d-code(`
 type semantics =
-  | MNat(int)
+  | MBase(term)
   | MAbs(semantics => semantics);
     `);
-    +p{STLCの項を評価するためには評価される項の他に自由変数に対応する値を持つ環境が必要です。これを\code(`env`);という型として定義しましょう。これは変数名を与えた時に対応する\code(`semantics`);を返す関数として実装できます。空の環境\code(`envEmpty`);は必ず\code(`Undefined_variable`);を例外として投げます。また\code(`envExt`);は変数名と\code(`semantics`);のペアを受け取って既存の環境を拡張します。}
-    +Code.code(`
+
+    STLCの項を評価するためには評価される項の他に自由変数に対応する値を持つ環境が必要です。これを\code(`env`);という型として定義しましょう。これは変数名を与えた時に対応する\code(`semantics`);を返す関数として実装できます。空の環境\code(`envEmpty`);は必ず\code(`Undefined_variable`);を例外として投げます。また\code(`envExt`);は変数名と\code(`semantics`);のペアを受け取って既存の環境を拡張します。
+   \Code.d-code(`
 type env = string => semantics;
 
 type exn +=
@@ -143,8 +166,8 @@ let envExt: (string, semantics, env) => env =
       env(name2);
     };
     `);
-    +p{然る後に\code(`eval`);の本体を書くことができます。項の構造に関する再帰を用いて素直に実装できます。}
-    +Code.code(`
+    然る後に\code(`eval`);の本体を書くことができます。項の構造に関する再帰を用いて素直に実装できます。
+    \Code.d-code(`
 type exn +=
   | Wrong_application;
 
@@ -165,8 +188,43 @@ let rec evaluate: (term, env) => semantics =
     };
   };
     `);
-    +p{というわけですんなりと\code(`eval`);を実装することができました。いいですね。人生もこうすんなりといってほしいものです。\code(`eval`);の実装がβ簡約より楽と言われてもそもそもやってることが違うから関係ないじゃないか、と思われるかもしれません。ところがどっこい、この\code(`eval`);を使うことで実はSTLCの項の正規形を得ることができてしまうのです。それが今から紹介するNomalization by Evaluationなのです。}
-    +p{Normalization by Evaluationは先程も説明したように\code(`eval`);(数学的に言えば表示的意味論)を用いてλ項の正規化を行うテクニックのことです。基本的\code(`eval`);の他に評価された値からもとのλ項の正規形をひき戻す関数\code(`reify`);\footnote{「具象化」という意味です}を定義すると\todo{reifyの定義を与える}}
+    というわけですんなりと\code(`eval`);を実装することができました。いいですね。人生もこうすんなりといってほしいものです。\code(`eval`);の実装がβ簡約より楽と言われてもそもそもやってることが違うから関係ないじゃないか、と思われるかもしれません。ところがどっこい、この\code(`eval`);を使うことで実はSTLCの項の正規形を得ることができてしまうのです。それが今から紹介するNomalization by Evaluationなのです。}
+    +p{Normalization by Evaluationは先程も説明したように\code(`eval`);(数学的に言えば表示的意味論)を用いてλ項の正規化を行うテクニックのことです。基本的\code(`eval`);の他に評価された値からもとのλ項の正規形をひき戻す関数\code(`reify`);\footnote{「具象化」という意味です}を定義すると\todo{reifyの定義を与える}
+    \Code.d-code(`
+let varCount = ref(0)
+let gensym: unit => string =
+  () => {
+    let num = varCount^;
+    varCount := num + 1;
+    "x" ++ Js.Int.toString(num)
+  }
+
+type exn +=
+  | Illegal_type;
+
+let rec reify: (semantics, typ) => term =
+  (sem) => (ty) => {
+    switch (sem) {
+    | MBase(m) => m
+    | MAbs(f) => 
+      switch (ty) {
+      | Base => raise(Illegal_type)
+      | Arr(ty1, ty2) => {
+        let x = gensym();
+        Abs(x, ty1, reify(f(reflect(Var(x), ty1)), ty2))
+      }
+      }
+    }
+  }
+and reflect: (term, typ) => semantics =
+  (m, ty) => {
+    switch(ty) {
+    | Base => MBase(m)
+    | Arr(ty1, ty2) =>
+      MAbs((sem) => reflect(App(m, reify(sem, ty1)), ty2))
+    }
+  }
+    `);}
     >
     +section {BelugaでNbEを書く} <
       +p{\todo{説明を書いていく}}
