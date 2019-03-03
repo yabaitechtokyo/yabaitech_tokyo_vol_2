@@ -45,6 +45,14 @@ let-math \M = ${\mathcal{M}}
 let-math \den m = ${\Brack{#m}}
 let-math \H = ${\mathcal{H}}
 
+let-math \vcenter m =
+  text-in-math MathOrd (fun ctx -> (
+    let ib = embed-math ctx m in
+    let (w, h, d) = get-natural-metrics ib in
+    let half = (h +' d) *' 0.5 in
+    raise-inline (half -' h) ib
+  ))
+
 let article = '<
 +chapter ?:(`wasabiz-article`) (|
     bibliography = wasabiz-bibliography;
@@ -82,7 +90,7 @@ let article = '<
   \listing{
   * パーサー: DSL
   * 束縛関係の管理, 型検査, 型推論: 高階抽象構文(HOAS)
-  * 効率的な評価器: Normalization by Evaluation
+  * 効率的な評価器: 評価による正規化(NbE)
   * タクティック言語: メタ言語のタクティック言語
   }%
 }
@@ -119,7 +127,7 @@ let article = '<
     ** \ref-subsection(`curry-vs-church`);\ \ Curry流とChurch流
     ** \ref-subsection(`church-style1`);\ \ Church流の単純型付きラムダ計算 (その1)
     ** \ref-subsection(`typeful-phoas`);\ \ 単純型付きラムダ計算の実装
-    ** \ref-subsection(`nbe`);\ \ Normalization by Evaluationによる正規化
+    ** \ref-subsection(`nbe`);\ \ 評価による正規化
     ** \ref-subsection(`church-style2`);\ \ Church流の単純型付きラムダ計算 (その2)
     ** \ref-subsection(`judgment1`);\ \ 型判断の実装 (その1)
     ** \ref-subsection(`judgment2`);\ \ 型判断の実装 (その2)
@@ -342,7 +350,7 @@ let article = '<
   さて，ここまでHOASをLeanで直接は定義できないという話をしてきましたが，実は仮に直接定義できたとしても，HOASには実用上の問題があります．
   一つ目の問題は一旦構築した項の中身を読み出せないということです．
   もう一つの問題は\code(`preterm`);型の値の中に対応するラムダ項が存在しないものがあるということです．
-  まず，一つ目の問題は，例えば\code(`preterm`);型の値を通常の表記に変換する\code(`to_string`);に相当する関数が定義できないということを指します．
+  まず，一つ目の問題は，例えば\code(`preterm`);型の値を通常の表記に変換する\code(`repr`);に相当する関数が定義できないということを指します．
   \footnote{なお，この問題はメタ言語が型付きの場合にのみ起こります．}
   この問題は古くから知られている問題で，\cite[`DanvyRR01`];ではこのような構文木を指して「write-only syntax」と呼んでいます．
   Write-only syntaxをreadableにするためには自由変数を表すコンストラクタを\code(`preterm`);を追加する方法が知られています．
@@ -413,24 +421,24 @@ let article = '<
   たとえばdeBrujin level (有名なdeBrujin indexの変種で，束縛変数の数字が項の内側にいくにつれて増えていくようにしたもの)を使って項を文字列に変換する場合はこの\code(`α`);として自然数の型\code(`ℕ`);を採用します．
 
   \d-code(`
-  def preterm.to_string : preterm ℕ → ℕ → string
-  | (var n) _ := to_string n
-  | (lam f) lv := "(λ" ++ to_string lv ++ "." ++ preterm.to_string (f lv) (lv + 1) ++ ")"
-  | (app m₁ m₂) lv := "(" ++ preterm.to_string m₁ lv ++ " " ++ preterm.to_string m₂ lv ++ ")"
+  def preterm.repr' : preterm ℕ → ℕ → string
+  | (var n) _ := repr n
+  | (lam f) lv := "(λ" ++ repr lv ++ "." ++ preterm.repr' (f lv) (lv + 1) ++ ")"
+  | (app m₁ m₂) lv := "(" ++ preterm.repr' m₁ lv ++ " " ++ preterm.repr' m₂ lv ++ ")"
 
-  def Preterm.to_string (m : Preterm) : string :=
-  preterm.to_string (m ℕ) 0
-  `);%
+  def preterm.repr (m : Preterm) : string :=
+  preterm.repr' (m ℕ) 0
+  `);
 
   LeanにはHaskellやCoqと同じく型クラスが用意されています．
-  この定義を用いて\code(`has_to_string`);型クラスのインスタンスを宣言して，値の文字列化を行う汎用関数\code(`to_string`);が適用できるようにします．
+  この定義を用いて\code(`has_repr`);型クラスのインスタンスを宣言して，値の文字列化を行う汎用関数\code(`repr`);が適用できるようにします．
 
   \d-code(`
-  instance Preterm_to_string : has_to_string Preterm :=
-  ⟨preterm.to_string⟩
-  `);%
+  instance Preterm_has_repr : has_repr Preterm :=
+  ⟨preterm.repr⟩
+  `);
 
-  ParametricでないHOASでは実現できなかった\code(`to_string`);を記述することができました．
+  ParametricでないHOASでは実現できなかった\code(`repr`);を記述することができました．
 }
 +p{
   では，実際にラムダ項を作成してみます．
@@ -442,14 +450,14 @@ let article = '<
   def i : Preterm := λ α, lam (λ x, var x)
   `);%
 
-  先ほどインスタンスを定義した\code(`to_string`);を用いてこれを表示してみます．
+  先ほどインスタンスを定義した\code(`repr`);を用いてこれを表示してみます．
 
   \d-code(`
-  #eval to_string i
-  --> "(λ0.0)"
+  #eval i
+  --> (λ0.0)
   `);%
 
-  \code(`--`);はLeanの一行コメントです．\code(`--`);以降に書いた文字列\code(`"(λ0.0)"`);が\code(`to_string i`);の結果です．
+  \code(`--`);はLeanの一行コメントです．\code(`--`);以降に書いた文字列\code(`(λ0.0)`);が\code(`repr i`);の結果です．
   正しく表示できているようです．
   同様に${s}や${k}と呼ばれる以下の項も定義してみます．
 
@@ -463,14 +471,14 @@ let article = '<
   def k : Preterm := λ α, lam (λ x, lam (λ y, var x))
   `);%
 
-  やはり\code(`to_string`);を使って表示してみます．
+  やはり\code(`repr`);を使って表示してみます．
   うまく動作しているようです．
 
   \d-code(`
-  #eval to_string s
-  --> "(λ0.(λ1.(λ2.((0 2) (1 2)))))"
-  #eval to_string k
-  --> "(λ0.(λ1.0))"
+  #eval s
+  --> (λ0.(λ1.(λ2.((0 2) (1 2)))))
+  #eval k
+  --> (λ0.(λ1.0))
   `);%
 }
 +p{
@@ -491,14 +499,14 @@ let article = '<
   `);%
 
   \d-code(`
-  #eval to_string n₀
-  --> "(λ0.(λ1.1))"
-  #eval to_string n₁
-  --> "(λ0.(λ1.(0 1)))"
-  #eval to_string n₂
-  --> "(λ0.(λ1.(0 (0 1))))"
-  #eval to_string n₃
-  --> "(λ0.(λ1.(0 (0 (0 1)))))"
+  #eval n₀
+  --> (λ0.(λ1.1))
+  #eval n₁
+  --> (λ0.(λ1.(0 1)))
+  #eval n₂
+  --> (λ0.(λ1.(0 (0 1))))
+  #eval n₃
+  --> (λ0.(λ1.(0 (0 (0 1)))))
   `);%
 
   自然数を受け取って次の自然数を返す\code(`succ`);を定義します．
@@ -522,8 +530,8 @@ let article = '<
   \d-code(`
   def succ_n₀ : Preterm := App succ n₀
 
-  #eval to_string succ_n₀
-  --> "((λ0.(λ1.(λ2.(1 ((0 1) 2))))) (λ0.(λ1.1)))"
+  #eval succ_n₀
+  --> ((λ0.(λ1.(λ2.(1 ((0 1) 2))))) (λ0.(λ1.1)))
   `);%
 }
 +p{
@@ -568,16 +576,16 @@ let article = '<
   それでは先ほどの\code(`succ_n₀`);を簡約してみます．
 
   \d-code(`
-  #eval to_string succ_n₀
-  --> "((λ0.(λ1.(λ2.(1 ((0 1) 2))))) (λ0.(λ1.1)))"
-  #eval to_string $ pbeta succ_n₀
-  --> "(λ0.(λ1.(0 (((λ2.(λ3.3)) 0) 1))))"
-  #eval to_string $ pbeta $ pbeta succ_n₀
-  --> "(λ0.(λ1.(0 ((λ2.2) 1))))"
-  #eval to_string $ pbeta $ pbeta $ pbeta succ_n₀
-  --> "(λ0.(λ1.(0 1)))"
-  #eval to_string $ pbeta $ pbeta $ pbeta $ succ_n₀
-  --> "(λ0.(λ1.(0 1)))"
+  #eval succ_n₀
+  --> ((λ0.(λ1.(λ2.(1 ((0 1) 2))))) (λ0.(λ1.1)))
+  #eval pbeta succ_n₀
+  --> (λ0.(λ1.(0 (((λ2.(λ3.3)) 0) 1))))
+  #eval pbeta (pbeta succ_n₀)
+  --> (λ0.(λ1.(0 ((λ2.2) 1))))
+  #eval pbeta (pbeta (pbeta succ_n₀))
+  --> (λ0.(λ1.(0 1)))
+  #eval pbeta (pbeta (pbeta (pbeta succ_n₀)))
+  --> (λ0.(λ1.(0 1)))
   `);%
 
   うまく動いていますね．
@@ -596,10 +604,10 @@ let article = '<
   実際に簡約して結果が\code(`Ω`);となることを確認します．
 
   \d-code(`
-  #eval to_string Ω
-  --> "((λ0.(0 0)) (λ0.(0 0)))"
-  #eval to_string $ pbeta Ω
-  --> "((λ0.(0 0)) (λ0.(0 0)))"
+  #eval Ω
+  --> ((λ0.(0 0)) (λ0.(0 0)))
+  #eval pbeta Ω
+  --> ((λ0.(0 0)) (λ0.(0 0)))
   `);
 }
 >
@@ -879,15 +887,15 @@ let article = '<
   App succ zero
   `);
 
-  ただしく項が作成できていることを確認するために(詳細は掲載しませんが)\code(`Term`);に対して\code(`has_to_string`);のインスタンスを定義しました．
+  ただしく項が作成できていることを確認するために(詳細は掲載しませんが)\code(`Term`);に対して\code(`has_repr`);のインスタンスを定義しました．
 
   \d-code(`
-  #eval to_string zero
-  --> "(λ0.(λ1.1)) : ((ι → ι) → (ι → ι))"
-  #eval to_string succ
-  --> "(λ0.(λ1.(λ2.(1 ((0 1) 2))))) : (((ι → ι) → (ι → ι)) → ((ι → ι) → (ι → ι)))"
-  #eval to_string succ_zero 
-  --> "((λ0.(λ1.(λ2.(1 ((0 1) 2))))) (λ0.(λ1.1))) : ((ι → ι) → (ι → ι))"
+  #eval zero
+  --> (λ0.(λ1.1)) : ((ι → ι) → (ι → ι))
+  #eval succ
+  --> (λ0.(λ1.(λ2.(1 ((0 1) 2))))) : (((ι → ι) → (ι → ι)) → ((ι → ι) → (ι → ι)))
+  #eval succ_zero 
+  --> ((λ0.(λ1.(λ2.(1 ((0 1) 2))))) (λ0.(λ1.1))) : ((ι → ι) → (ι → ι))
   `);
 
   うまく動いているようです．
@@ -900,10 +908,10 @@ let article = '<
 }
 >
 
-+subsection?:(`nbe`){Normalization by Evaluationによる正規化} <
++subsection?:(`nbe`){評価による正規化} <
 +p{
   この節では項の正規化を実装します．
-  特に，\dfn{Normalization by Evaluation (NbE)}というテクニックを使って実装することで非常にコンパクトなコードで正規化を実装します．
+  特に，\dfn{評価による正規化 (Normalization by Evaluation, NbE)}というテクニックを使って実装することで非常にコンパクトなコードで正規化を実装します．
   NbEについてはこの本のzeptometerによる別の記事(\ref-chapter(`zpt-article`);)に詳細が掲載されているので，テクニックの概要の説明はそちらに譲ることにします．
   代わりに，この記事ではNbEをTypeful PHOASでどのように実装するかに焦点を合わせます．
 }
@@ -988,14 +996,14 @@ let article = '<
   \code(`zero`);を\code(`succ`);した結果が正しく正規化されてChurch encodingの形で出力されています．
 
   \d-code(`
-  #eval to_string $ normalize zero
-  --> "(λ0.(λ1.1)) : ((ι → ι) → (ι → ι))"
-  #eval to_string $ normalize (App succ zero)
-  --> "(λ0.(λ1.(0 1))) : ((ι → ι) → (ι → ι))"
-  #eval to_string $ normalize (App succ (App succ zero))
-  --> "(λ0.(λ1.(0 (0 1)))) : ((ι → ι) → (ι → ι))"
-  #eval to_string $ normalize (App succ (App succ (App succ zero)))
-  --> "(λ0.(λ1.(0 (0 (0 1))))) : ((ι → ι) → (ι → ι))"
+  #eval normalize zero
+  --> (λ0.(λ1.1)) : ((ι → ι) → (ι → ι))
+  #eval normalize (App succ zero)
+  --> (λ0.(λ1.(0 1))) : ((ι → ι) → (ι → ι))
+  #eval normalize (App succ (App succ zero))
+  --> (λ0.(λ1.(0 (0 1)))) : ((ι → ι) → (ι → ι))
+  #eval normalize (App succ (App succ (App succ zero)))
+  --> (λ0.(λ1.(0 (0 (0 1))))) : ((ι → ι) → (ι → ι))
   `);
 
   \code(`normalize`);が${\beta}簡約だけでなく${\eta}展開を行うことも確認します．
@@ -1004,10 +1012,10 @@ let article = '<
   def i : Term (arrow (arrow base base) (arrow base base)) :=
   λ ν, lam (λ f, var f)
 
-  #eval to_string i
-  --> "(λ0.0) : ((ι → ι) → (ι → ι))"
-  #eval to_string $ normalize i
-  --> "(λ0.(λ1.(0 1))) : ((ι → ι) → (ι → ι))"
+  #eval i
+  --> (λ0.0) : ((ι → ι) → (ι → ι))
+  #eval normalize i
+  --> (λ0.(λ1.(0 1))) : ((ι → ι) → (ι → ι))
   `);
 }
 +p{
@@ -1281,9 +1289,9 @@ let article = '<
   この補題は，証明木で考えると以下のような証明木の間の変換を定義しています．
 
   \eqn(${
-    \paren{\derive{| \phi_1, \Gamma \vdash \phi_2 |}{ \Gamma \vdash \phi_1 \to \phi_2 }}
+    \paren{\vcenter{\derive{| \phi_1, \Gamma \vdash \phi_2 |}{ \Gamma \vdash \phi_1 \to \phi_2 }}}
     \mapsto
-    \paren{\derive{| \derive{| \psi, \phi_1, \Gamma \vdash \phi_2 |}{ \phi_1, \psi, \Gamma \vdash \phi_2 } |}{ \psi, \Gamma \vdash \phi_1 \to \phi_2 }}
+    \paren{\vcenter{\derive{| \derive{| \psi, \phi_1, \Gamma \vdash \phi_2 |}{ \phi_1, \psi, \Gamma \vdash \phi_2 } |}{ \psi, \Gamma \vdash \phi_1 \to \phi_2 }}}
   });
 }
 +p{
@@ -1384,7 +1392,7 @@ let article = '<
   例えば，${\iota \to \iota, \iota \vdash \iota}という型判断が演繹定理により${\vdash \iota \to \paren{\iota \to \iota} \to \iota}に変換される処理がLean上では以下のコードで表現されます．
 
   \d-code(`
-  #eval type.to_string $ type.foldl [arrow base base, base] base
+  #eval type.foldl [arrow base base, base] base
   --> "(ι → ((ι → ι) → ι))"
   `);
 
@@ -1921,15 +1929,15 @@ let article = '<
   `);
 }
 +p{
-  最後に高階論理の証明を定義して，全ての定義が終わりです．
+  最後に高階論理の証明を定義して，全ての定義が終わりです．\footnote{\code(`theorem`);はLeanの予約語なので，代わりに\code(`Theorem`);と名付けます．}
 
   \d-code(`
-  inductive theorem : Π {Γ}, list (Judgment Γ prop) → Judgment Γ prop → Prop
-  | hyp : Π {Γ Φ} {φ : Judgment Γ prop}, φ ∈ Φ → theorem Φ φ
-  | refl : Π {Γ Φ t} {m₁ m₂ : Judgment Γ t}, m₁ ≈ m₂ → theorem Φ (eq m₁ m₂)
-  | cong : Π {Γ Φ t} (m : Judgment (t :: Γ) prop) (m₂ m₁ : Judgment Γ t), theorem Φ (eq m₁ m₂) → theorem Φ (subst m m₁) → theorem Φ (subst m m₂)
-  | prop_ext : Π {Γ Φ} {φ₁ φ₂ : Judgment Γ prop}, theorem (φ₁ :: Φ) φ₂ → theorem (φ₂ :: Φ) φ₁ → theorem Φ (eq φ₁ φ₂)
-  | fun_ext : Π {Γ Φ t₁ t₂} (m₁ m₂ : Judgment (t₁ :: Γ) t₂), theorem (list.map weak Φ) (eq m₁ m₂) → theorem Φ (eq (lam m₁) (lam m₂))
+  inductive Theorem : Π {Γ}, list (Judgment Γ prop) → Judgment Γ prop → Prop
+  | hyp : Π {Γ Φ} {φ : Judgment Γ prop}, φ ∈ Φ → Theorem Φ φ
+  | refl : Π {Γ Φ t} {m₁ m₂ : Judgment Γ t}, m₁ ≈ m₂ → Theorem Φ (eq m₁ m₂)
+  | cong : Π {Γ Φ t} (m : Judgment (t :: Γ) prop) (m₂ m₁ : Judgment Γ t), Theorem Φ (eq m₁ m₂) → Theorem Φ (subst m m₁) → Theorem Φ (subst m m₂)
+  | prop_ext : Π {Γ Φ} {φ₁ φ₂ : Judgment Γ prop}, Theorem (φ₁ :: Φ) φ₂ → Theorem (φ₂ :: Φ) φ₁ → Theorem Φ (eq φ₁ φ₂)
+  | fun_ext : Π {Γ Φ t₁ t₂} (m₁ m₂ : Judgment (t₁ :: Γ) t₂), Theorem (list.map weak Φ) (eq m₁ m₂) → Theorem Φ (eq (lam m₁) (lam m₂))
   `);
 
   これで定理証明支援系が完成しました．
@@ -1947,19 +1955,19 @@ let article = '<
     |}{ p \vdash_\set{p : \omicron} \top \doteq p }
   });
 
-  判断${p \vdash_\set{p : \omicron} \top \doteq p}に対応するLeanの命題は\code(`@theorem [prop] [var here] (eq (weak top) (var here))`);です．
-  \code(`@theorem`);は命題\code(`theorem`);の暗黙の引数を明示的に与えるという構文です．
-  この場合，\code(`@theorem [prop] ...`);で判断の型環境${\Gamma}が${\omicron}型の一つの変数からなるという意味になります．
+  判断${p \vdash_\set{p : \omicron} \top \doteq p}に対応するLeanの命題は\code(`@Theorem [prop] [var here] (eq (weak top) (var here))`);です．
+  \code(`@Theorem`);は命題\code(`Theorem`);の暗黙の引数を明示的に与えるという構文です．
+  この場合，\code(`@Theorem [prop] ...`);で判断の型環境${\Gamma}が${\omicron}型の一つの変数からなるという意味になります．
   よって，Leanの中で以下の\code(`...`);を埋めれば証明が完了します．
 
   \d-code(`
-  def theorem1 : @theorem [prop] [var here] (eq (weak top) (var here)) := ...
+  def theorem1 : @Theorem [prop] [var here] (eq (weak top) (var here)) := ...
   `);
 
   ここで，普通にプログラミングしてLeanの項を作るのではなく，Leanのタクティック言語を用います．
 
   \d-code(`
-  def theorem1 : @theorem [prop] [var here] (eq (weak top) (var here)) :=
+  def theorem1 : @Theorem [prop] [var here] (eq (weak top) (var here)) :=
   begin
     -- ここを埋める
   end
@@ -1969,16 +1977,16 @@ let article = '<
 
   \d-code(`
   Tactic State:
-  ⊢ theorem [var here] (eq (weak top) (var here))
+  ⊢ Theorem [var here] (eq (weak top) (var here))
   `);
 
   出来上がるべき証明木は根が命題外延性なので\code(`prop_ext`);を用います．
-  もし普通にLeanの証明を書くのであればここで単に\code(`prop_ext`);と書くのですが，今回はLeanの上で実装された演繹体系の証明を書いているので\code(`apply theorem.prop_ext`);と書くのが正解です．
+  もし普通にLeanの証明を書くのであればここで単に\code(`prop_ext`);と書くのですが，今回はLeanの上で実装された演繹体系の証明を書いているので\code(`apply Theorem.prop_ext`);と書くのが正解です．
 
   \d-code(`
-  example : @theorem [prop] [var here] (eq (weak top) (var here)) :=
+  def theorem1 : @Theorem [prop] [var here] (eq (weak top) (var here)) :=
   begin
-    apply theorem.prop_ext,
+    apply Theorem.prop_ext,
     -- ここを埋める
   end
   `);
@@ -1988,21 +1996,21 @@ let article = '<
   \d-code(`
   Tactic State:
   2 goals
-  ⊢ theorem [weak top, var here] (var here)
+  ⊢ Theorem [weak top, var here] (var here)
 
-  ⊢ theorem [var here, var here] (weak top)
+  ⊢ Theorem [var here, var here] (weak top)
   `);
 
   このように，Lean自体のタクティック言語を用いることで今回作成した論理の証明を対話的に記述することができます．
   この証明を最後まで書くと以下のようになります．
 
   \d-code(`
-  example : @theorem [prop] [var here] (eq (weak top) (var here)) :=
+  def theorem1 : @Theorem [prop] [var here] (eq (weak top) (var here)) :=
   begin
-    apply theorem.prop_ext,
-    { apply theorem.hyp,
+    apply Theorem.prop_ext,
+    { apply Theorem.hyp,
       simp },
-    { apply theorem.refl,
+    { apply Theorem.refl,
       canonicity }
   end
   `);
@@ -2014,35 +2022,35 @@ let article = '<
   詳細は省きますが，この証明支援系での証明がどのような雰囲気かがわかると思います．
 
   \d-code(`
-  example {φ₁ φ₂} {Φ : list (Judgment [] prop)} : theorem Φ (app (app and φ₁) φ₂) → theorem Φ φ₁ :=
+  def theorem2 {φ₁ φ₂} {Φ : list (Judgment [] prop)} : Theorem Φ (app (app and φ₁) φ₂) → Theorem Φ φ₁ :=
   begin
     intro p,
-    apply theorem.cong
+    apply Theorem.cong
       (var here)
       φ₁
       (λ ν, app (lam (λ f, app (app (var f) (φ₁ ν)) (φ₂ ν))) (lam (λ p₁, lam (λ p₂, var p₁)))),
-    { apply theorem.refl,
+    { apply Theorem.refl,
       canonicity, },
-    { apply theorem.cong
+    { apply Theorem.cong
         (@id (Judgment [arrow _ prop] prop) $ λ ν f, app (var f) (lam (λ p₁, lam (λ p₂, var p₁))))
         (λ ν, lam (λ f, app (app (var f) (φ₁ ν)) (φ₂ ν)))
         (@id (Judgment [] (arrow _ prop)) $ λ ν, lam (λ f, app (app (var f) (top ν)) (top ν))),
-      { apply theorem.cong
+      { apply Theorem.cong
           (var here)
           (eq
             (@id (Judgment [] (arrow _ prop)) $ λ ν, lam (λ f, app (app (var f) (top ν)) (top ν)))
             (λ ν, lam (λ f, app (app (var f) (φ₁ ν)) (φ₂ ν))))
           (λ ν, app (app (lam (λ p₁, lam (λ p₂, eq (lam (λ f : ν (arrow _ (arrow _ prop)), app (app (var f) (top ν)) (top ν))) (lam (λ f, app (app (var f) (var p₁)) (var p₂)))))) (φ₁ ν)) (φ₂ ν)),
-        { apply theorem.refl,
+        { apply Theorem.refl,
           canonicity },
         { from p } },
-      { apply theorem.cong
+      { apply Theorem.cong
           (var here)
           (@id (Judgment [] _) $ λ ν, app (lam (λ f, app (app (var f) (top ν)) (top ν))) (lam (λ p₁, lam (λ p₂, var p₁))))
           top,
-        { apply theorem.refl,
+        { apply Theorem.refl,
           canonicity },
-        { apply theorem.refl,
+        { apply Theorem.refl,
           canonicity } } }
   end
   `);
