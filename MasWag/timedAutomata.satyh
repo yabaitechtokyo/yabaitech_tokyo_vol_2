@@ -5,6 +5,10 @@
 
 let timedAutomata = '<+section{時間オートマトン} <
 +subsection{時刻付きワード} <
++p {
+先ず、時間オートマトンに与える入力として、時刻付きワード (timed word)を定義します。時刻付きワードで考える文字集合${\alphabet}は、通常のオートマトンにおける文字列と同様に有限集合ですが、時刻付きワードでは各文字${\event_i \in \alphabet}に正実数値のタイムスタンプ${\tsi{i} \in \Rp}が付いています。
+これは「イベント ${\event_i} が時刻${\tsi{i}}で起こった」と読むことができます。
+}
 +definition ?:({時刻付きワード}) ?:(`def:timedWord`)
 {
   ${\alphabet}を有限の文字集合とする。
@@ -17,14 +21,16 @@ let timedAutomata = '<+section{時間オートマトン} <
 {
   文字集合${\alphabet} を ${\alphabet = \set{\eventstyle{a}, \eventstyle{b}}}とする。
   このとき、${\word = \paren{\eventstyle{a}, 0.1},\paren{\eventstyle{b}, 0.2},\paren{\eventstyle{a}, 0.8}}は 時刻付きワードである。
+  これは例えば「イベント ${\eventstyle{a}} が時刻${0.1}で起こり、イベント ${\eventstyle{b}} が時刻${0.2}で起こり、イベント ${\eventstyle{a}} が時刻${0.8}で起こった」と読むことができる。
   一方で${\word' = \paren{\eventstyle{a}, 0.2},\paren{\eventstyle{b}, 0.1},\paren{\eventstyle{a}, 0.8}}や
    ${\word'' = \paren{\eventstyle{a}, 0},\paren{\eventstyle{b}, 0.1},\paren{\eventstyle{a}, 0.8}}は 時刻付きワードではない。
-  \footnote{定義によっては${\word''}の様にタイムスタンプが0のものや、タイムスタンプが広義単調増加のものもを時刻付きワードに含める場合もある。}
+  \footnote{定義によっては${\word''}の様にタイムスタンプが0のものや、タイムスタンプが広義単調増加のものもを時刻付きワードに含める場合もあります。}
 }
 >
 +subsection{時間オートマトン (構文論)} <
-+p {クロック変数の集合${\Clock}について、以下のBNFで定義される制約の集合を${\Guard}で表わす。
-   但し${\clock \in \Clock}、${\bowtie \in \set{\geq, >, =, <, \leq}}、${k \in \Z}である。
++p {時間オートマトンでは、有限個の\dfn{クロック変数} (clock variable)を用いることで時刻付きワードのタイムスタンプ間の制約を表現します。
+クロック変数の集合${\Clock}について、以下のBNFで定義される制約の集合を${\Guard}で表します。
+   但し${\clock \in \Clock}、${\bowtie \in \set{\geq, >, =, <, \leq}}、${k \in \Z}とする。
 }
 +BNF (${\guard}) ([[${\clock \bowtie k}; ${\guard \land \guard}]]);
 +definition ?:({時間オートマトン}) ?:(`def:TA`)
