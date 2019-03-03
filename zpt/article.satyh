@@ -126,8 +126,8 @@ type term =
     >
     
     +section {背景: Normalization by Evaluation} <
-      +p{先程紹介したような簡約を用いた正規化以外にもλ項の正規形を得る方法はあります。それがこれから紹介するNormalization by Evaluation(評価による正規化)です。基本的なアイデアは名前の通りで、λ項に対するeval関数を用いて正規形を得るというものです。}
-      +p{一般的にeval関数とはプログラムのコードを受け取ってそれを実行した結果を返す関数のことです\footnote{RubyやPython、Javascriptなどのインタープリタを前提とした言語がサポートしていることが多い印象があります。あとCommon LispとかSchemeとかClojureとか。}。もう少し抽象的な解釈として、ここではeval関数を「λ項の集合からそれに対応する\dfn{意味}\footnote{要はsemanticsのことです。}の集合への関数」と考えることにしましょう。以降λ項の集合を${Term}、意味の集合を${Sem}と呼ぶことにします。
+      +p{先程紹介したような簡約を用いた正規化以外にもλ項の正規形を得る方法はあります。それがこれから紹介するNormalization by Evaluation(NbE, 評価による正規化)です。基本的なアイデアは名前の通りで、λ項に対するeval関数を用いて正規形を得るというものです。}
+      +p{一般的にeval(評価)関数とはプログラムのコードを受け取ってそれを実行した結果を返す関数のことです\footnote{RubyやPython、Javascriptなどのインタープリタを前提とした言語がサポートしていることが多い印象があります。あとCommon LispとかSchemeとかClojureとか。}。もう少し抽象的な解釈として、ここではeval関数を「λ項の集合からそれに対応する\dfn{意味}\footnote{要はsemanticsのことです。}の集合への関数」と考えることにしましょう。以降λ項の集合を${Term}、意味の集合を${Sem}と呼ぶことにします。
       \math-list(${| eval: Term \rightarrow Sem |});
       eval関数に対する妥当な仮定として以下のものを考えます。}
 
@@ -139,9 +139,9 @@ type term =
       \math-list(${| reify: Sem \rightarrow Norm |});
       後は簡単で、このevalとreifyを組み合わせると項の正規形を与える関数になります。
       \math-list(${| normalize = reify \circ eval: Term \rightarrow Norm |});
-      これがNormalization by Evaluationの基本的なアイデアです。このアイデアのキモはreify関数を如何に実装するかという点ですが、実際にReasonで実装しながらその辺りを見ていくことにしましょう。}
+      これがNbEの基本的なアイデアです。このアイデアのキモの部分はreify関数を如何に実装するかという点にありますが、実際にReasonでNbEを実装しながらその辺りを見ていくことにしましょう。}
 
-    +p{最初に${Sem}に対応するものとして\code(`semantics`);という型を定義します。今回は基底型に対応する値として\code(`MBase`);と関数型に対応する値として\code(`MAbs`);を用意します。
+    +p{最初に${Sem}に対応するものとして\code(`semantics`);という型を定義します。
 
     \Code.d-code(`
 type semantics =
@@ -149,7 +149,8 @@ type semantics =
   | MAbs(semantics => semantics);
     `);
 
-    STLCの項を評価するためには評価される項の他に自由変数に対応する値を持つ環境が必要です。これを\code(`env`);という型として定義しましょう。これは変数名を与えた時に対応する\code(`semantics`);を返す関数として実装できます。空の環境\code(`envEmpty`);は必ず\code(`Undefined_variable`);を例外として投げます。また\code(`envExt`);は変数名と\code(`semantics`);のペアを受け取って既存の環境を拡張します。
+    基底型の項に対応する意味が\Code.code(`MBase`);で、これは正規形の項をそのまま持ちます。型に\Code.code(`term`);を使っているのはReasonの型システムでは正規形を表現できないためです。また、関数型の項に対応する意味が\Code.code(`MAbs`);で、これは意味から意味への関数から成ります。}
+    +p{STLCの項を評価するためには評価される項の他に自由変数に対応する意味を持つ\dfn{環境}が必要です。これを\code(`env`);という型として定義しましょう。これは変数名を与えた時に対応する\code(`semantics`);を返す関数として実装できます。空の環境\code(`envEmpty`);は必ず\code(`Undefined_variable`);を例外として投げます。また\code(`envExt`);は変数名と\code(`semantics`);のペアを受け取って既存の環境を拡張します。
    \Code.d-code(`
 type env = string => semantics;
 
@@ -159,27 +160,36 @@ type exn +=
 let envEmpty: env = _ => raise(Undefined_variable);
 
 let envExt: (string, semantics, env) => env =
-  (name, sem, env, name2) =>
+  (name, sem, env) => (name2) =>
+    if (name === name2) {
+      sem;
+    } else {
+      env(name2);
+    };
+
+let envEmpty: env = _ => raise(Undefined_variable);
+
+let envExt: (string, semantics, env) => env =
+  (name, sem, env) => (name2) =>
     if (name === name2) {
       sem;
     } else {
       env(name2);
     };
     `);
-    然る後に\code(`eval`);の本体を書くことができます。項の構造に関する再帰を用いて素直に実装できます。
+    然る後に\code(`eval`);の本体を書くことができます。項の構造に関する再帰を用いて素直に実装できます。変数の場合は環境から変数名に対応する意味を返す。λ抽象の場合は意味を受け取ってそれを環境に追加した上でλ抽象の本体を評価する関数を返す。適用の場合はそれぞれを評価した上で一つ目の意味が\Code.code(`MAbs`);になっているはずなのでこの関数に二つ目の意味を渡す。
     \Code.d-code(`
 type exn +=
   | Wrong_application;
 
-let rec evaluate: (term, env) => semantics =
-  (m, e) => {
-    switch (m) {
-    | Var(name) => e(name)
-    | Abs(name, _, n) =>
-      MAbs(sem => evaluate(n, envExt(name, sem, e)))
+let rec eval: (term, environment) => semantics =
+  (tm, env) => {
+    switch (tm) {
+    | Var(name) => env(name)
+    | Abs(name, _, n) => MAbs(sem => evaluate(n, envExt(name, sem, env)))
     | App(n1, n2) =>
-      let sem1 = evaluate(n1, e);
-      let sem2 = evaluate(n2, e);
+      let sem1 = evaluate(n1, env);
+      let sem2 = evaluate(n2, env);
 
       switch (sem1) {
       | MAbs(f) => f(sem2)
@@ -188,8 +198,8 @@ let rec evaluate: (term, env) => semantics =
     };
   };
     `);
-    というわけですんなりと\code(`eval`);を実装することができました。いいですね。人生もこうすんなりといってほしいものです。\code(`eval`);の実装がβ簡約より楽と言われてもそもそもやってることが違うから関係ないじゃないか、と思われるかもしれません。ところがどっこい、この\code(`eval`);を使うことで実はSTLCの項の正規形を得ることができてしまうのです。それが今から紹介するNomalization by Evaluationなのです。}
-    +p{Normalization by Evaluationは先程も説明したように\code(`eval`);(数学的に言えば表示的意味論)を用いてλ項の正規化を行うテクニックのことです。基本的\code(`eval`);の他に評価された値からもとのλ項の正規形をひき戻す関数\code(`reify`);\footnote{「具象化」という意味です}を定義すると\todo{reifyの定義を与える}
+    というわけですんなりと\code(`eval`);を実装することができました。いいですね。人生もこうすんなりといってほしいものです。}
+    +p{最後に本題のreify関数を実装します。まず補助関数として新しい変数名を生成する関数を定義しておきます。
     \Code.d-code(`
 let varCount = ref(0)
 let gensym: unit => string =
@@ -198,33 +208,36 @@ let gensym: unit => string =
     varCount := num + 1;
     "x" ++ Js.Int.toString(num)
   }
-
+    `);
+    reify本体は以下のように定義できます。
+    \Code.d-code(`
 type exn +=
   | Illegal_type;
 
 let rec reify: (semantics, typ) => term =
   (sem) => (ty) => {
     switch (sem) {
-    | MBase(m) => m
-    | MAbs(f) => 
+    | MBase(tm) => tm
+    | MAbs(fn) => 
       switch (ty) {
       | Base => raise(Illegal_type)
-      | Arr(ty1, ty2) => {
+      | Arr(ty1, ty2) =>
         let x = gensym();
-        Abs(x, ty1, reify(f(reflect(Var(x), ty1)), ty2))
-      }
+        Abs(x, ty1, reify(fn(reflect(Var(x), ty1)), ty2))
       }
     }
   }
 and reflect: (term, typ) => semantics =
-  (m, ty) => {
+  (tm, ty) => {
     switch(ty) {
-    | Base => MBase(m)
+    | Base => MBase(tm)
     | Arr(ty1, ty2) =>
-      MAbs((sem) => reflect(App(m, reify(sem, ty1)), ty2))
+      MAbs((sem) => reflect(App(tm, reify(sem, ty1)), ty2))
     }
   }
-    `);}
+    `);
+    \todo{何が起こっているかを説明する}
+    }
     >
     +section {BelugaでNbEを書く} <
       +p{\todo{説明を書いていく}}
