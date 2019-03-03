@@ -28,19 +28,54 @@ http://doi.ieeecomputersociety.org/10.1109/REAL.1998.739751
 <url>db/journals/tcs/tcs126.html#AlurD94</url>
 <ee>https://doi.org/10.1016/0304-3975(94)90010-8</ee>
 </article>
-<incollection key="series/lncs/BartocciFFR18" mdate="2018-11-02">
+<inproceedings key="conf/tacas/AnnpureddyLFS11" mdate="2018-06-26">
+<author>Yashwanth Annpureddy</author>
+<author>Che Liu</author>
+<author>Georgios E. Fainekos</author>
+<author>Sriram Sankaranarayanan</author>
+<title>
+S-TaLiRo: A Tool for Temporal Logic Falsification for Hybrid Systems.
+</title>
+<pages>254-257</pages>
+<year>2011</year>
+<booktitle>TACAS</booktitle>
+<ee type="oa">https://doi.org/10.1007/978-3-642-19835-9_21</ee>
+<crossref>conf/tacas/2011</crossref>
+<url>db/conf/tacas/tacas2011.html#AnnpureddyLFS11</url>
+</inproceedings>
+<incollection key="series/lncs/BartocciDDFMNS18" mdate="2018-11-02">
 <author orcid="0000-0002-8004-6601">Ezio Bartocci</author>
-<author orcid="0000-0002-0114-0641">Yliès Falcone</author>
-<author>Adrian Francalanza</author>
-<author>Giles Reger</author>
-<title>Introduction to Runtime Verification.</title>
-<pages>1-33</pages>
+<author>Jyotirmoy V. Deshmukh</author>
+<author>Alexandre Donzé</author>
+<author>Georgios E. Fainekos</author>
+<author>Oded Maler</author>
+<author>Dejan Nickovic</author>
+<author>Sriram Sankaranarayanan</author>
+<title>
+Specification-Based Monitoring of Cyber-Physical Systems: A Survey on Theory, Tools and Applications.
+</title>
+<pages>135-175</pages>
 <year>2018</year>
 <booktitle>Lectures on Runtime Verification</booktitle>
-<ee>https://doi.org/10.1007/978-3-319-75632-5_1</ee>
+<ee>https://doi.org/10.1007/978-3-319-75632-5_5</ee>
 <crossref>series/lncs/10457</crossref>
-<url>db/series/lncs/lncs10457.html#BartocciFFR18</url>
+<url>db/series/lncs/lncs10457.html#BartocciDDFMNS18</url>
 </incollection>
+<book key="series/lncs/10457" mdate="2018-02-14">
+<editor>Ezio Bartocci</editor>
+<editor>Yliès Falcone</editor>
+<title>
+Lectures on Runtime Verification - Introductory and Advanced Topics
+</title>
+<publisher>Springer</publisher>
+<year>2018</year>
+<series href="db/journals/lncs.html">Lecture Notes in Computer Science</series>
+<volume>10457</volume>
+<isbn>978-3-319-75631-8</isbn>
+<isbn>978-3-319-75632-5</isbn>
+<ee>https://doi.org/10.1007/978-3-319-75632-5</ee>
+<url>db/series/lncs/lncs10457.html</url>
+</book>
 <inproceedings key="conf/qest/BehrmannDLHPYH06" mdate="2017-05-26">
 <author>Gerd Behrmann</author>
 <author>Alexandre David</author>
@@ -71,6 +106,31 @@ http://doi.ieeecomputersociety.org/10.1109/QEST.2006.59
 <booktitle>Lectures on Concurrency and Petri Nets</booktitle>
 <url>db/conf/ac/acpn2003.html#BengtssonY03</url>
 </inproceedings>
+<inproceedings key="conf/cav/Donze10" mdate="2018-10-03">
+<author>Alexandre Donzé</author>
+<title>
+Breach, A Toolbox for Verification and Parameter Synthesis of Hybrid Systems.
+</title>
+<pages>167-170</pages>
+<year>2010</year>
+<booktitle>CAV</booktitle>
+<ee type="oa">https://doi.org/10.1007/978-3-642-14295-6_17</ee>
+<crossref>conf/cav/2010</crossref>
+<url>db/conf/cav/cav2010.html#Donze10</url>
+</inproceedings>
+<inproceedings key="conf/formats/DonzeM10" mdate="2017-05-26">
+<author>Alexandre Donzé</author>
+<author>Oded Maler</author>
+<title>
+Robust Satisfaction of Temporal Logic over Real-Valued Signals.
+</title>
+<pages>92-106</pages>
+<year>2010</year>
+<booktitle>FORMATS</booktitle>
+<ee>https://doi.org/10.1007/978-3-642-15297-9_9</ee>
+<crossref>conf/formats/2010</crossref>
+<url>db/conf/formats/formats2010.html#DonzeM10</url>
+</inproceedings>
 <book key="HopcroftMU2003">
 <author>J. ホップクロフト</author>
 <author>R. モトワニ</author>
@@ -95,4 +155,32 @@ db/journals/combinatorica/combinatorica4.html#Karmarkar84
 <ee>https://doi.org/10.1007/BF02579150</ee>
 <ee>https://www.wikidata.org/entity/Q29543194</ee>
 </article>
+<article key="journals/rts/Koymans90" mdate="2018-11-14">
+<author>Ron Koymans</author>
+<title>
+Specifying Real-Time Properties with Metric Temporal Logic.
+</title>
+<pages>255-299</pages>
+<year>1990</year>
+<volume>2</volume>
+<journal>Real-Time Systems</journal>
+<number>4</number>
+<url>db/journals/rts/rts2.html#Koymans90</url>
+<ee>https://doi.org/10.1007/BF01995674</ee>
+<ee>https://www.wikidata.org/entity/Q56225957</ee>
+</article>
+<inproceedings key="conf/formats/MalerN04" mdate="2018-11-14">
+<author>Oded Maler</author>
+<author>Dejan Nickovic</author>
+<title>
+Monitoring Temporal Properties of Continuous Signals.
+</title>
+<pages>152-166</pages>
+<ee>https://doi.org/10.1007/978-3-540-30206-3_12</ee>
+<ee>https://www.wikidata.org/entity/Q56225956</ee>
+<year>2004</year>
+<crossref>conf/formats/2004</crossref>
+<booktitle>FORMATS/FTRTFT</booktitle>
+<url>db/conf/formats/formats2004.html#MalerN04</url>
+</inproceedings>
 </dblp>

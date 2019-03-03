@@ -26,10 +26,34 @@ let maswag-bibliography = [
   |));
 
 
-  (`series/lncs/BartocciFFR18`, Book(|
-    author = {|Ezio Bartocci, Yliès Falcone, Adrian Francalanza, Giles Reger|};
-    title = {Introduction to Runtime Verification.};
-    publisher = {};
+  (`conf/tacas/AnnpureddyLFS11`, InProceedings(|
+    author = {|Yashwanth Annpureddy, Che Liu, Georgios E. Fainekos, Sriram Sankaranarayanan|};
+    title = {S-TaLiRo: A Tool for Temporal Logic Falsification for Hybrid Systems.};
+    booktitle = {TACAS};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (254,257);
+    year = 2011;
+  |));
+
+
+  (`series/lncs/BartocciDDFMNS18`, InProceedings(|
+    author = {|Ezio Bartocci, Jyotirmoy V. Deshmukh, Alexandre Donzé, Georgios E. Fainekos, Oded Maler, Dejan Nickovic, Sriram Sankaranarayanan|};
+    title = {Specification-Based Monitoring of Cyber-Physical Systems: A Survey on Theory, Tools and Applications.};
+    booktitle = {Lectures on Runtime Verification};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (135,175);
+    year = 2018;
+  |));
+
+
+  (`series/lncs/10457`, Book(|
+    author = {|Ezio Bartocci, Yliès Falcone|};
+    title = {Lectures on Runtime Verification - Introductory and Advanced Topics};
+    publisher = {Springer};
     year = 2018;
   |));
 
@@ -58,6 +82,30 @@ let maswag-bibliography = [
   |));
 
 
+  (`conf/cav/Donze10`, InProceedings(|
+    author = {|Alexandre Donzé|};
+    title = {Breach, A Toolbox for Verification and Parameter Synthesis of Hybrid Systems.};
+    booktitle = {CAV};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (167,170);
+    year = 2010;
+  |));
+
+
+  (`conf/formats/DonzeM10`, InProceedings(|
+    author = {|Alexandre Donzé, Oded Maler|};
+    title = {Robust Satisfaction of Temporal Logic over Real-Valued Signals.};
+    booktitle = {FORMATS};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (92,106);
+    year = 2010;
+  |));
+
+
   (`HopcroftMU2003`, Book(|
     author = {|J. ホップクロフト, R. モトワニ, J. ウルマン|};
     title = {オートマトン言語理論計算論 I};
@@ -74,6 +122,29 @@ let maswag-bibliography = [
     number = Some({4});
     pages = (373,396);
     year = 1984;
+  |));
+
+
+  (`journals/rts/Koymans90`, Article(|
+    author = {|Ron Koymans|};
+    title = {Specifying Real-Time Properties with Metric Temporal Logic.};
+    journal = {Real-Time Systems};
+    volume = Some(2);
+    number = Some({4});
+    pages = (255,299);
+    year = 1990;
+  |));
+
+
+  (`conf/formats/MalerN04`, InProceedings(|
+    author = {|Oded Maler, Dejan Nickovic|};
+    title = {Monitoring Temporal Properties of Continuous Signals.};
+    booktitle = {FORMATS/FTRTFT};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (152,166);
+    year = 2004;
   |));
 
 
