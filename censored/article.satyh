@@ -1,12 +1,257 @@
 @import: bib
 @import: ../main/book-class
+@import: ../lib/code
+
+let-inline ctx \todo inner =
+  let ctx-todo =
+    ctx |> set-text-color Color.red
+  in
+    read-inline ctx-todo {[TODO: #inner;]}
 
 let censored-article = '<
   +chapter ?:(`censored-article`) (|
     bibliography = censored-bibliography;
-    title = {censored Chapter};
+    title = {AWS lambdaでtwitter botを運用する};
     author = {censored};
     |) <
-    +p {Hello}
+    +p {
+      AWSを使ってけものフレンズのtwitter botを動かせるようにしていきます。AWSの１年間限定\emph{ではない}無料枠を使って運用することを目標としていきます。
+      本記事の扱う分野としてはAWS lambda、MeCab、twitter botの運用tipsあたりですが、解説というよりは作業記録に近いので、だいぶ分かりづらいかもしれまん。
+    }
+    +section {なぜ今更けものフレンズbotなのか} <
+    +p {
+      端的に言えば、１年ほど前までtwitterでけものフレンズbotを運用していたので、手元に基本的なコードがあったからです。作成したのがもう２年前のことになるので最早当時のことは朧げにしか覚えていないですがざっくり経緯を書くと、けものフレンズbotは筆者が先輩の修論発表会に内輪で楽しむために作ったtwitter botです。界隈で有名な人に面白がられて以降フォロワーが増え、１万フォロワー程度まで行きました。後々いろんな機能を付け加えていきましたが、botの基本的なコンセプトは単純です。
+      フォローの誰かが
+      「世界一バグを生むのが得意」
+      などと特定のキーワード（得意、好き等）を含むツイートしたときに、すかさず
+      「すっごーい！あなたは世界一バグを生むのが得意なフレンズなんだね！」
+      と返す、元々は内輪で楽しむために作ったbotでした。
+      大学時代は大学に置きっぱなしだった個人用PCを使って運用していましたが、卒業とともに運用が終了しました。停止した後もちょくちょく復活させてほしいとリプライやDMが来ていたのと、AWSの勉強をしたいと思っていたの、2期もやってることですし（1話も見てないけど）このbotをAWS上に移植することにしました。EC2へ移すだけなら非常に簡単なのですが、こんなbotのために年数千円も払うのも馬鹿馬鹿しいので、AWS の無料枠に収まるように頑張っていきます。
+    }
+    >
+    +section {AWS lambdaについて} <
+    +p {
+      \todo{なんか書く}
+    }
+    >
+    +section{環境セットアップ}<
+    +subsection{Lambda環境用のMeCab ipadic-neologdのビルド} <
+    +p {
+      \cite[`qiita201809`];を参考に行いました。
+      https://docs.aws.amazon.com/ja_jp/lambda/latest/dg/current-supported-versions.html
+      に行って、記載されているAWS lambdaのイメージを使ってEC2インスタンス（2019年3月現在amzn-ami-hvm-2017.03.1.20170812-x86_64-gp2）を起動します。
+      ログイン後、環境を最新にしておきます。
+      \d-code(`
+        sudo yum update -y
+      `);
+      MeCabのビルドのためg++をインストールします。
+      \d-code(`
+        sudo yum install gcc-c++ -y
+      `);
+      Neologdのビルドのためpatch、git、autodieをインストールします。
+      \d-code(`
+        sudo yum install patch git perl-autodie.noarch
+      `);
+    }
+    +p {
+      g++へのパスを通します。
+      \d-code(`
+        sudo mkdir /var/task
+        sudo ln -s /usr/libexec/gcc/x86_64-amazon-linux/4.8.5/cc1plus /usr/local/bin/
+      `);
+      これで準備は完了です。
+    }
+    >
+    +subsection{mecabのダウンロードとビルド}<
+    +p {
+      http://taku910.github.io/mecab へ行って最新のものを確認しましょう。
+      \d-code(`
+      cd ~
+      curl -L "https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7cENtOXlicTFaRUE" -o mecab-0.996.tar.gz
+      tar -zxvf mecab-0.996.tar.gz
+      cd mecab-0.996
+      インストール先を/var/taskに設定します。
+      sudo ./configure --prefix=/var/task --with-charset=utf8
+      sudo make
+      sudo make install
+      `);
+    }
+    >
+    +subsection{ipa辞書のダウンロードとビルド}<
+    +p {
+      \d-code(`
+      cd ~
+      curl -L "https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7MWVlSDBCSXZMTXM" -o mecab-ipadic-2.7.0-20070801.tar.gz
+      tar -zxvf mecab-ipadic-2.7.0-20070801.tar.gz
+      cd mecab-ipadic-2.7.0-20070801
+      sudo ./configure --prefix=/var/task --with-charset=utf8 --with-mecab-config=/var/task/bin/mecab-config
+      sudo make
+      sudo make install
+      `);
+    }
+    >
+    +subsection{mecab-python3のダウンロードとビルド} <
+    +p {
+      \d-code(`
+      sudo yum install swig -y
+      wget –quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3.sh
+      /bin/bash miniconda3.sh -b -p $HOME/miniconda3
+      echo 'export PATH=”$HOME/miniconda3/bin:$PATH"' >> ~/.bashrc
+      echo 'export "PATH=$PATH:/var/task/bin/"' >> ~/.bashrc
+      echo 'export "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/var/task/lib/"' >> ~/.bashrc
+      source ~/.bashrc
+      pip install mecab-python3
+      `);
+    }
+    >
+    +subsection{NEologd辞書のダウンロードとビルド} <
+    +p {
+      \d-code(`
+      git clone –depth 1 https://github.com/neologd/mecab-ipadic-neologd.git
+      echo 'export "PATH=$PATH:/var/task/bin/"' >> .bashrc
+      echo 'export "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/var/task/lib/"' >> .bashrc
+      ./bin/install-mecab-ipadic-neologd -y -p $HOME/neologd-minimum -n –eliminate-redundant-enrty
+      `);
+      この時点で\code(`$HOME/neologd`);の中身は400MB以上ありますが、圧縮すると90MB程度になるので、S3経由でlambda functionをアップロードすることができます。--elimintate-redundant-entryオプションをつけることによって最小構成でインストールを試みます。ちなみに、他のオプションではt2.micro instanceのメモリが足りずにビルドが途中で落ちます。仕方ないので、t2.medium instanceをお金を払って起動してビルドして見ました。比較してみると、システム辞書の部分が大きく異なっていることが分かります。
+      \d-code(`
+      neologd-ignore-all:
+      合計 702M
+      -rw-r--r-- 1 ec2-user ec2-user 257K  2月  7 16:07 char.bin
+      -rw-r--r-- 1 ec2-user ec2-user  693  2月  7 16:07 dicrc
+      -rw-r--r-- 1 ec2-user ec2-user  73K  2月  7 16:07 left-id.def
+      -rw-r--r-- 1 ec2-user ec2-user 3.4M  2月  7 16:07 matrix.bin
+      -rw-r--r-- 1 ec2-user ec2-user 1.9K  2月  7 16:07 pos-id.def
+      -rw-r--r-- 1 ec2-user ec2-user 7.3K  2月  7 16:07 rewrite.def
+      -rw-r--r-- 1 ec2-user ec2-user  73K  2月  7 16:07 right-id.def
+      -rw-r--r-- 1 ec2-user ec2-user 698M  2月  7 16:07 sys.dic
+      -rw-r--r-- 1 ec2-user ec2-user 5.6K  2月  7 16:07 unk.dic
+
+      neologd-minimum:
+      合計 406M
+      -rw-r--r-- 1 ec2-user ec2-user 257K  2月  7 16:21 char.bin
+      -rw-r--r-- 1 ec2-user ec2-user  693  2月  7 16:21 dicrc
+      -rw-r--r-- 1 ec2-user ec2-user  73K  2月  7 16:21 left-id.def
+      -rw-r--r-- 1 ec2-user ec2-user 3.4M  2月  7 16:21 matrix.bin
+      -rw-r--r-- 1 ec2-user ec2-user 1.9K  2月  7 16:21 pos-id.def
+      -rw-r--r-- 1 ec2-user ec2-user 7.3K  2月  7 16:21 rewrite.def
+      -rw-r--r-- 1 ec2-user ec2-user  73K  2月  7 16:21 right-id.def
+      -rw-r--r-- 1 ec2-user ec2-user 403M  2月  7 16:21 sys.dic
+      -rw-r--r-- 1 ec2-user ec2-user 5.6K  2月  7 16:21 unk.dic
+      `);
+      この主な原因はseed/mecab-user-dict-seed.20190204.csv.xzなのですが、中を見てみると結構程頻度そうな単語も多く収録されていることがわかります。ここで、語数の長い単語は低頻出であるという経験的な仮定をおきます。/bin/install-mecab-ipadic-neologdに—max_surface_lengthとmin_surface_lengthというオプションがあるので、これを用いて長単語を辞書から削除していきます。しかし、このままではIPAの辞書にもこの長さ制限がかかってしまうので、execlib/make-mecab-ipadic-neologd.shを修正し、mecab-user-dict-seed.20190204.csvにのみ選択的に反応するようにします。今回は、
+      \d-code(`
+      if [[ ${TIM_FILE_NAME} =~ mecab-user-dict-seed ]]; then
+      `);
+      を加えました。
+      で、
+      \d-code(`
+      ./bin/install-mecab-ipadic-neologd -n -y\
+      --ignore_adverb\
+      --ignore_interject\
+      --ignore_noun_ortho\
+      --ignore_noun_sahen_conn_ortho\
+      --ignore_adjective_std\
+      --ignore_adjective_verb\
+      --ignore_ill_formed_words
+      --max_surface_length 11 --min_surface_length 1
+      `);
+      を適用したところ、ファイルサイズは501MBになりました。
+      この２つの辞書を比較して見ます。けものフレンズの単語は今では多くの単語が登録されているため、作成当時のようなカスタム辞書を自分で作る手間は必要ありませんでした。すっごーい！
+      \d-code(`
+      mecab -d neologd-minimum
+      うみゃー！やってみたーい！
+      う	感動詞,*,*,*,*,*,う,ウ,ウ
+      み	接頭詞,名詞接続,*,*,*,*,み,ミ,ミ
+      ゃ	名詞,一般,*,*,*,*,*
+      ー	名詞,一般,*,*,*,*,*
+      ！	記号,一般,*,*,*,*,！,！,！
+      や	助詞,並立助詞,*,*,*,*,や,ヤ,ヤ
+      って	助詞,格助詞,連語,*,*,*,って,ッテ,ッテ
+      み	接頭詞,名詞接続,*,*,*,*,み,ミ,ミ
+      た	助動詞,*,*,*,特殊・タ,基本形,た,タ,タ
+      ー	名詞,一般,*,*,*,*,*
+      い	名詞,一般,*,*,*,*,い,イ,イ
+      ！	記号,一般,*,*,*,*,！,！,！
+      EOS
+
+      mecab -d neologd-restricted
+      うみゃー！やってみたーい！
+      うみゃ	動詞,自立,*,*,五段・マ行,仮定縮約１,うむ,ウミャ,ウミャ
+      ー	名詞,一般,*,*,*,*,*
+      ！	記号,一般,*,*,*,*,！,！,！
+      やっ	動詞,自立,*,*,五段・ラ行,連用タ接続,やる,ヤッ,ヤッ
+      て	助詞,接続助詞,*,*,*,*,て,テ,テ
+      み	動詞,非自立,*,*,一段,連用形,みる,ミ,ミ
+      た	助動詞,*,*,*,特殊・タ,基本形,た,タ,タ
+      ー	名詞,一般,*,*,*,*,*
+      い	動詞,自立,*,*,一段,連用形,いる,イ,イ
+      ！	記号,一般,*,*,*,*,！,！,！
+      EOS
+
+      mecab -d neologd-minimum
+      いいとこまできてるですね、やりますね
+      いい	形容詞,自立,*,*,形容詞・イイ,基本形,いい,イイ,イイ
+      とこ	名詞,一般,*,*,*,*,とこ,トコ,トコ
+      まで	助詞,副助詞,*,*,*,*,まで,マデ,マデ
+      き	助動詞,*,*,*,文語・キ,基本形,き,キ,キ
+      てる	名詞,固有名詞,人名,名,*,*,てる,テル,テル
+      です	助動詞,*,*,*,特殊・デス,基本形,です,デス,デス
+      ね	助詞,終助詞,*,*,*,*,ね,ネ,ネ
+      、	記号,読点,*,*,*,*,、,、,、
+      や	助詞,並立助詞,*,*,*,*,や,ヤ,ヤ
+      り	助動詞,*,*,*,文語・リ,基本形,り,リ,リ
+      ます	助動詞,*,*,*,特殊・マス,基本形,ます,マス,マス
+      ね	助詞,終助詞,*,*,*,*,ね,ネ,ネ
+      EOS
+
+      mecab -d neologd-restricted
+      いいとこまできてるですね、やりますね
+      いい	形容詞,自立,*,*,形容詞・イイ,基本形,いい,イイ,イイ
+      とこ	名詞,一般,*,*,*,*,とこ,トコ,トコ
+      まで	助詞,副助詞,*,*,*,*,まで,マデ,マデ
+      き	動詞,自立,*,*,カ変・クル,連用形,くる,キ,キ
+      てる	動詞,非自立,*,*,一段,基本形,てる,テル,テル
+      です	助動詞,*,*,*,特殊・デス,基本形,です,デス,デス
+      ね	助詞,終助詞,*,*,*,*,ね,ネ,ネ
+      、	記号,読点,*,*,*,*,、,、,、
+      やり	動詞,自立,*,*,五段・ラ行,連用形,やる,ヤリ,ヤリ
+      ます	助動詞,*,*,*,特殊・マス,基本形,ます,マス,マス
+      ね	助詞,終助詞,*,*,*,*,ね,ネ,ネ
+      EOS
+      `);
+      --eliminate-redundant-enrtyが非推奨であった通り、やはり精度がだいぶ違っています。特に今回は—eliminate-redundant-entryは辞書に非可逆なnormalizationを加えビルドした後、実際の入力データもnormalizationが施された後にmecabに入力するようなケース、すなわち検索や推薦など単語の標準形のみ得られればそれで十分な場合では有効ですが、今回のような鸚鵡返しを想定した状況では使用するのは難しいことが改めて確認されました。
+ここまでにt2.micro t2.mediumを起動したので\$0.06かかりました。
+Unzipの際にかかるコストは256MBメモリの設定で184MB消費して約33秒かかりました。S3から計500MBのファイル群をダウンロードするよりは早いはずです。
+    }
+    >
+    +subsection{neologd辞書をlambda layerとして固める} <
+      
+    >
+    >
+    +section{実際に動かす} <
+    +subsection{Pythonでの日本語処理} <
+    +p {
+      lambdaはデフォルトだと日本語（多分マルチバイト文字）に対応していないので
+      \code(`# -*- coding: utf-8 -*-`);をlambda functionのソースコードに加えるようにします。
+    }
+    >
+    +subsection{mecab-python3の処理速度} <
+    +p {
+      \cite[`qiita2015`];によれば、mecab-python3のparseToNodeメソッドはparseメソッドに比べ２倍以上遅いようです。４年前の記事だったので一応手元で追試験を行ったところ、確かに2倍程度の差があったので確かなようです。
+      機能をフルに使おうとしない限り、自作でparseToNodeを実装した方が良さそうです。
+    }
+    >
+    +subsection{TLのデータを処理する} <
+    +p {
+      実際に動かすのに必要なメモリは1024MBあれば大丈夫そうです。Lambdaは月間400,000GB秒なので、400,000 \* 1024 / 1024 / 31 / 24 / 60 = 8.96回/分のペースでfunctionを呼び出すことができます。
+      3,200,000秒のコンピューティング時間が無料なので、3,200,000 / 31 / 24 / 60 = 71.68秒/分functionを呼び出すことができます。けもフレbotを一回稼働させるのにかかる時間は20秒以内なので20秒おき程度に呼び出すことが可能です。    
+    }
+    >
+    >
+    +section{まとめ} <
+    +p {
+      Google Cloud Platformではf1.microインスタンスが１インスタンス年分無料なので、GCPを使えばこんな面倒なことはせずに簡単にできます。GCP使いましょう。
+    }
+    >
   >
 >

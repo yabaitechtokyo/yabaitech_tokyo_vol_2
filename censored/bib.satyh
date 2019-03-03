@@ -1,2 +1,45 @@
+@import: ../main/book-class
+
 let censored-bibliography = [
+  (`speakerdeck2017`, WebSite(|
+    author = {|Satoru Kadowaki|};
+    title  = {AWS APIGateway + Python Lambda + NEologdで作るサーバレス日本語形態素解析API - Speaker Deck};
+    url    = `https://speakerdeck.com/satorukadowaki/aws-apigateway-plus-python-lambda-plus-neologddezuo-rusabaresuri-ben-yu-xing-tai-su-jie-xi-api`;
+    year   = 2017;
+  |));
+
+  (`shogo2017`, WebSite(|
+    author = {|Ichinose Shogo|};
+    title  = {MeCabをAWS Lambdaで動かす(2017年版)};
+    url    = `https://shogo82148.github.io/blog/2017/12/06/mecab-in-lambda/`;
+    year   = 2017;
+  |));
+
+  (`hatena2017`, WebSite(|
+    author = {|marmarossa|};
+    title  = {AWSのlambda上でMeCabを実行する (他のバイナリへも応用可)!! - marmarossa’s blog};
+    url    = `http://marmarossa.hatenablog.com/entry/2017/02/03/223423`;
+    year   = 2017;
+  |));
+
+  (`qiita201809`, WebSite(|
+    author = {|\@rtaguchi|};
+    title  = {AWS Lambda でMeCabを動かす （2018年9月時点）};
+    url    = `https://qiita.com/rtaguchi/items/e6cb594196fa8186e9a2`;
+    year   = 2018;
+  |));
+  
+  (`qiita201812`, WebSite(|
+    author = {|\@carrotflakes|};
+    title  = {AWS Lambda で MeCab + NEologd 辞書を Node.js で動かす – Qiita};
+    url    = `https://qiita.com/carrotflakes/items/d3bab5a81817c7e7edc0`;
+    year   = 2018;
+  |));
+  
+  (`qiita2015`, WebSite(|
+    author = {|\@yukinoi|};
+    title  = {PythonでのMeCabを速くするtips – Qiita};
+    url    = `https://qiita.com/yukinoi/items/81a707c1317c97f5fdf9`;
+    year   = 2015;
+  |));
 ]
