@@ -27,7 +27,7 @@ let-inline ctx \todo inner =
 
 let article = '<
   +chapter ?:(`zpt-article`)
-  ?:({依存型と文脈様相型による定理証明})
+  ?:({LFと文脈様相型によるNormalization by Evaluationの定式化})
    (|
     bibliography = zpt-bibliography;
     title = {Belugaによるメタプログラミング};
@@ -126,7 +126,7 @@ type term =
     >
     
     +section {背景: Normalization by Evaluation} <
-      +p{先程紹介したような簡約を用いた正規化以外にもλ項の正規形を得る方法はあります。それがこれから紹介するNormalization by Evaluation(NbE, 評価による正規化)です。基本的なアイデアは名前の通りで、λ項に対するeval関数を用いて正規形を得るというものです。}
+      +p{先程紹介したような簡約を用いた正規化以外にもλ項の正規形を得る方法はあります。それがこれから紹介する\dfn{Normalization by Evaluation}(NbE, 評価による正規化)です。基本的なアイデアは名前の通りで、λ項に対するeval関数を用いて正規形を得るというものです。}
       +p{一般的にeval(評価)関数とはプログラムのコードを受け取ってそれを実行した結果を返す関数のことです\footnote{RubyやPython、Javascriptなどのインタープリタを前提とした言語がサポートしていることが多い印象があります。あとCommon LispとかSchemeとかClojureとか。}。もう少し抽象的な解釈として、ここではeval関数を「λ項の集合からそれに対応する\dfn{意味}\footnote{要はsemanticsのことです。}の集合への関数」と考えることにしましょう。以降λ項の集合を${Term}、意味の集合を${Sem}と呼ぶことにします。
       \math-list(${| eval: Term \rightarrow Sem |});
       eval関数に対する妥当な仮定として以下のものを考えます。}
@@ -139,7 +139,7 @@ type term =
       \math-list(${| reify: Sem \rightarrow Norm |});
       後は簡単で、このevalとreifyを組み合わせると項の正規形を与える関数になります。
       \math-list(${| normalize = reify \circ eval: Term \rightarrow Norm |});
-      これがNbEの基本的なアイデアです。このアイデアのキモの部分はreify関数を如何に実装するかという点にありますが、実際にReasonでNbEを実装しながらその辺りを見ていくことにしましょう。}
+      これがNbEの基本的なアイデアです。このアイデアのキモの部分はreify関数を如何に実装するかという点にありますが、実際にReasonでNbEを実装しながらその辺りを見ていくことにしましょう。\todo{何故Reason?}\todo{図があると見栄えがする}}
 
     +p{最初に${Sem}に対応するものとして\code(`semantics`);という型を定義します。
 
@@ -239,7 +239,8 @@ and reflect: (term, typ) => semantics =
     \todo{何が起こっているかを説明する}
     }
     >
-    +section {BelugaでNbEを書く} <
+    +section {BelugaによるNormalization by Evaluationの定式化} <
+      +p{\todo{Reasonのコードの何がいただけなかったかを説明する}}
       +p{\todo{説明を書いていく}}
 
       +Code.code(`
