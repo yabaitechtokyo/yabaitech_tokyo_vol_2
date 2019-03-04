@@ -1768,27 +1768,27 @@ let article = '<
   具体的には以下のように${\doteq}を定義します．
   
   \eqn(${
-    M_1 \doteq M_2 \coloneq \forall P^{\tau \to \omicron}. P M_1 \to P M_2
+    M_1 \doteq M_2 \coloneq \forall P^{\tau \to \omicron}. \mathop{P} M_1 \to \mathop{P} M_2
   });
 
   この${\doteq}は\dfn{Leibniz equality}と呼ばれる等号の定義です．
   ややびっくりするような定義ですが，これが実際に等号としての機能を果たすことはすぐにわかります．
 }
 +lemma{
-  上で定義した${\doteq}について，${\den{M_1 \doteq M_2} = 0}であるとき，かつそのときに限り，${\den{M_1} = \den{M_2}}．
+  上で定義した${\doteq}について，${\M,\theta \vDash M_1 \doteq M_2}であるとき，かつそのときに限り，${\den{M_1}^\M_{\tau,\theta} = \den{M_2}^\M_{\tau,\theta}}．
 }
 +proof{
-  ${\den{M_1 \doteq M_2} = 0}ならば${\den{M_1} = \den{M_2}}を示す．(逆は明らか．)
-  定義より${\den{\forall P^{\tau \to \omicron}. P M_1 \to P M_2} = 0}なので，任意の関数${P : D_\tau \to \Omega}について${\app{P}{\den{M_1}} = 0}ならば${\app{P}{\den{M_2}} = 0}である．
+  ${\M,\theta \vDash M_1 \doteq M_2}ならば${\den{M_1}^\M_{\tau,\theta} = \den{M_2}^\M_{\tau,\theta}}を示す．(逆は明らか．)
+  定義より${\M,\theta \vDash \forall P^{\tau \to \omicron}. \mathop{P} M_1 \to \mathop{P} M_2}なので，任意の関数${P : D_\tau \to \Omega}について${\app{P}{\den{M_1}^\M_{\tau,\theta}} = 0}ならば${\app{P}{\den{M_2}^\M_{\tau,\theta}} = 0}である．
   ここで，${P}として，
   \eqn(${
     \app{P}{x} = \cases![
-      (${0}, {${x = \den{M_1}}のとき});
+      (${0}, {${x = \den{M_1}^\M_{\tau,\theta}}のとき});
       (${1}, {そうでないとき})
     ]
   });%
-  をとると，${\app{P}{\den{M_1}} = 0}なので，${\app{P}{\den{M_2}} = 0}である．
-  ${\app{P}{x}}が${0}を値にとるのは${x = \den{M_1}}のときだけなので，${\den{M_1} = \den{M_2}}である．
+  をとると，${\app{P}{\den{M_1}^\M_{\tau,\theta}} = 0}なので，${\app{P}{\den{M_2}^\M_{\tau,\theta}} = 0}である．
+  ${\app{P}{x}}が${0}を値にとるのは${x = \den{M_1}^\M_{\tau,\theta}}のときだけなので，${\den{M_1}^\M_{\tau,\theta} = \den{M_2}^\M_{\tau,\theta}}である．
 }
 +p{
   このように${\doteq}を基本とせずとも等価な表現能力を持つ高階論理を定義することができます．
