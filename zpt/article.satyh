@@ -141,7 +141,7 @@ type term =
       \math-list(${| normalize = reify \circ eval: Term \rightarrow Norm |});
       これがNbEの基本的なアイデアです。このアイデアのキモの部分はreify関数を如何に実装するかという点にありますが、実際にReasonでNbEを実装しながらその辺りを見ていくことにしましょう。\todo{何故Reason?}\todo{図があると見栄えがする}}
 
-    +p{最初に${Sem}に対応するものとして\code(`semantics`);という型を定義します。
+    +p{最初に${Sem}に対応するものとして\Code.code(`semantics`);という型を定義します。
 
     \Code.d-code(`
 type semantics =
@@ -150,7 +150,7 @@ type semantics =
     `);
 
     基底型の項に対応する意味が\Code.code(`MBase`);で、これは正規形の項をそのまま持ちます。型に\Code.code(`term`);を使っているのはReasonの型システムでは正規形を表現できないためです。また、関数型の項に対応する意味が\Code.code(`MAbs`);で、これは意味から意味への関数から成ります。}
-    +p{STLCの項を評価するためには評価される項の他に自由変数に対応する意味を持つ\dfn{環境}が必要です。これを\code(`env`);という型として定義しましょう。これは変数名を与えた時に対応する\code(`semantics`);を返す関数として実装できます。空の環境\code(`envEmpty`);は必ず\code(`Undefined_variable`);を例外として投げます。また\code(`envExt`);は変数名と\code(`semantics`);のペアを受け取って既存の環境を拡張します。
+    +p{STLCの項を評価するためには評価される項の他に自由変数に対応する意味を持つ\dfn{環境}が必要です。これを\Code.code(`env`);という型として定義しましょう。これは変数名を与えた時に対応する\Code.code(`semantics`);を返す関数として実装できます。空の環境\Code.code(`envEmpty`);は必ず\Code.code(`Undefined_variable`);を例外として投げます。また\Code.code(`envExt`);は変数名と\Code.code(`semantics`);のペアを受け取って既存の環境を拡張します。
    \Code.d-code(`
 type env = string => semantics;
 
@@ -177,7 +177,7 @@ let envExt: (string, semantics, env) => env =
       env(name2);
     };
     `);
-    然る後に\code(`eval`);の本体を書くことができます。項の構造に関する再帰を用いて素直に実装できます。変数の場合は環境から変数名に対応する意味を返す。λ抽象の場合は意味を受け取ってそれを環境に追加した上でλ抽象の本体を評価する関数を返す。適用の場合はそれぞれを評価した上で一つ目の意味が\Code.code(`MAbs`);になっているはずなのでこの関数に二つ目の意味を渡す。
+    然る後に\Code.code(`eval`);の本体を書くことができます。項の構造に関する再帰を用いて素直に実装できます。変数の場合は環境から変数名に対応する意味を返す。λ抽象の場合は意味を受け取ってそれを環境に追加した上でλ抽象の本体を評価する関数を返す。適用の場合はそれぞれを評価した上で一つ目の意味が\Code.code(`MAbs`);になっているはずなのでこの関数に二つ目の意味を渡す。
     \Code.d-code(`
 type exn +=
   | Wrong_application;
@@ -198,7 +198,7 @@ let rec eval: (term, environment) => semantics =
     };
   };
     `);
-    というわけですんなりと\code(`eval`);を実装することができました。いいですね。人生もこうすんなりといってほしいものです。}
+    というわけですんなりと\Code.code(`eval`);を実装することができました。いいですね。人生もこうすんなりといってほしいものです。}
     +p{最後に本題のreify関数を実装します。まず補助関数として新しい変数名を生成する関数を定義しておきます。
     \Code.d-code(`
 let varCount = ref(0)
