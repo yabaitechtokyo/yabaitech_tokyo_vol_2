@@ -243,4 +243,11 @@ let wasabiz-bibliography = [
     url = `https://staff.fnwi.uva.nl/t.uemura/files/topos-and-hol.pdf`;
     year = 2018;
   |));
+
+  (`Jacobs99`, Book(|
+  author = {| B. Jacobs |};
+  title = {Categorical Logic and Type Theory};
+  publisher = {North Holland};
+  year = 1999;
+  |));
 ]

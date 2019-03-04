@@ -329,7 +329,7 @@ let article = '<
   これにより，オブジェクト言語の${\alpha}同値な項はすべて同一視されます．(メタ言語の処理系が${\alpha}同値な(メタ言語の)項を同一視する機能を実装しているからです．)
   しかし，実は上に挙げたコードはLeanに与えるとエラーが出ます．
 
-  \d-code(`
+  \console(`
   hol.lean:1:0: error
   arg #1 of 'preterm.lam' has a non positive occurrence of the datatypes being declared
   `);
@@ -457,7 +457,7 @@ let article = '<
   --> (λ0.0)
   `);%
 
-  \code(`--`);はLeanの一行コメントです．\code(`--`);以降に書いた文字列\code(`(λ0.0)`);が\code(`repr i`);の結果です．
+  \code(`--`);はLeanの一行コメントです．\code(`-->`);以降に書いた文字列\code(`(λ0.0)`);が\code(`repr i`);の結果です．
   正しく表示できているようです．
   同様に${s}や${k}と呼ばれる以下の項も定義してみます．
 
@@ -465,6 +465,8 @@ let article = '<
   ${| s |= \lambda x. \lambda y. \lambda z. \paren{x z} \paren{y z} |};
   ${| k |=  \lambda x. \lambda y. x |};
   ];%
+
+  ${s}と${k}はそれらの適用による組み合わせで任意のラムダ項(に${\beta}同値な項)を表現できるという意味で非常に重要な項なのですが，ここでは特に掘り下げないことにします．
 
   \d-code(`
   def s : Preterm := λ α, lam (λ x, lam (λ y, lam (λ z, app (app (var x) (var z)) (app (var y) (var z)))))
@@ -483,6 +485,7 @@ let article = '<
 }
 +p{
   次に自然数のChurch encodingを試してみます．
+  Church encodingでは自然数を以下のようなラムダ項として表現します．
 
   \align[
   ${| 0 |= \lambda f. \lambda x. x |}; 
@@ -491,12 +494,17 @@ let article = '<
   ${| 3 |= \lambda f. \lambda x. f \paren{f \paren{f x}} |};
   ];%
 
+  ${4}以上の自然数に対しても同様に定義されます．
+  以上のラムダ項をPHOASで記述します．
+
   \d-code(`
   def n₀ : Preterm := λ α, lam (λ f, lam (λ x, var x))
   def n₁ : Preterm := λ α, lam (λ f, lam (λ x, app (var f) (var x)))
   def n₂ : Preterm := λ α, lam (λ f, lam (λ x, app (var f) (app (var f) (var x))))
   def n₃ : Preterm := λ α, lam (λ f, lam (λ x, app (var f) (app (var f) (app (var f) (var x)))))
   `);%
+
+  念のため正しく定義できているか確認します．
 
   \d-code(`
   #eval n₀
@@ -509,7 +517,7 @@ let article = '<
   --> (λ0.(λ1.(0 (0 (0 1)))))
   `);%
 
-  自然数を受け取って次の自然数を返す\code(`succ`);を定義します．
+  つぎに自然数を受け取って次の自然数を返す\code(`succ`);を定義します．
 
   \d-code(`
   def succ : Preterm := λ α, lam (λ n, lam (λ f, lam (λ x, app (var f) (app (app (var n) (var f)) (var x)))))
@@ -817,16 +825,15 @@ let article = '<
   \footnote{individualの頭文字です．}
 }
 +p{
-  まず，オブジェクト言語の型を定義します．
+  まず，オブジェクト言語の型を表す型\code(`type`);を定義します．
 
   \d-code(`
   inductive type : Type
   | base : type
   | arrow : type → type → type
   `);
-}
-+p{
-  \code(`type`);型を用いて項を表す型\code(`term`);を定義します．
+
+  さらに，\code(`type`);型を用いて項を表す型\code(`term`);を定義します．
   \ref-subsection(`curry-style`);のChurch流のSTLCの形式的な定義とは違い，擬項を定義せず直接項を定義します．
   \code(`variable ν : type → Type`);という文が登場していますが，これは単に\code(`term`);の引数を外に書いただけで，
   \code(`inductive term (ν : type → Type) : type → Type`);の略記です．
@@ -1379,53 +1386,46 @@ let article = '<
   ``);
 }
 +p{
+  論理結合子${\to}の特徴付けである演繹定理とその逆を定義します．
+  といっても，ここまでの準備のおかげで非常に簡単に定義できます．
+  まず，演繹定理の逆は単に${\to}の導入則と同じだったので，それをそのまま用いるだけです．
+
+  \d-code(`
+  def abs : judgment₁ (t₁ :: Γ) t₂ → judgment₁ Γ (arrow t₁ t₂) :=
+  lam
+  `);
+
+  肝心の演繹定理の方は，型合わせのために\code(`weak`);を用いることにだけ注意すればすぐに定義できます．
+
+  \d-code(`
+  def antiabs : judgment₁ Γ (arrow t₁ t₂) → judgment₁ (t₁ :: Γ) t₂ :=
+  λ m, app (weak m) (var here)
+  `);
+}
++p{
   項\code(`term`);と型判断\code(`judgment₁`);の間の相互変換を定義します．
   型判断の仮定が空の場合，項と型判断の間には直接の対応関係があります．
   そうでない場合は演繹定理を用いることで，型判断の仮定が空の場合に帰着させます．
-  演繹定理による型判断の変換を実装するために，以下のような関数を実装します．
+  例えば，${\iota \to \iota, \iota \vdash \iota}という型判断を項に変換したい場合，まず型判断を演繹定理により${\vdash \iota \to \paren{\iota \to \iota} \to \iota}に変換して，それを${\iota \to \paren{\iota \to \iota} \to \iota}という型の項に変換します．
+  実際の定義は以下のようになります．
+  この実装では\code(`env`);という型を経由している点が非自明です．
 
   \d-code(`
-  def type.foldl : list type → type → type :=
-  λ Γ t, list.foldl (λ r t, arrow t r) t Γ
-  `);
+  inductive env : list type → Type
+  | nil {} : env []
+  | step : Π {t Γ}, ν t → env Γ →  env (t :: Γ)
 
-  例えば，${\iota \to \iota, \iota \vdash \iota}という型判断が演繹定理により${\vdash \iota \to \paren{\iota \to \iota} \to \iota}に変換される処理がLean上では以下のコードで表現されます．
+  def to_term_var : Π {Γ t}, t ∈' Γ → env ν Γ → term ν t
+  | (_ :: Γ) _ here (env.step x _) := term.var x
+  | (_ :: Γ) _ (there h) (env.step _ Δ) := to_term_var h Δ
 
-  \d-code(`
-  #eval type.foldl [arrow base base, base] base
-  --> "(ι → ((ι → ι) → ι))"
-  `);
+  def to_term' : Π {Γ t}, judgment₁ Γ t → env ν Γ → term ν t
+  | _ _ (var h) Δ := to_term_var ν h Δ
+  | _ _ (lam m) Δ := term.lam (λ x, to_term' m (env.step x Δ))
+  | _ _ (app m₁ m₂) Δ := term.app (to_term' m₁ Δ) (to_term' m₂ Δ)
 
-  すると型判断を項に変換する関数\code(`to_term`);は以下のような型を持ち，実際に定義することができます．
-  \footnote{
-    ここの実装は本質的でないので脚注で掲載します．
-    \code(`env`);という型を経由している点が非自明です．
-
-    \d-code(`
-    inductive env : list type → Type
-    | nil {} : env []
-    | step : Π {t Γ}, ν t → env Γ →  env (t :: Γ)
-
-    def to_term_var : Π {Γ t}, t ∈' Γ → env ν Γ → term ν t
-    | (_ :: Γ) _ here (env.step x _) := term.var x
-    | (_ :: Γ) _ (there h) (env.step _ Δ) := to_term_var h Δ
-
-    def to_term' : Π {Γ t}, judgment₁ Γ t → env ν Γ → term ν t
-    | _ _ (var h) Δ := to_term_var ν h Δ
-    | _ _ (lam m) Δ := term.lam (λ x, to_term' m (env.step x Δ))
-    | _ _ (app m₁ m₂) Δ := term.app (to_term' m₁ Δ) (to_term' m₂ Δ)
-
-    def foldl : Π {Γ t}, judgment₁ Γ t → judgment₁ [] (type.foldl Γ t)
-    | [] _ m := m
-    | (t :: Γ) _ m := foldl (lam m)
-
-    def to_term : judgment₁ Γ t → Term (type.foldl Γ t) :=
-    λ m ν, to_term' ν (foldl m) env.nil
-    `);
-  }
-
-  \d-code(`
-  def to_term : judgment₁ Γ t → Term (type.foldl Γ t)
+  def to_term : judgment₁ [] t → Term t :=
+  λ m ν, to_term' ν m env.nil
   `);
 }
 +p{
@@ -1440,9 +1440,12 @@ let article = '<
 
   \d-code(`
   inductive wf : list (Σ t, ν₁ t × ν₂ t) → Π {t}, term ν₁ t → term ν₂ t → Type
-  | var : Π {Γ t} {x₁ : ν₁ t} {x₂ : ν₂ t}, sigma.mk t (prod.mk x₁ x₂) ∈' Γ → wf Γ (var x₁) (var x₂)
-  | lam : Π {Γ t₁ t₂} {f₁ : ν₁ t₁ → term ν₁ t₂} {f₂ : ν₂ t₁ → term ν₂ t₂}, (Π x₁ x₂, wf (⟨t₁, x₁, x₂⟩ :: Γ) (f₁ x₁) (f₂ x₂)) → wf Γ (lam f₁) (lam f₂)
-  | app : Π {Γ t₁ t₂} {m₁ : term ν₁ (arrow t₁ t₂)} {m₂ : term ν₂ (arrow t₁ t₂)} {n₁ : term ν₁ t₁} {n₂ : term ν₂ t₁}, wf Γ m₁ m₂ → wf Γ n₁ n₂ → wf Γ (app m₁ n₁) (app m₂ n₂)
+  | var : Π {Γ t} {x₁ : ν₁ t} {x₂ : ν₂ t},
+    ⟨t, x₁, x₂⟩ ∈' Γ → wf Γ (var x₁) (var x₂)
+  | lam : Π {Γ t₁ t₂} {f₁ : ν₁ t₁ → term ν₁ t₂} {f₂ : ν₂ t₁ → term ν₂ t₂},
+    (Π x₁ x₂, wf (⟨t₁, x₁, x₂⟩ :: Γ) (f₁ x₁) (f₂ x₂)) → wf Γ (lam f₁) (lam f₂)
+  | app : Π {Γ t₁ t₂} {m₁ : term ν₁ (arrow t₁ t₂)} {m₂ : term ν₂ (arrow t₁ t₂)} {n₁ : term ν₁ t₁} {n₂ : term ν₂ t₁},
+    wf Γ m₁ m₂ → wf Γ n₁ n₂ → wf Γ (app m₁ n₁) (app m₂ n₂)
 
   def WF (t : type) (m : Term t) : Type 1 :=
   Π ν₁ ν₂, wf [] (m ν₁) (m ν₂)
@@ -1452,7 +1455,7 @@ let article = '<
   \code(`WF t m`);は全ての\code(`m`);が満たしていてほしい性質です．
   実際，様々な具体的な\code(`m : Term t`);に対して\code(`WF t m`);を(Leanの中で)証明をすることができます．
   \footnote{メタ的な議論を用いれば${\forall \text!{\code(`m : Term t`);}. \text!{\code(`WF t m`); is inhabited}}が証明できると予想されています．\cite[`CPDT`];}
-  もし，全ての項に対して\code(`WF t m`);が成り立つことを表す以下の項をLeanの中で証明できれば，それを用いて\code(`to_judgment₁`);を用いて定義できます．
+  もし，全ての項に対して\code(`WF t m`);が成り立つことを表す以下の項をLeanの中で証明できれば，それを用いて\code(`to_judgment₁`);を定義できます．
 
   \d-code(`
   def term_wf : Π t m, WF t m := ???
@@ -1495,8 +1498,6 @@ let article = '<
   `);
 
   このアイデアをうまく用いて型判断を表す型\code(`judgment₂`);を以下のように定義できます．
-  \footnote{\ref-subsection(`judgment1`);では型のリストに対して\code(`foldl`);を行なっていましたが，この節では技術的な理由により\code(`foldr`);を用います．
-  どちらも表現能力に違いはありません．}
 
   \d-code(`
   def judgment₂ : list type → type → Type :=
@@ -1626,16 +1627,11 @@ let article = '<
   ${\omicron}型を持つ変数をしばしば${p,q,\cdots}というメタ変数で表します．
   高階論理の\dfn{言語 (language)}あるいは\dfn{シグニチャ (signature)}とは型で添字づけられた集合${\paren{\Sigma_\tau}_{\tau \in \Ty{\base}}}のこととします．
   以下，言語${\Sigma}を固定します．
-  擬項の定義${\PsLam}と項の定義${\Lambda_\tau}を以下の規則で拡張します．
+  擬項の定義${\PsLam}を以下の規則で拡張します．
 
   \math-list(${
   | \derive{| c \in \Sigma_\tau |}{ c^\tau \in \PsLam }
   | \derive{| M \in \PsLam | N \in \PsLam |}{ M \doteq N \in \PsLam }
-  |});
-
-  \math-list(${
-  | \derive{| c \in \Sigma_\tau |}{ c^\tau \in \Lambda_\tau }
-  | \derive{| M \in \Lambda_\tau | N \in \Lambda_\tau |}{ M \doteq N \in \Lambda_\omicron }
   |});
 
   つまり，高階論理の擬項の集合は以下のBNFで表せます．
@@ -1643,6 +1639,13 @@ let article = '<
   \eqn(${
     M \Coloneq x^\tau \mid c^\tau \mid \lambda x^\tau. M \mid M M \mid M \doteq M
   });
+
+  項の定義${\Lambda_\tau}は以下の規則で拡張されます．
+
+  \math-list(${
+  | \derive{| c \in \Sigma_\tau |}{ c^\tau \in \Lambda_\tau }
+  | \derive{| M \in \Lambda_\tau | N \in \Lambda_\tau |}{ M \doteq N \in \Lambda_\omicron }
+  |});
 
   ${\Sigma_\tau}の要素であるような項を\dfn{定数 (constant)}と呼びます．
   ${\beta}簡約や${\eta}展開は定数や${\doteq}に対してcongruentに振る舞うとします．
@@ -1752,6 +1755,44 @@ let article = '<
   一連の議論により，高階論理が論理として十分強力な表現力を持つことがわかります．
   \footnote{個人的には，等号(${\doteq})で全ての論理結合子が表現できることは本質的ではなく，たまたまそうなっているだけな気がしています．
   等号だけあればよいという事実は技術的におもしろいですし実際今回の記事のように実装を目的としたケースでも役に立つのは間違いですが，私自身はこの事実に特に深遠な理由があるとは考えていません．}
+}
++p{
+  さて，最後に蛇足として，高階論理の他の形式化について述べておきます．
+  今回の定義では組み込みの論理結合子は${\doteq}だけであり，他の論理結合子はすべて${\doteq}を用いて定義される派生物であるという立場をとりました．
+  しかし，これが唯一のやり方というわけではありません．
+  最も単純なやり方として，初めから全ての論理結合子とそれに関連する推論規則を組み込みとして定義するというのも考えることができます．
+  その場合は組み込みの論理結合子とここまで見てきたような${\doteq}で定義した論理結合子が論理的に等価になるので，体系としては冗長性を含んでいるということになります．
+  別のやり方として，${\doteq}を組み込みとして持たない高階論理の上で${\doteq}を派生物として定義することもできます．
+  中でも，${\to}と${\forall}だけを組み込みとして持ち，他の論理結合子をそれらを用いて定義する方法がよく知られています．\cite[`Jacobs99`];
+  すでに${\doteq}が単体でも十分な表現力を持っていることがわかっているので，${\to}と${\forall}を用いて${\doteq}を表現できれば全ての論理結合子が表現できることになります．
+  具体的には以下のように${\doteq}を定義します．
+  
+  \eqn(${
+    M_1 \doteq M_2 \coloneq \forall P^{\tau \to \omicron}. P M_1 \to P M_2
+  });
+
+  この${\doteq}は\dfn{Leibniz equality}と呼ばれる等号の定義です．
+  ややびっくりするような定義ですが，これが実際に等号としての機能を果たすことはすぐにわかります．
+}
++lemma{
+  上で定義した${\doteq}について，${\den{M_1 \doteq M_2} = 0}であるとき，かつそのときに限り，${\den{M_1} = \den{M_2}}．
+}
++proof{
+  ${\den{M_1 \doteq M_2} = 0}ならば${\den{M_1} = \den{M_2}}を示す．(逆は明らか．)
+  定義より${\den{\forall P^{\tau \to \omicron}. P M_1 \to P M_2} = 0}なので，任意の関数${P : D_\tau \to \Omega}について${\app{P}{\den{M_1}} = 0}ならば${\app{P}{\den{M_2}} = 0}である．
+  ここで，${P}として，
+  \eqn(${
+    \app{P}{x} = \cases![
+      (${0}, {${x = \den{M_1}}のとき});
+      (${1}, {そうでないとき})
+    ]
+  });%
+  をとると，${\app{P}{\den{M_1}} = 0}なので，${\app{P}{\den{M_2}} = 0}である．
+  ${\app{P}{x}}が${0}を値にとるのは${x = \den{M_1}}のときだけなので，${\den{M_1} = \den{M_2}}である．
+}
++p{
+  このように${\doteq}を基本とせずとも等価な表現能力を持つ高階論理を定義することができます．
+  \footnote{ただし，高階論理の演繹体系を考える場合，${\beta\eta}同値性の扱いなどについて${\doteq}を基本とする形式のほうが(この記事の範囲では)都合がよいです．}
 }
 >
 
@@ -1933,11 +1974,16 @@ let article = '<
 
   \d-code(`
   inductive Theorem : Π {Γ}, list (Judgment Γ prop) → Judgment Γ prop → Prop
-  | hyp : Π {Γ Φ} {φ : Judgment Γ prop}, φ ∈ Φ → Theorem Φ φ
-  | refl : Π {Γ Φ t} {m₁ m₂ : Judgment Γ t}, m₁ ≈ m₂ → Theorem Φ (eq m₁ m₂)
-  | cong : Π {Γ Φ t} (m : Judgment (t :: Γ) prop) (m₂ m₁ : Judgment Γ t), Theorem Φ (eq m₁ m₂) → Theorem Φ (subst m m₁) → Theorem Φ (subst m m₂)
-  | prop_ext : Π {Γ Φ} {φ₁ φ₂ : Judgment Γ prop}, Theorem (φ₁ :: Φ) φ₂ → Theorem (φ₂ :: Φ) φ₁ → Theorem Φ (eq φ₁ φ₂)
-  | fun_ext : Π {Γ Φ t₁ t₂} (m₁ m₂ : Judgment (t₁ :: Γ) t₂), Theorem (list.map weak Φ) (eq m₁ m₂) → Theorem Φ (eq (lam m₁) (lam m₂))
+  | hyp : Π {Γ Φ} {φ : Judgment Γ prop},
+    φ ∈ Φ → Theorem Φ φ
+  | refl : Π {Γ Φ t} {m₁ m₂ : Judgment Γ t},
+    m₁ ≈ m₂ → Theorem Φ (eq m₁ m₂)
+  | cong : Π {Γ Φ t} (m : Judgment (t :: Γ) prop) (m₂ m₁ : Judgment Γ t),
+    Theorem Φ (eq m₁ m₂) → Theorem Φ (subst m m₁) → Theorem Φ (subst m m₂)
+  | prop_ext : Π {Γ Φ} {φ₁ φ₂ : Judgment Γ prop},
+    Theorem (φ₁ :: Φ) φ₂ → Theorem (φ₂ :: Φ) φ₁ → Theorem Φ (eq φ₁ φ₂)
+  | fun_ext : Π {Γ Φ t₁ t₂} (m₁ m₂ : Judgment (t₁ :: Γ) t₂),
+    Theorem (list.map weak Φ) (eq m₁ m₂) → Theorem Φ (eq (lam m₁) (lam m₂))
   `);
 
   これで定理証明支援系が完成しました．
@@ -1946,6 +1992,8 @@ let article = '<
 +p{
   と言ってもこれだけだとよくわからないので，実際に証明を書いてみます．
   たとえば，${p \vdash_\set{p : \omicron} \top \doteq p}を証明してみます．
+  日本語にすると，「命題${p}が成り立っているとき，${p}は真である．」という意味です．
+  これは当然証明できてほしいでしょう．
   答えを先に述べると，以下の証明木を構成し，Leanの型検査が通ればその証明が正しい証明であることがわかるという寸法です．
 
   \eqn(${
@@ -1975,7 +2023,7 @@ let article = '<
 
   すると，Leanは以下のようなメッセージを出力して証明を埋めるように指示してきます．
 
-  \d-code(`
+  \console(`
   Tactic State:
   ⊢ Theorem [var here] (eq (weak top) (var here))
   `);
@@ -1993,7 +2041,7 @@ let article = '<
 
   すると，Leanは証明すべき命題があと二つ残っているという旨のメッセージを出力します．
 
-  \d-code(`
+  \console(`
   Tactic State:
   2 goals
   ⊢ Theorem [weak top, var here] (var here)
