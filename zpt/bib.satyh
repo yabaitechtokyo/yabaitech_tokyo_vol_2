@@ -1,4 +1,13 @@
 @import: ../main/book-class
 
 let zpt-bibliography = [
+    (`Harper93`, Article(|
+    author = {| Robert Harper | Furio Honsell | Gordon Plotkin|};
+    title = {A Framework For Defining Logics};
+    journal = {Journal of the Association for Computing Machinery};
+    volume = Some(40);
+    number = Some({1});
+    pages = (143, 184);
+    year = 1993;
+    |));
 ]

@@ -133,7 +133,7 @@ type term =
 
       +theorem?:({evalの健全性1}){${M}と${N}が同じ正規形を持つなら${eval\paren{M} = eval\paren{N}}である。\todo{定理ではない気がする}}
 
-      +theorem?:({evalの健全性2}){${M}と${N}が同じ正規形を持たないなら${eval\paren{M} \neq eval\paren{N}}である。}
+      +theorem?:({evalの健全性2}){${M}と${N}が同じ正規形を持たないなら${eval\paren{M} \neq eval\paren{N}}である。\todo{健全性？}}
 
       +p{この性質から\emph{同じ正規形を持つ項はその場合に限って同じ意味を持つ}ということが言えるはずです。とすると、ある意味${s}が与えられた時に${eval\paren{M} = s}となるようなMのうちただ一つの正規形を選んでくることができるはずです。この関数は\dfn{reify}(具象化)関数と呼ばれます。以降、正規形からなる集合を${Norm}と呼びます。
       \math-list(${| reify: Sem \rightarrow Norm |});
@@ -263,14 +263,30 @@ LF tp : type =
 | arr  : tp → tp → tp
 ;
   `);
-      説明しましょう。\Code.code(`LF`);は新しいLF項を定義するためのキーワードです。
-      }
-      +Code.code(`
+      \Code.code(`LF`);は新しい定数定義するためのキーワードです。\footnote{BelugaではLF\cite[`Harper93`];という依存型理論を用いた定理証明手法を用いており、\Code.code(`LF`);というキーワード名はそれに由来しています。}まず最初の行で\Code.code(`tp`);というSTLCの型を表す型を定義しています(Belugaにおいて型は\Code.code(`type`);という型を持つ値のことです)。その後に\Code.code(`tp`);に関係する定数として\Code.code(`base`);と\Code.code(`arr`);を定義します。これらはそれぞれSTLCの基底型と関数型に対応させています。\Code.code(`arr`);の型は\Code.code(`tp → tp → tp`);となっていますが、これは「\Code.code(`tp`);の値をを二つとる\Code.code(`tp`);の型コンストラクタ」と思うとわかりやすいかと思います。例えば${\arr{A}{B}}が\Code.code(`arr A B`);に対応するわけです。}
+      +p{次にSTLCの項の定義を行います。Belugaの型システムは依存型を持っているため、「STLCにおいて正しい型判断を伴う項」を表現することが可能です。定義はたったの4行です。
+      \Code.d-code(`
 LF term : tp → type =
 | app : term (arr a b) → term a → term b
 | lam : (term a → term b) → term (arr a b)
 ;
       `);
+      1行目で\Code.code(`term`);という型を定義しています。これは\Code.code(`term`);の項を一つとりますが、たとえば\Code.code(`term A`);で「STLCにおいてAという型を持つλ項」を表します。\Code.code(`app`);は関数適用の項に対応する定数で、\Code.code(`arr a b`);の型の項と\Code.code(`a`);の型の項から\Code.code(`b`);の型の項をつくります。以下のSTLCの導出規則に素直に対応していることがわかります。
+      \math-list (${
+%    | \bderive?:!{Var}
+%              { \judgeStlc{\Gamma}{\var{x}}{A} }
+%              {| x \colon A \in \Gamma |}
+%    | \bderive?:!{Abs}
+%              { \judgeStlc{\Gamma}{\lam{x}{A}{M}}{\arr{A}{B}} }
+%              {| \judgeStlc{\Gamma, x:A}{M}{B} |}
+      | \bderive?:!{App}
+              { \judgeStlc{\Gamma}{\app{M}{N}}{B} }
+              {| \judgeStlc{\Gamma}{M}{\arr{A}{B}}
+               | \judgeStlc{\Gamma}{N}{A}
+               |}
+      |});
+       一方で\Code.code(`abs`);の方は${\paren{Abs}}の規則と直接は対応していません。
+      }
 
       +Code.code(`
 schema tctx = some [t : tp] block x : term t;
