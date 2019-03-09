@@ -1,6 +1,12 @@
 @import: ../main/book-class
 
 let zpt-bibliography = [
+    (`Lindley05`, Book(|
+    author = {| Sam Lindley|};
+    title = {Normalisation by evaluation in the compilation of typed functional programming languages};
+    publisher = {PhD Thesis};
+    year = 2005
+    |));
     (`Harper93`, Article(|
     author = {| Robert Harper | Furio Honsell | Gordon Plotkin|};
     title = {A Framework For Defining Logics};
