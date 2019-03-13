@@ -15,6 +15,7 @@ let-math \Coloneq = math-char MathRel `::=` % FIXME: `⩴`, (U+2A74)
 let-math \lBrack = math-char MathOrd `⟦`
 let-math \rBrack = math-char MathOrd `⟧`
 let-math \uexists = math-char MathOrd `∃!`
+let-math \bigstar = math-char MathOrd `★`
 
 let-math \Brack m = ${\lBrack #m \rBrack} % FIXME
 let-math \spadesuit = math-char MathOrd `♠`
@@ -25,6 +26,7 @@ let-math \forfresh = text-in-math MathOrd (cyr (embed-string `И`))
 let-math \fresh = ${\mathrel{\#}}
 let-math \fv m = ${\app{\mathop{\mathrm{fv}}}{#m}}
 let-math \subst m1 m2 = ${\mathord{\sqbracket{#m1/#m2}}}
+let-math \term m = ${\mathrm{#m}}
 let-math \Var = ${\mathrm{Var}}
 let-math \Tm = ${\mathrm{Tm}}
 let-math \Ty m = ${\app{\mathop{\mathrm{Ty}}}{#m}}
@@ -97,9 +99,13 @@ let article = '<
 +p{
   具体的な方針は以下の通りです．
   まず，核となる論理として\emph{高階論理}と呼ばれる論理を採用します．
-  高階論理は非常に強力な表現力を持ちながら極めて簡潔な構文と演繹体系を持ちます．
+  高階論理は簡単に言えば普通の論理にラムダ抽象がはいったようなもので，例えば以下のような命題を記述することができます．
+  \eqn(${
+    \paren{\lambda P^{\omicron \to \paren{\iota \to \omicron} \to \omicron}. \forall f^{\iota \to \omicron}. \lnot\app{P}{\top,f}} \paren{\lambda \phi^\omicron. \lambda Q^{\iota \to \omicron}. \app{Q}{c} \land \phi}
+  });
+  高階論理は(数学の大部分を直接記述できる程度に)非常に強力な表現力を持ちながら極めて簡潔な構文と演繹体系を持ちます．
   よって今回の目標にはぴったりです．
-  また，実装に使用する言語はLeanと呼ばれる言語です．\cite[`lean`];
+  また，実装に使用する言語は\emph{Lean}と呼ばれる言語です．\cite[`lean`];
   Leanは2014年ごろからMicrosoft Researchで開発されている定理証明支援系で，Coqとよく似た型理論に基づく言語です．
   LeanはCoqよりも現代的な設計と強力なメタプログラミング機構を持つ言語で，個人的にとても気に入っている言語です．
   \footnote{実はこの記事を書き始めた段階ではHaskellでの実装を予定していました．
@@ -108,7 +114,9 @@ let article = '<
 +p{
   この記事の読み方について簡単に説明します．
   この記事では定理証明支援系を作成するのにあたって必要な理論的背景とその実装の解説を交互に挟んでいます．
-  もし理論方面に興味がある方は理論方面の節だけを読むのもいいでしょう．
+  理論的な話をする小節にはタイトルに${\bigstar}マークをつけておきました．
+  もし理論方面に興味がある方は${\bigstar}マークのついた理論方面の節だけを読むのもいいでしょう．
+  特に，高階論理について最短で知りたいという方は${\bigstar}マークのついた節だけを読んで4章に突入するのも良いと思います．
   また，実装から読み始めたほうが理解が早いという人は実装の部分だけを読んでしまっても問題ないと思います．
   なんなら，一番最後の節から読み始めてもよいと思います．
   あと，Leanは知名度がないので今回はLeanの構文を知らない読者にもわかるよう随所にLean自体の解説も挟みました．
@@ -119,21 +127,21 @@ let article = '<
   \emph{目次}
   \listing{
     * \ref-section(`ulc`);\ \ ラムダ計算
-    ** \ref-subsection(`ulc`);\ \ 型無しラムダ計算
+    ** \ref-subsection(`ulc`);\ \ 型無しラムダ計算 ${\bigstar}
     ** \ref-subsection(`hoas`);\ \ 高階抽象構文
     ** \ref-subsection(`phoas`);\ \ 多相高階抽象構文
     * \ref-section(`stlc`);\ \ 単純型付きラムダ計算
-    ** \ref-subsection(`curry-style`);\ \ Curry流の単純型付きラムダ計算
+    ** \ref-subsection(`curry-style`);\ \ Curry流の単純型付きラムダ計算 ${\bigstar}
     ** \ref-subsection(`curry-vs-church`);\ \ Curry流とChurch流
-    ** \ref-subsection(`church-style1`);\ \ Church流の単純型付きラムダ計算 (その1)
+    ** \ref-subsection(`church-style1`);\ \ Church流の単純型付きラムダ計算 (その1) ${\bigstar}
     ** \ref-subsection(`typeful-phoas`);\ \ 単純型付きラムダ計算の実装
     ** \ref-subsection(`nbe`);\ \ 評価による正規化
-    ** \ref-subsection(`church-style2`);\ \ Church流の単純型付きラムダ計算 (その2)
+    ** \ref-subsection(`church-style2`);\ \ Church流の単純型付きラムダ計算 (その2) ${\bigstar}
     ** \ref-subsection(`judgment1`);\ \ 型判断の実装 (その1)
     ** \ref-subsection(`judgment2`);\ \ 型判断の実装 (その2)
     * \ref-section(`hol`);\ \ 高階論理
-    ** \ref-subsection(`hol`);\ \ 高階論理の意味論
-    ** \ref-subsection(`hol-nd`);\ \ 高階論理の演繹体系
+    ** \ref-subsection(`hol`);\ \ 高階論理の意味論 ${\bigstar}
+    ** \ref-subsection(`hol-nd`);\ \ 高階論理の演繹体系 ${\bigstar}
     ** \ref-subsection(`hol-impl`);\ \ 高階論理の実装
     * \ref-section(`conclusion`);\ \ まとめ
   }
@@ -141,7 +149,7 @@ let article = '<
 >
 
 +section?:(`ulc`){ラムダ計算}<
-+subsection?:(`ulc`){型無しラムダ計算} <
++subsection?:(`ulc`){型無しラムダ計算 ${\bigstar}} <
 +p {
   この小節では\dfn{型無しラムダ計算 (untyped lambda calculus)}について復習します．
   まず，変数の無限集合${\Var}が定まっているとします．
@@ -179,6 +187,13 @@ let article = '<
   \cite[`Pitts13`];では圏論の言葉を用いてNominal set theoryが展開されていますが，ここではラムダ計算を定義するのに必要な部分だけを初等的な言葉のみで説明します．
 }
 +p{
+  ここで先に種明かしというかネタバラシをしてしまうと，以下の内容は${\alpha}同値性の正確な記述の大変さを読者のみなさまに感じてもらうのが狙いです．
+  コンピュータ上でラムダ計算を実装する際には当然定義のあやふやさは許されないので，以下で解説する数学的大変さがそのままプログラミングの際にも問題になります．
+  この後ラムダ計算の実装の話に移ったときには，以下で解説される${\alpha}同値性の複雑さをいかに回避しつつ${\alpha}同値性を実装するかを議論します．
+  というわけで，ここからしばらくは「${\alpha}同値の概念が実はとても複雑である」ということさえわかってもらえれば十分です．
+  (とはいえ，形式的な議論に慣れている人には以下の話はそれだけでも十分面白いと思います．)
+}
++p{
   変数${x,y \in \Var}に対して写像${\paren{x\ y} : \Var \to \Var}を，${x}を${y}に，${y}を${x}に写し，それ以外の場合は入力をそのまま返すものと定義します．
   このような写像を\dfn{互換 (transposition)}と呼びます．
   互換${\pi}について，${\Tm}から${\Tm}への写像${\pi\cdot\paren{-}}を構造に関する帰納法により定義します．
@@ -191,6 +206,7 @@ let article = '<
 
   また，${\app{\pi}{x}}のことも${\pi\cdot x}と書きます．
   ${\alpha}同値性を定義するために新しい量化子${\forfresh}を導入します．
+  (ちなみに，${\forfresh}は「for fresh」と読みます．)
 
   \eqn(${
     \forfresh x \in X.\ \app{\phi}{x} \mathrel{:\iff} X \setminus \setsep{x \in X}{\app{\phi}{x}} \ \text!{is finite}
@@ -325,7 +341,6 @@ let article = '<
   特に${M_0}を明示して，\dfn{${M_0}の簡約列}とも言います．
   ある簡約列が無限列であることを\dfn{発散する}と言います．
   ${M}の長さ2以上の簡約列が存在しない時，${M}を\dfn{${\beta}正規形 (${\beta}-normal form)}あるいは単に\dfn{正規形 (normal form)}と言います．
-  ${\beta}正規形でない項を\dfn{${\beta}簡約基 (${\beta}-redex)}と言います．
   また，${M}の無限簡約列が存在しない時，${M}は\dfn{強正規化可能である}と言います．
   ${\to_\beta}の反射推移対称閉包を${=_\beta}を書きます．
   定義より，${=_\beta}は${\Lambda}上の同値関係です．
@@ -390,20 +405,20 @@ let article = '<
   たとえば，${\mathrm{isapp}}なる(メタ言語の)関数を以下のように定義します
 
   \align[
-    ${| \app{\mathrm{isapp}}{\app{\mathrm{app}}{M,N}} |\coloneq t |};
-    ${| \app{\mathrm{isapp}}{\app{\mathrm{lam}}{f}} |\coloneq f |};
+    ${| \app{\mathrm{isapp}}{\app{\term{app}}{M,N}} |\coloneq \term{true} |};
+    ${| \app{\mathrm{isapp}}{\app{\term{lam}}{f}} |\coloneq \term{false} |};
   ];
 
-  ただし，${t,f}はそれぞれ真と偽をChurch encodingで表したラムダ項とします．
+  ただし，${\term{true},\term{false}}はそれぞれ真と偽をChurch encodingで表したラムダ項とします．
   もしLeanで実装する場合は以下のようなコードになるでしょう．
 
   \d-code(`
   def isapp : preterm → preterm
-  | (lam f) := f
-  | (app m₁ m₂) := t
+  | (lam f) := false
+  | (app m₁ m₂) := true
   `);
 
-  このとき，${\app{\mathrm{lam}}{\mathrm{isapp}}}は\code(`preterm`);型をもちかつ(メタレベルで)閉じた項であるので，
+  このとき，${\app{\term{lam}}{\mathrm{isapp}}}は\code(`preterm`);型をもちかつ(メタレベルで)閉じた項であるので，
   なんらかのラムダ項を表していることが期待されますが，実際には対応するラムダ項は存在しません．
 }
 >
@@ -424,7 +439,7 @@ let article = '<
   各コンストラクタの型シグネチャに現れている\code(`preterm`);はゼロ引数に見えますが，暗黙に\code(`α`);が適用されています．
   (これはLeanの仕様で，帰納的定義を行う際は\code(`:`);の前の引数は再帰の中で常に固定されていると解釈されます．
   この場合は，\code(`inductive preterm (α : Type) : Type`);という行の\code(`:`);の前に\code(`(α : Type)`);があるのでこの\code(`α`);は定義中で固定されています．)
-  さて，このデータ型はこの\code(`α`);は通常全称量化された状態で使われます．
+  さて，このデータ型は通常\code(`α`);が全称量化された状態で使われます．
 
   \d-code(`
   def Preterm : Type 1 := Π (α : Type), preterm α
@@ -505,7 +520,6 @@ let article = '<
   `);%
 
   やはり\code(`repr`);を使って表示してみます．
-  うまく動作しているようです．
 
   \d-code(`
   #eval s
@@ -513,6 +527,8 @@ let article = '<
   #eval k
   --> (λ0.(λ1.0))
   `);%
+
+  うまく動作しているようです．
 }
 +p{
   次に自然数のChurch encodingを試してみます．
@@ -584,35 +600,26 @@ let article = '<
   | (lam f) := lam (λ x, subst' (f (var x))) -- terminates!
   | (app m₁ m₂) := app (subst' m₁) (subst' m₂)
 
-  def pbeta' {α} : preterm (preterm α) → preterm α -- parallel outermost reduction
+  def pbeta' {α} : preterm (preterm α) → preterm α
   | (var x) := x
   | (lam f) := lam (λ x, pbeta' (f (var x)))
   | (app (lam f) m) := subst' (f (subst' m))
   | (app n m) := app (pbeta' n) (pbeta' m)
 
-  def pbeta : Preterm → Preterm :=
+  def pbeta : Preterm → Preterm :=     -- parallel outermost reduction
   λ m α, pbeta' (m _)
   `);%
 
-  まず，Leanの構文について説明します．
-  \code(`subst'`);と\code(`pbeta'`);の定義の先頭に現れている\code(`{α}`);は\code(`{α : Type}`);の略で，これは引数\code(`α`);が暗黙の引数である(処理系により自動で適切な項が補完される)ことを指定しています．
-  また，\code(`pbeta`);の定義の中に現れている\code(`_`);はプレースホルダで，Leanの処理系が適切な項を推論して補完してくれます．
+  ここで新しく現れたLeanの構文について説明しておきます．
+  \code(`pbeta`);の定義の中に現れている\code(`_`);はプレースホルダで，Leanの処理系が適切な項を推論して補完してくれます．
   ここでは\code(`preterm α`);という項が自動的に補完されます．
-
-  では，それぞれの定義について説明します．
-  \code(`subst'`);は置換を完了させるための手続きです．
-  (Parametric) HOASでは変数の置換は単なるメタレベルの適用で実現されます．
-  (\code(`pbeta'`);の下から二行目を見るとわかる通り置換はLeanの関数適用です．)
-  ただし適用を行うには項の型が\code(`preterm (preterm α)`);という形をしている必要があります．
-  \code(`subst'`);は適用を完了させ，型を\code(`preterm α`);に平坦化します．
-  細かい点ですが，Leanは\code(`subst'`);が停止することを自動で検出してくれます．
-  これは実は自明ではないので，場合によっては手動で証明を書く必要があるかも知れません．
-  \code(`pbeta'`);は${\paren{\lambda x. M}N}という形の項を探し，置換を行います．
-  先ほど説明した通り並列最外簡約です．
-  \code(`pbeta`);は型を合わせるために\code(`pbeta'`);とは別に定義しました．
+  また，\code(`subst'`);と\code(`pbeta'`);の定義の先頭に現れている\code(`{α}`);は\code(`{α : _}`);の略です．
+  これは引数\code(`α`);が暗黙の引数である(処理系により自動で適切な項が補完される)ことを指定しています．
+  また，\code(`α`);自体の型はプレースホルダ\code(`_`);になっており，その後の\code(`α`);の使われ方から\code(`Type`);であることが自動的に推論されます．
 }
 +p{
-  それでは先ほどの\code(`succ_n₀`);を簡約してみます．
+  \code(`pbeta`);の実装の解説は後回しにして，どのように動作するかを先に確認します．
+  先ほどの\code(`succ_n₀`);を簡約してみます．
 
   \d-code(`
   #eval succ_n₀
@@ -631,7 +638,7 @@ let article = '<
   これだけでも十分遊べますが，今回の趣旨から逸れてしまうのでほどほどにしておきます．
 }
 +p{
-  最後に発散する項が記述できることを確認しておわります．
+  つぎに発散する項を作ってみます．
 
   \d-code(`
   def ω : Preterm := λ α, lam (λ x, app (var x) (var x))
@@ -648,6 +655,22 @@ let article = '<
   #eval pbeta Ω
   --> ((λ0.(0 0)) (λ0.(0 0)))
   `);
+
+  たしかに\code(`Ω`);を簡約しても\code(`Ω`);になりました．
+}
++p{
+  最後に，後回しにした\code(`pbeta`);や\code(`subst'`);のそれぞれの意味についてざっくりとだけ説明します．
+  (ここは読み飛ばしてもよいです．)
+  \code(`subst'`);は置換を完了させるための手続きです．
+  (Parametric) HOASでは変数の置換は単なるメタレベルの適用で実現されます．
+  (\code(`pbeta'`);の下から二行目を見るとわかる通り置換はLeanの関数適用です．)
+  ただし適用を行うには項の型が\code(`preterm (preterm α)`);という形をしている必要があります．
+  \code(`subst'`);は適用を完了させ，型を\code(`preterm α`);に平坦化します．
+  細かい点ですが，Leanは\code(`subst'`);が停止することを自動で検出してくれます．
+  これは実は自明ではないので，場合によっては手動で証明を書く必要があるかも知れません．
+  \code(`pbeta'`);は${\paren{\lambda x. M}N}という形の項を探し，置換を行います．
+  先ほど説明した通り並列最外簡約です．
+  \code(`pbeta`);は型を合わせるために\code(`pbeta'`);とは別に定義しました．
 }
 >
 >
@@ -666,7 +689,7 @@ let article = '<
   その後，Church流での定義を紹介します．
   あとで詳しく話しますが，今回実装するのはChurch流の型付きラムダ計算です．
 }
-+subsection?:(`curry-style`){Curry流の単純型付きラムダ計算} <
++subsection?:(`curry-style`){Curry流の単純型付きラムダ計算 ${\bigstar}} <
 +p{
   Curry流の単純型付きラムダ計算を定義します．
   まず，\dfn{基底型}の空でない集合${\base}を固定します．
@@ -793,10 +816,10 @@ let article = '<
 }
 >
 
-+subsection?:(`church-style1`){Church流の単純型付きラムダ計算 (その1)} <
++subsection?:(`church-style1`){Church流の単純型付きラムダ計算 (その1) ${\bigstar}} <
 +p{
   Church流の単純型付きラムダ計算を定義します．
-  型の集合${\Ty{\base} = \set{\tau, \sigma, \cdots}}はCurry流と同じ定義を用います．
+  型の集合${\Ty{\base}}はCurry流と同じ定義を用います．
   型無しラムダ計算と同様に変数の無限集合${\Var = \set{x,y,z,\cdots}}を固定します．
   加えて，変数に対して型を割り当てる写像${\A : \Var \to \Ty{\base}}を固定します．
   \footnote{Curry流で登場した型環境とは違い全域で定義された写像です．}
@@ -1011,7 +1034,7 @@ let article = '<
   \d-code(`
   mutual def reify, reflect
   with reify : Π {t : type}, domain ν t → term ν t
-  | base ν := ν
+  | base m := m
   | (arrow t₁ t₂) f := lam (λ x, reify (f (reflect (var x))))
   with reflect : Π {t : type}, term ν t → domain ν t
   | base m := m
@@ -1095,13 +1118,21 @@ let article = '<
 }
 >
 
-+subsection?:(`church-style2`){Church流の単純型付きラムダ計算 (その2)} <
++subsection?:(`church-style2`){Church流の単純型付きラムダ計算 (その2) ${\bigstar}} <
 +p{
-  Curry流では型付けが型判断や型環境を元に定義されました．
-  同様にChurch流でも型判断や型環境を用いた定義が可能です．
-  関連して，\dfn{Curry-Howard同型対応}と呼ばれる直観主義論理との対応を確認します．
-  さらに，Curry流とChurch流との比較も行います．
-  技術的には，この節の内容は\ref-subsection(`nbe`);で開発した正規形を計算する手続きを閉じた項から開いた項に一般化する際に(むしろそのためだけに)必要です．
+  ここまでの実装ではいずれも閉じたラムダ項のみを扱ってきました．
+  それを開いた項に一般化するために，Church流の単純型付きラムダ計算の拡張を紹介します．
+  これにより，例えば\ref-subsection(`nbe`);で開発した正規形を計算する手続きを一般化して，開いた項の間の${\beta\eta}同値性を計算することができるようになります．
+}
++p{
+  もう少し具体的に説明すると，ここまでで出てきた項の型\code(`Term t`);を\code(`Judgment Γ t`);という型に拡張するのがこの節を含めた\ref-section(`stlc`);の残り(\ref-subsection(`church-style2`);，\ref-subsection(`judgment1`);，\ref-subsection(`judgment2`);)の狙いです．
+
+  \eqn(${
+    \text!{\code(`Term t`);} \ \ \ \mapsto \ \ \ \text!{\code(`Judgment Γ t`);}
+  });
+
+  ただし，\code(`Γ`);は型のリストです．
+  また，この拡張による理論面でのご利益としては，Church流とCurry流との関連について議論できるようになること，また，直観主義命題論理と型付きラムダ計算の間のCurry-Howard同型対応と呼ばれる対応について議論できるようになることです．
 }
 +p{
   固定された写像${\A : \Var \to \Ty{\base}}の有限部分集合を\dfn{型環境 (type environment)}と呼びます．
@@ -1124,7 +1155,7 @@ let article = '<
   逆に，なんらかの${\Gamma}について型判断${\Gamma \vdash M : \tau}が成り立つとき，${M}は${\tau}型を持ちます．
 }
 +p{
-  また，Curry流とChurch流は次のように関連づけられます．
+  また，Church流にCurry流と似たような型環境の概念が入ったことで両者を比較することができるようになります．
   擬項を前項に送る忘却写像${\abs{\cdot} : \PsLam \to \Lambda}を構造に関する帰納法で以下のように定義します．
 
   \align([
@@ -1138,7 +1169,7 @@ let article = '<
 }
 +p{
   型判断に対する様々な操作を定義するために${\IPC^\to}という直観主義命題論理の断片を紹介します．
-  型付きラムダ計算と${\IPC^\to}の自然演繹はCurry-Howard同型対応を通じて対応しており，型判断についての様々な概念は論理学の用語を用いることで簡潔に説明されます．
+  型付きラムダ計算と${\IPC^\to}の自然演繹には著しい類似があり，型判断についての様々な概念は論理学の用語を用いることで簡潔に説明されます．
 }
 +p{
   ${\PVar = \set{P,Q,\cdots}}を\dfn{命題変数 (propositional variable)}の集合とします．
@@ -1169,7 +1200,13 @@ let article = '<
   });
 
   と書きます．
-  ${P}をなんらかの述語とするとき，規則の集合${\setsep{\paren{\set{\H_1, \cdots, \H_n}, \H}}{\app{P}{\H_1,\cdots,\H_n,\H}}}を\dfn{規則図式 (rule schema)}と呼び，以下のように書きます．
+  ${P}をなんらかの述語とするとき，規則の集合
+
+  \eqn(${
+    \setsep{\paren{\set{\H_1, \cdots, \H_n}, \H}}{\app{P}{\H_1,\cdots,\H_n,\H}}
+  });
+
+  を\dfn{規則図式 (rule schema)}と呼び，以下のように書きます．
 
   \eqn(${
     \derive?:{\app{P}{\H_1,\cdots,\H_n,\H}}{|\H_1 | \cdots | \H_n|}{\H}
@@ -1239,9 +1276,9 @@ let article = '<
 +p{
   型付きラムダ計算と${\IPC^\to}の間の関係について説明します．
   ここでは${\base = \PVar}を仮定します．
-  型環境をその終域に送る関数を${\abs{\cdot}}とします．
+  型環境をその像に送る関数を${\abs{\cdot}}とします．
   型判断${\Gamma \vdash M : \tau}が成り立つとき，${\abs{\Gamma} \vdash \tau}が成り立ちます．
-  逆に，${\Phi \vdash \tau}が成り立つとき，き適当な型環境${\Gamma}と項${M}であって${\abs{\Gamma} = \Phi}であるものが存在して，${\Gamma \vdash M : \tau}が成り立ちます．
+  逆に，${\Phi \vdash \tau}が成り立つとき，適当な型環境${\Gamma}と項${M}であって${\abs{\Gamma} = \Phi}であるものが存在して，${\Gamma \vdash M : \tau}が成り立ちます．
   この事実は${\IPC^\to}の\dfn{Curry-Howard同型対応}と呼ばれています．
   また，この議論から型付きラムダ計算においても型環境をリストとしてみなすことができ，かつ置換，弱化，交換，縮約，演繹定理に相当するものが成り立つことがわかります．
   以降の文章では，型判断を表すのにそれに対応する仮説的判断を用いることがあります．
@@ -1250,13 +1287,14 @@ let article = '<
 
 +subsection?:(`judgment1`){型判断の実装 (その1)} <
 +p{
-  Typeful PHOASは一見非常にコンパクトで簡潔に見えますが，開いた項がうまく扱えないという問題があります．
-  その問題を解決するために\ref-subsection(`church-style2`);で定義した型判断を用います．
-  型判断は開いた項を扱いやすくする良い形式化になっているためです．
-  具体的には，\ref-subsection(`typeful-phoas`);で定義した項に加えて型判断を実装し，それらの間に適切な相互変換を定義することで，開いた項をうまく扱うことを試みます．
+  前節\ref-subsection(`church-style2`);の冒頭でも言及したように，Typeful PHOASには開いた項がうまく扱えないという問題があります．
+  本節\ref-subsection(`judgment1`);と次節\ref-subsection(`judgment2`);では前節\ref-subsection(`church-style2`);で定義した型判断を用いてその問題を解決することを試みます．
+  具体的には，\ref-subsection(`typeful-phoas`);で定義した項に加えて型判断を実装し，項と型判断との間の相互変換を定義することで，開いた項をうまく扱うことを試みます．
   \footnote{この問題に対する他のアプローチとして文脈様相型を持つプログラミング言語(例えばBeluga \cite[`beluga`];)を用いる手法があります．}
-  先に予告しておくと，この方針は(最後の最後で)失敗します．
-  (なので，この節は読み飛ばしてしまっても構いません．)
+  この相互変換について，本節\ref-subsection(`judgment1`);と次節\ref-subsection(`judgment2`);では異なる方針で実装を試みています．
+  本節\ref-subsection(`judgment1`);の方針はより素直なのですが(最後の最後で)失敗します．
+  一方，次節\ref-subsection(`judgment2`);では代わりにややトリッキーな方針を採用して，相互変換を適切に定義します．
+  ここからの話はそれなりにテクニカル(な割に実りが少ない)ので，前節\ref-subsection(`church-style2`);の内容を実装したんだということだけ頭にいれておけば，本節\ref-subsection(`judgment1`);と次節\ref-subsection(`judgment2`);は読み飛ばして\ref-section(`hol`);へ進んで構いません．
 }
 +p{
   型判断を表す\code(`judgment₁`);型を定義します．
@@ -1270,7 +1308,8 @@ let article = '<
   `);
 
   ただし，\code(`t ∈' Γ`);は以下で定義される型です．
-  \footnote{Leanの標準ライブラリには\code(`mem`);によく似た\code(`list.mem`);があるのですが，\code(`Prop`);型として定義されているので今回の用途には使いづらいので\code(`Type`);型として再実装しました．}
+  \footnote{Leanの標準ライブラリには\code(`∈'`);によく似た\code(`∈`);があるのですが，\code(`Prop`);型として定義されていて今回の用途には使いづらいので\code(`Type`);型として再実装しました．
+  これらの違いは簡単に言えば，\code(`x ∈ l`);は\code(`l`);の中のどこかに\code(`x`);が入っていることだけを表しそれがどの位置に入っているかという情報は含まないのに対し，\code(`x ∈' l`);は\code(`l`);の中の何番目の位置に\code(`x`);が入っているかの情報まで含みます．}
 
   \d-code(``
   inductive mem : α → list α → Type -- proof relevant version
@@ -1334,7 +1373,7 @@ let article = '<
   });
 }
 +p{
-  交換規則についても以下の補題があれば簡単に定義できます．
+  交換規則についても以下の補題を示すことで簡単に定義できます．
   \footnote{
     ちなみに，補題の証明は以下の通りです．
     \d-code(`
@@ -1617,32 +1656,39 @@ let article = '<
   λ m, subst m (var here)
   `);
 
-  交換も(ここでは省略しますが)素直に実装できます．
-  演繹定理も\code(`type.foldr`);を適切に定義することで実装できます．
+  交換も(ここでは詳細は省略しますが)素直に実装できます．
 
   \d-code(`
-  def abs : Judgment₂ Γ t → Term (type.foldr Γ t)
-  def antiabs : Judgment₂ [] (type.foldr Γ t) → Judgment₂ Γ t
+  def xchg : Π {Γ₁ Γ₂ t}, (Γ₁ ~ Γ₂) → judgment₂ Γ₁ t → judgment₂ Γ₂ t
+  `);
+
+  演繹定理も同様に適切に定義することで実装できます．
+
+  \d-code(`
+  def abs : judgment₂ (t₁ :: Γ) t₂ → judgment₂ Γ (arrow t₁ t₂)
+  def antiabs : judgment₂ Γ (arrow t₁ t₂) → judgment₂ (t₁ :: Γ) t₂
   `);
 
   \code(`abs`);が定義できたことで以下のように型判断の間(つまり開いた項の間)の${\beta\eta}同値性が計算できるようになります．
 
   \d-code(`
   instance : setoid (Judgment₂ Γ t) :=
-  ⟨inv_image eq (normalize ∘ to_term ∘ judgment₂.abs),
-   inv_image.equivalence eq (normalize ∘ to_term ∘ judgment₂.abs) eq.equivalence⟩
+  ⟨inv_image eq (normalize ∘ to_term ∘ judgment₂.abs'),
+   inv_image.equivalence eq (normalize ∘ to_term ∘ judgment₂.abs') eq.equivalence⟩
   `);
+
+  ただし，\code(`abs'`);は型環境が空になるまで\code(`abs`);を繰り返すような関数です．
 }
 >
 >
 
 +section?:(`hol`){高階論理}<
-+subsection?:(`hol`){高階論理の意味論}<
++subsection?:(`hol`){高階論理の意味論 ${\bigstar}}<
 +p{
   \dfn{高階論理 (Higher-order logic, HOL)}を導入します．
   高階論理と呼ばれるものには様々な変種があり確立された唯一の定義があるわけではありません．
   例えば，Churchの\emph{Simple Type Theory (STT)}\cite[`Church40`];やCoquandとHuetの\emph{Calculus of Constructions (CoC)}\cite[`CoquandH88`];が有名です．
-  この節では高階論理のなかでも特に小さくわかりやすい等号に基づく定義を紹介します．
+  この節では高階論理のなかでも特に小さくわかりやすい，等号に基づく定義を紹介します．
 }
 +p{
   高階論理の構文論を定義します．
@@ -1735,12 +1781,13 @@ let article = '<
   これでは一見，高階論理が非常に表現力の弱い論理に見えます．
   \footnote{たとえば，論理結合子が${\land}しかない命題論理を考えると，それはかなり表現力の弱い論理であると言えるでしょう．}
   しかし，実はラムダ抽象をうまく用いることで通常用いられる種々の論理結合子を高階論理の中で定義することができます．
-  たとえば，論理式${\phi_1}と${\phi_2}に対して以下のような論理式を考えます．
+  たとえば，論理式${\phi_1}と${\phi_2}に対して以下のような項を考えます．
 
   \eqn(${
     \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \paren{f \doteq f} \paren{f \doteq f}} \doteq \paren{\lambda f^{\omicron \to \omicron \to \omicron}. \mathop{f} \phi_1 \phi_2}
   });
 
+  この項は${\omicron}型なので，論理式です．
   この論理式を${\phi_1 \mathrel{\spadesuit} \phi_2}と書くことにします．
   すると，以下が成り立ちます．
 }
@@ -1783,13 +1830,14 @@ let article = '<
     ${| \uexists x^\tau.\phi |\coloneq \exists x^\tau.\phi \land \forall y^\tau. \subst{y}{x}\phi \to x \doteq y |};
   ];
 
-  ここでの命題の上の量化${\forall p^\omicron.\phi}を用いましたが，このテクニックはGirardのSystem F(二階命題論理)で論理結合子を定義する際に使われるテクニックと同じものです．
+  ここで命題の上の量化${\forall p^\omicron.\phi}を多用していますが，このテクニックはGirardのSystem F(二階命題論理)で論理結合子を定義する際に使われるテクニックと同じものです．
   一連の議論により，高階論理が論理として十分強力な表現力を持つことがわかります．
   \footnote{個人的には，等号(${\doteq})で全ての論理結合子が表現できることは本質的ではなく，たまたまそうなっているだけな気がしています．
-  等号だけあればよいという事実は技術的におもしろいですし実際今回の記事のように実装を目的としたケースでも役に立つのは間違いですが，私自身はこの事実に特に深遠な理由があるとは考えていません．}
+  等号だけあればよいという事実は技術的におもしろいですし実際今回の記事のように実装を目的としたケースでも役に立つのは間違いないですが，私自身はこの事実に特に深遠な理由があるとは考えていません．}
 }
 +p{
   さて，最後に蛇足として，高階論理の他の形式化について述べておきます．
+  (なので，気になる方以外は読み飛ばして大丈夫です．)
   今回の定義では組み込みの論理結合子は${\doteq}だけであり，他の論理結合子はすべて${\doteq}を用いて定義される派生物であるという立場をとりました．
   しかし，これが唯一のやり方というわけではありません．
   最も単純なやり方として，初めから全ての論理結合子とそれに関連する推論規則を組み込みとして定義するというのも考えることができます．
@@ -1824,11 +1872,11 @@ let article = '<
 }
 +p{
   このように${\doteq}を基本とせずとも等価な表現能力を持つ高階論理を定義することができます．
-  \footnote{ただし，高階論理の演繹体系を考える場合，${\beta\eta}同値性の扱いなどについて${\doteq}を基本とする形式のほうが(この記事の範囲では)都合がよいです．}
+  \footnote{ただし，高階論理の演繹体系を考える場合，特に${\beta\eta}同値性の扱いにかんして，${\doteq}を基本とする形式のほうが(この記事の範囲では)都合がよいです．}
 }
 >
 
-+subsection?:(`hol-nd`){高階論理の演繹体系}<
++subsection?:(`hol-nd`){高階論理の演繹体系 ${\bigstar}}<
 +p{
   本節では高階論理の証明体系を与えます．
   証明体系の与え方には様々な流儀がありますが，この記事では(私の個人的な好みによって)自然演繹を採用します．
