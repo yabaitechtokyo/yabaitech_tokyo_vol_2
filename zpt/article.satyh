@@ -263,7 +263,8 @@ LF tp : type =
 | arr  : tp → tp → tp
 ;
   `);
-      \Code.code(`LF`);は新しい定数定義するためのキーワードです。\footnote{BelugaではLF\cite[`Harper93`];という依存型理論を用いた定理証明手法を用いており、\Code.code(`LF`);というキーワード名はそれに由来しています。}まず最初の行で\Code.code(`tp`);というSTLCの型を表す型を定義しています(Belugaにおいて型は\Code.code(`type`);という型を持つ値のことです)。その後に\Code.code(`tp`);に関係する定数として\Code.code(`base`);と\Code.code(`arr`);を定義します。これらはそれぞれSTLCの基底型と関数型に対応させています。\Code.code(`arr`);の型は\Code.code(`tp → tp → tp`);となっていますが、これは「\Code.code(`tp`);の値をを二つとる\Code.code(`tp`);の型コンストラクタ」と思うとわかりやすいかと思います。例えば${\arr{A}{B}}が\Code.code(`arr A B`);に対応するわけです。}
+      \Code.code(`LF`);は新しい定数定義するためのキーワードです\footnote{BelugaではLF\cite[`Harper93`];という依存型理論を用いた定理証明手法を用いており、\Code.code(`LF`);というキーワード名はそれに由来しています。}。まず最初の行で\Code.code(`tp`);というSTLCの型を表す型を定義しています(Belugaにおいて型は\Code.code(`type`);という型を持つ値のことです)。その後に\Code.code(`tp`);に関係する定数として\Code.code(`base`);と\Code.code(`arr`);を定義します。これらはそれぞれSTLCの基底型と関数型に対応させています。\Code.code(`arr`);の型は\Code.code(`tp → tp → tp`);となっていますが、これは「\Code.code(`tp`);の値をを二つとる\Code.code(`tp`);の型コンストラクタ」と思うとわかりやすいかと思います。例えば${\arr{A}{B}}が\Code.code(`arr A B`);に対応するわけです。}
+      +p{なお、\Code.code(`LF`);で定義する定数名は\emph{全て小文字である必要があります}。これはBelugaが多くの種類の変数を扱っているが故の制限です。}
       +p{次にSTLCの項の定義を行います。Belugaの型システムは依存型を持っているため、「STLCにおいて正しい型判断を伴う項」を表現することが可能です。定義はたったの4行です。
       \Code.d-code(`
 LF term : tp → type =
@@ -271,21 +272,21 @@ LF term : tp → type =
 | lam : (term a → term b) → term (arr a b)
 ;
       `);
-      1行目で\Code.code(`term`);という型を定義しています。これは\Code.code(`term`);の項を一つとりますが、たとえば\Code.code(`term A`);で「STLCにおいてAという型を持つλ項」を表します。\Code.code(`app`);は関数適用の項に対応する定数で、\Code.code(`arr a b`);の型の項と\Code.code(`a`);の型の項から\Code.code(`b`);の型の項をつくります。以下のSTLCの導出規則に素直に対応していることがわかります。
+      1行目で\Code.code(`term`);という型を定義しています。これは\Code.code(`term`);の項を一つとりますが、たとえば\Code.code(`term A`);で「STLCにおいてAという型を持つλ項」を表します。\Code.code(`app`);は関数適用の項に対応する定数で、型\Code.code(`arr a b`);の項と型\Code.code(`a`);の項から型\Code.code(`b`);の項をつくります。以下のSTLCの導出規則に素直に対応していることがわかります。
       \math-list (${
-%    | \bderive?:!{Var}
-%              { \judgeStlc{\Gamma}{\var{x}}{A} }
-%              {| x \colon A \in \Gamma |}
-%    | \bderive?:!{Abs}
-%              { \judgeStlc{\Gamma}{\lam{x}{A}{M}}{\arr{A}{B}} }
-%              {| \judgeStlc{\Gamma, x:A}{M}{B} |}
       | \bderive?:!{App}
               { \judgeStlc{\Gamma}{\app{M}{N}}{B} }
               {| \judgeStlc{\Gamma}{M}{\arr{A}{B}}
                | \judgeStlc{\Gamma}{N}{A}
                |}
       |});
-       一方で\Code.code(`abs`);の方は${\paren{Abs}}の規則と直接は対応していません。
+      一方で\Code.code(`lam`);は関数の項に対応する定数で、「型\Code.code(`a`);の項から型\Code.code(`b`);の項への関数」から型\Code.code(`arr a b`);の項をつくります。このように対象言語(STLC)の関数をメタ言語(Beluga)の関数によって表現する手法を\dfn{Higher Order Abstract Syntax}(HOAS)と呼びます。以下のSTLCの規則と直接対応しないように見えますが、型判断の${\vdash}をメタ言語の関数型と思えばなんとなく対応する気もする、そんな感じです。
+      \math-list (${
+        | \bderive?:!{Abs}
+            { \judgeStlc{\Gamma}{\lam{x}{A}{M}}{\arr{A}{B}} }
+            {| \judgeStlc{\Gamma, x:A}{M}{B} |}
+      |});
+      変数名を文字列で管理する方法に比べて、HOASは変数の取り扱いの面倒な部分をメタ言語に任せることができるため実装が楽になります。\todo{β簡約の例}
       }
 
       +Code.code(`
