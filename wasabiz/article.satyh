@@ -218,7 +218,6 @@ let article = '<
   ${| \pi\cdot\paren{MN} |\coloneq \paren{\pi\cdot M} \paren{\pi\cdot N} |};
   ];
 
-  また，${\app{\pi}{x}}のことも${\pi\cdot x}と書きます．
   ${\alpha}同値性を定義するために新しい量化子${\forfresh}を導入します．
   (ちなみに，${\forfresh}は「for fresh」と読みます．)
 
@@ -1887,7 +1886,7 @@ let article = '<
 }
 +p{
   このように${\doteq}を基本とせずとも等価な表現能力を持つ高階論理を定義することができます．
-  \footnote{ただし，高階論理の演繹体系を考える場合，特に${\beta\eta}同値性の扱いにかんして，${\doteq}を基本とする形式のほうが(この記事の範囲では)都合がよいです．}
+  \footnote{ただし，高階論理の演繹体系を考える場合(少なくともこの記事の範囲では)${\doteq}を基本とする形式のほうが都合がよいです．}
 }
 >
 
@@ -1933,6 +1932,7 @@ let article = '<
   |});
 
   これら二つの規則図式はそれぞれ\dfn{命題外延性 (propositional extensionality)}，\dfn{関数外延性 (functional extensionality)}と呼ばれます．
+  関数外延性の規則は\dfn{${\xi}規則 (${\xi} rule)}とも呼ばれます．
 }
 +p{
   この体系では，自然演繹に通常要請される性質が問題なく成立します．
@@ -1982,7 +1982,7 @@ let article = '<
   | \derive{| \phi_1, \Phi \vdash_\Gamma \phi_2 |}{ \Phi \vdash_\Gamma \phi_1 \to \phi_2 }
   | \derive{| \Phi \vdash_\Gamma \phi_1 \to \phi_2 | \Phi \vdash_\Gamma \phi_1 |}{ \Phi \vdash_\Gamma \phi_2 }
   | \derive?:{\ x \fresh \Phi}{| \Phi \vdash_{\set{x : \tau} \cup \Gamma} \phi |}{ \Phi \vdash_\Gamma \forall x^\tau. \phi }
-  | \derive{| \Phi \vdash_\Gamma \forall x^\tau. \phi | \Gamma \vdash M : \tau |}{ \Phi \vdash_\Gamma \subst{M}{x} \phi }
+  | \derive?:{\ \Gamma \vdash M : \tau}{| \Phi \vdash_\Gamma \forall x^\tau. \phi |}{ \Phi \vdash_\Gamma \subst{M}{x} \phi }
   |});
 
   ただし${\land}，${\to}，${\forall}の導入則が許容可能であるためには命題外延性と関数外延性が必要です．
@@ -2071,9 +2071,9 @@ let article = '<
   inductive Theorem : Π {Γ}, list (Judgment Γ prop) → Judgment Γ prop → Prop
   | hyp : Π {Γ Φ} {φ : Judgment Γ prop},
     φ ∈ Φ → Theorem Φ φ
-  | refl : Π {Γ Φ t} {m₁ m₂ : Judgment Γ t},
+  | eq_intro : Π {Γ Φ t} {m₁ m₂ : Judgment Γ t},
     m₁ ≈ m₂ → Theorem Φ (eq m₁ m₂)
-  | subst : Π {Γ Φ t} (m : Judgment (t :: Γ) prop) (m₂ m₁ : Judgment Γ t),
+  | eq_elim : Π {Γ Φ t} (m : Judgment (t :: Γ) prop) (m₂ m₁ : Judgment Γ t),
     Theorem Φ (eq m₁ m₂) → Theorem Φ (subst m m₁) → Theorem Φ (subst m m₂)
   | prop_ext : Π {Γ Φ} {φ₁ φ₂ : Judgment Γ prop},
     Theorem (φ₁ :: Φ) φ₂ → Theorem (φ₂ :: Φ) φ₁ → Theorem Φ (eq φ₁ φ₂)
@@ -2153,7 +2153,7 @@ let article = '<
     apply Theorem.prop_ext,
     { apply Theorem.hyp,
       simp },
-    { apply Theorem.refl,
+    { apply Theorem.eq_intro,
       canonicity }
   end
   `);
@@ -2170,32 +2170,32 @@ let article = '<
   def theorem2 {φ₁ φ₂} {Φ : list (Judgment [] prop)} : Theorem Φ (app (app and φ₁) φ₂) → Theorem Φ φ₁ :=
   begin
     intro p,
-    apply Theorem.subst
+    apply Theorem.eq_elim
       (var here)
       φ₁
       (λ ν, app (lam (λ f, app (app (var f) (φ₁ ν)) (φ₂ ν))) (lam (λ p₁, lam (λ p₂, var p₁)))),
-    { apply Theorem.refl,
+    { apply Theorem.eq_intro,
       canonicity, },
-    { apply Theorem.subst
+    { apply Theorem.eq_elim
         (@id (Judgment [arrow _ prop] prop) $ λ ν f, app (var f) (lam (λ p₁, lam (λ p₂, var p₁))))
         (λ ν, lam (λ f, app (app (var f) (φ₁ ν)) (φ₂ ν)))
         (@id (Judgment [] (arrow _ prop)) $ λ ν, lam (λ f, app (app (var f) (top ν)) (top ν))),
-      { apply Theorem.subst
+      { apply Theorem.eq_elim
           (var here)
           (eq
             (@id (Judgment [] (arrow _ prop)) $ λ ν, lam (λ f, app (app (var f) (top ν)) (top ν)))
             (λ ν, lam (λ f, app (app (var f) (φ₁ ν)) (φ₂ ν))))
           (λ ν, app (app (lam (λ p₁, lam (λ p₂, eq (lam (λ f : ν (arrow _ (arrow _ prop)), app (app (var f) (top ν)) (top ν))) (lam (λ f, app (app (var f) (var p₁)) (var p₂)))))) (φ₁ ν)) (φ₂ ν)),
-        { apply Theorem.refl,
+        { apply Theorem.eq_intro,
           canonicity },
         { from p } },
-      { apply Theorem.subst
+      { apply Theorem.eq_elim
           (var here)
           (@id (Judgment [] _) $ λ ν, app (lam (λ f, app (app (var f) (top ν)) (top ν))) (lam (λ p₁, lam (λ p₂, var p₁))))
           top,
-        { apply Theorem.refl,
+        { apply Theorem.eq_intro,
           canonicity },
-        { apply Theorem.refl,
+        { apply Theorem.eq_intro,
           canonicity } } }
   end
   `);
