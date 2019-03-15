@@ -272,7 +272,7 @@ LF term : tp → type =
 | lam : (term a → term b) → term (arr a b)
 ;
       `);
-      1行目で\Code.code(`term`);という型を定義しています。これは\Code.code(`term`);の項を一つとりますが、たとえば\Code.code(`term A`);で「STLCにおいてAという型を持つλ項」を表します。\Code.code(`app`);は関数適用の項に対応する定数で、型\Code.code(`arr a b`);の項と型\Code.code(`a`);の項から型\Code.code(`b`);の項をつくります。以下のSTLCの導出規則に素直に対応していることがわかります。
+      1行目で\Code.code(`term`);という型を定義しています。これは\Code.code(`tp`);の項を一つとります。たとえば\Code.code(`tp`);の型を持つ項\Code.code(`A`);があったときに、\Code.code(`term A`);で「STLCにおいてAという型を持つλ項」を表します。このように型の中に項の出現を許すのが依存型の特色です。\Code.code(`app`);は関数適用の項に対応する定数で、型\Code.code(`arr a b`);の項と型\Code.code(`a`);の項から型\Code.code(`b`);の項をつくります。以下のSTLCの導出規則に素直に対応していることがわかります。
       \math-list (${
       | \bderive?:!{App}
               { \judgeStlc{\Gamma}{\app{M}{N}}{B} }
@@ -280,26 +280,25 @@ LF term : tp → type =
                | \judgeStlc{\Gamma}{N}{A}
                |}
       |});
-      一方で\Code.code(`lam`);は関数の項に対応する定数で、「型\Code.code(`a`);の項から型\Code.code(`b`);の項への関数」から型\Code.code(`arr a b`);の項をつくります。このように対象言語(STLC)の関数をメタ言語(Beluga)の関数によって表現する手法を\dfn{Higher Order Abstract Syntax}(HOAS)と呼びます。以下のSTLCの規則と直接対応しないように見えますが、型判断の${\vdash}をメタ言語の関数型と思えばなんとなく対応する気もする、そんな感じです。
+      一方で\Code.code(`lam`);は関数の項に対応する定数で、「型\Code.code(`a`);の項から型\Code.code(`b`);の項への関数」から型\Code.code(`arr a b`);の項をつくります。このように対象言語(STLC)の関数をメタ言語(Beluga)の関数によって表現する手法を\dfn{Higher Order Abstract Syntax}(HOAS)と呼びます。ところでSTLCの(Abs)の規則は以下のようなものでした。
       \math-list (${
         | \bderive?:!{Abs}
             { \judgeStlc{\Gamma}{\lam{x}{A}{M}}{\arr{A}{B}} }
             {| \judgeStlc{\Gamma, x:A}{M}{B} |}
       |});
-      変数名を文字列で管理する方法に比べて、HOASは変数の取り扱いの面倒な部分をメタ言語に任せることができるため実装が楽になります。\todo{β簡約の例}
+      これと\Code.code(`lam`);は一見対応してないように見えますが、以下のような見方において一致しています。すなわち(Abs)のルールは「${A}の型の項が環境にある時に、仮にそれの名前をxとして${B}の型の項をつくることができる」ときに「${\arr{A}{B}}の型の項」をつくる規則であると考えることができます。この前者の部分がSTLCだと${\Gamma, x : A \vdash M : B}の形になり、一方でHOASではメタ言語の関数の形をとるだけで本質的には同じと考えることができるわけです。\todo{もっとわかりやすく}\todo{(Var)がない理由について}}
+      +p{変数名を文字列で管理する方法に比べて、HOASは変数の取り扱いの面倒な部分をメタ言語に任せることができるため実装が楽になります。\todo{β簡約の例}
       }
-
-      +Code.code(`
-schema tctx = some [t : tp] block x : term t;
-
-% we use old-style definition because
-% we need both neut and norm at the same time
+      +p{依存型は大変強力なので、STLCのβη正規形のためのデータ型をつくることさえ可能です。
+        \Code.d-code(`
 neut : tp → type.
 norm : tp → type.
 nlam : (neut a → norm b) → norm (arr a b).
 rapp : neut (arr a b) → norm a → neut b.
 embed : neut base → norm base.
       `);
+      }
+
     +Code.code(`
 schema ctx = some [a:tp] block x:neut a;
 
