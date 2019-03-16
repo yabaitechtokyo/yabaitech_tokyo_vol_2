@@ -17,10 +17,17 @@ rapp : neut (arr a b) → norm a → neut b.
 embed : neut base → norm base.
 
 LF beta: term a → term a → type =
-    | beta_red : beta (app (lam m) n) (m n)
-    | beta_rapp : beta m1 m2 → beta (app n m1) (app n m2)
-    | beta_lapp : beta m1 m2 → beta (app m1 n) (app m2 n)
-    | beta_lam : beta (m1 x) (m2 x) → beta (lam m1) (lam m2)
+| beta_red  : beta (app (lam m) n) (m n)
+| beta_rapp : beta m1 m2 → beta (app n m1) (app n m2)
+| beta_lapp : beta m1 m2 → beta (app m1 n) (app m2 n)
+| beta_lam  : beta (m1 x) (m2 x) → beta (lam m1) (lam m2)
+;
+
+LF eta: term a → term a → type =
+| eta_exp  : eta m (lam (\x. app m x))
+| eta_rapp : eta m1 m2 → eta (app n m1) (app n m2)
+| eta_lapp : eta m1 m2 → eta (app m1 n) (app m2 n)
+| eta_lam  : eta (m1 x) (m2 x) → eta (lam m1) (lam m2)
 ;
 
 schema ctx = some [a:tp] block x:neut a;
