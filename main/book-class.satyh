@@ -800,11 +800,20 @@ end = struct
       | None        -> ()
     in
     let it-num = embed-string s-num in
+    let ctx-category =
+      ctx |> set-font Latin font-latin-sans
+          |> set-cjk-font font-cjk-gothic in
+    let ib-caption-inside = read-inline ctx-category {#category; #it-num;} ++ inline-skip (get-font-size ctx) ++ read-inline ctx caption in
+    % Centerize only if the length is less than the length of the page
+    let ib-caption = if get-natural-width ib-caption-inside >' text-width then
+            ib-caption-inside ++ inline-fil 
+        else
+            inline-fil ++ ib-caption-inside ++ inline-fil in
     let bb-inner =
       let d (_, _) _ _ _ = [] in
       block-frame-breakable ctx (2pt, 2pt, 2pt, 2pt) (d, d, d, d) (fun ctx -> (
         read-block ctx inner
-          +++ line-break true true ctx (inline-fil ++ read-inline ctx {#category; #it-num; #caption;} ++ inline-fil)
+          +++ line-break true true ctx ib-caption
       ))
     in
       hook-page-break (fun pbinfo _ -> (
@@ -875,7 +884,7 @@ end = struct
     let ib-word =
       match wordopt with
       | None       -> inline-nil
-      | Some(word) -> read-inline ctx {\ (#word;).}
+      | Some(word) -> read-inline ctx {\ (#word;)}
     in
     let ib-inner = read-inline (ctxf ctx) inner in
       line-break true true ctx
