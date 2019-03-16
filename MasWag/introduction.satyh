@@ -11,8 +11,7 @@ let introduction = '<+section{はじめに} <
  {システムの動作ログ ${\word}とシステムの仕様${\phi}}
  {システムの動作ログ${\word}が仕様${\phi}を充たすかどうかを判定する。つまり${\word \models \phi}であるかどうかを判定する。}
 +p{
-% ひどい!!
-\figure ?:(`fig:TA`){時間オートマトンの例。5秒以内の${abab\ldots}の繰り返しで、直近の${b}からの時間経過が\promote-linebreak;1秒以内であるような言語を表現する。}<
+\figure ?:(`fig:TA`){時間オートマトンの例。5秒以内の${abab\ldots}の繰り返しで、直近の${b}からの時間経過が1秒以内であるような言語を表現する。}<
    +image-frame{
    \insert-pdf-image(8cm)(`../MasWag/figs/timed_automaton.pdf`)(1);
 }
