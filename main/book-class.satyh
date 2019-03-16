@@ -920,10 +920,11 @@ end = struct
 
   let-block ctx +proof ?:wordopt inner =
     let ib-heading =
-      let ctx = ctx |> set-latin-font font-latin-italic in
+      let ctx = ctx |> set-font Latin font-latin-sans
+                    |> set-cjk-font font-cjk-gothic in
         match wordopt with
-        | None    -> read-inline ctx {Proof.}
-        | Some(w) -> read-inline ctx {Proof of #w;.}
+        | None    -> read-inline ctx {証明}
+        | Some(w) -> read-inline ctx {#w; の証明}
     in
     let ib-box = read-inline ctx {${\QED}} in
       line-break true true ctx
