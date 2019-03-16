@@ -15,6 +15,8 @@ let-math \var name = ${#name}
 let-math \lam name typ body = ${\lambda #name^{#typ} . #body}
 let-math \app fn arg = ${#fn #arg}
 let-math \judgeStlc ctx term typ = ${#ctx \vdash #term : #typ}
+let-math \judgeNeut ctx neut typ = ${#ctx \vdash^{Neut} #neut : #typ}
+let-math \judgeNorm ctx norm typ = ${#ctx \vdash^{Nrom} #norm : #typ}
 let-math \br = ${\rightarrow_{\beta}}
 let-math \brm = ${\rightarrow_{\beta}^{*}}
 let-math \subst m x n = ${#m \sqbracket{#x \coloneq #n}}
@@ -286,69 +288,83 @@ LF term : tp → type =
             { \judgeStlc{\Gamma}{\lam{x}{A}{M}}{\arr{A}{B}} }
             {| \judgeStlc{\Gamma, x:A}{M}{B} |}
       |});
-      これと\Code.code(`lam`);は一見対応してないように見えますが、以下のような見方において一致しています。すなわち(Abs)のルールは「${A}の型の項が環境にある時に、仮にそれの名前をxとして${B}の型の項をつくることができる」ときに「${\arr{A}{B}}の型の項」をつくる規則であると考えることができます。この前者の部分がSTLCだと${\Gamma, x : A \vdash M : B}の形になり、一方でHOASではメタ言語の関数の形をとるだけで本質的には同じと考えることができるわけです。\todo{もっとわかりやすく}\todo{(Var)がない理由について}}
+      この規則と\Code.code(`lam`);は一見対応してないように見えますが、以下のような見方において一致しています。すなわち(Abs)のルールは「${A}の型の項が環境にある時に、仮にそれの名前をxとして${B}の型の項をつくることができる」ときに「${\arr{A}{B}}の型の項」をつくる規則であると考えることができます。この前者の部分がSTLCだと${\Gamma, x : A \vdash M : B}の形になり、一方でHOASではメタ言語の関数の形をとると考えることができるわけです。}
       +p{変数名を文字列で管理する方法に比べて、HOASは変数の取り扱いの面倒な部分をメタ言語に任せることができるため実装が楽になります。\todo{β簡約の例}
       }
-      +p{依存型は大変強力なので、STLCのβη正規形のためのデータ型をつくることさえ可能です。
-        \Code.d-code(`
+      +p{依存型は大変強力なので、STLCのβη正規形のためのデータ型をつくることさえ可能です。以前の章でβη簡約に基く正規形の定義をお見せしましたが、以下のような導出規則でも定義が可能です。
+      \todo{導出規則をかけ}
+      \math-list (${
+      |});
+      この定義が簡約ベースの正規形の定義と一致していることは当然自明ではないので証明が必要ですが、とりあえずここではそういうものだと思ってください。これをBelugaのコードに落としこむと以下のようになります。
+      \Code.d-code(`
 neut : tp → type.
 norm : tp → type.
 nlam : (neut a → norm b) → norm (arr a b).
 rapp : neut (arr a b) → norm a → neut b.
 embed : neut base → norm base.
       `);
+      正規形の定義は相互再帰的になっているため\Code.code(`LF`);では定義できません。変わりに今回使っている構文では一行ずつ新しいLF項を定義しています\footnote{\Code.code(`LF`);はコードを構造化するための糖衣構文で特に何か特別なことをやっているわけではありません。}。
       }
-
-    +Code.code(`
+      +p{
+        \Code.d-code(`
 schema ctx = some [a:tp] block x:neut a;
 
 stratified Sem : {g : ctx} [ ⊢ tp] -> ctype =
-    | Base : [g ⊢ norm base] → Sem [g] [ ⊢ base]
-    | Arr : {g : ctx} ({ h : ctx } {#S: [h ⊢ g]} Sem [h] [ ⊢ A] → Sem [h] [ ⊢ B]) → Sem [g] [ ⊢ arr A B]
+| Base : [g ⊢ norm base] → Sem [g] [ ⊢ base]
+| Arr : {g : ctx} ({ h : ctx } {#S: [h ⊢ g]} Sem [h] [ ⊢ A] → Sem [h] [ ⊢ B])
+                  → Sem [g] [ ⊢ arr A B]
 ;
 
 rec sem_wkn : {h : ctx} {g : ctx} {#S : [h ⊢ g]} Sem [g] [ ⊢ A] → Sem [h] [ ⊢ A]  =
-mlam h ⇒ mlam g ⇒ mlam S ⇒ fn e ⇒ case e of 
-    | Base [g ⊢ R] ⇒ Base [h ⊢ R[#S]]
-    | Arr [g] f ⇒ Arr [h] (mlam h' ⇒ mlam S' ⇒ f [h'] [h' ⊢ #S[#S']])
+  mlam h ⇒ mlam g ⇒ mlam S ⇒ fn e ⇒ case e of 
+  | Base [g ⊢ R] ⇒ Base [h ⊢ R[#S]]
+  | Arr [g] f ⇒ Arr [h] (mlam h' ⇒ mlam S' ⇒ f [h'] [h' ⊢ #S[#S']])
 ;
+        `);
+      }
+
+    +p{\Code.d-code(`
+schema tctx = some [t : tp] block x : term t;
 
 typedef Env : {g : tctx} {h : ctx} ctype =
-{T : [ ⊢ tp]} {#p : [g ⊢ term T[]]} Sem [h] [ ⊢ T]
+  {T : [ ⊢ tp]} {#p : [g ⊢ term T[]]} Sem [h] [ ⊢ T]
 ;
 
 rec env_ext : Env [g] [h] → Sem [h] [ ⊢ S] → Env [g, x : term S[]] [h]  =
-fn env ⇒ let  env : Env [g] [h] = env
-          in fn sem ⇒ mlam T ⇒ mlam p ⇒ case [g, x : term _ ⊢ #p] of 
-              | [ g, x : term S ⊢ x ] ⇒ sem
-              | [ g, x : term S ⊢ #q[..] ] ⇒ env [ ⊢ T ] [ g ⊢ #q ]
+  fn env ⇒ let env : Env [g] [h] = env
+    in fn sem ⇒ mlam T ⇒ mlam p ⇒ case [g, x : term _ ⊢ #p] of 
+       | [ g, x : term S ⊢ x ] ⇒ sem
+       | [ g, x : term S ⊢ #q[..] ] ⇒ env [ ⊢ T ] [ g ⊢ #q ]
 ;
 
 rec env_wkn : {h' : ctx} {h : ctx} {#W : [h' ⊢ h]} Env [g] [h] → Env [g] [h']  =
 mlam h' ⇒ mlam h ⇒ mlam W ⇒ fn env ⇒ 
-    let env : Env [g] [h] = env
-    in mlam T ⇒ mlam p ⇒ sem_wkn [h'] [h] [h' ⊢ #W] (env [ ⊢ T] [g ⊢ #p])
+  let env : Env [g] [h] = env
+  in mlam T ⇒ mlam p ⇒ sem_wkn [h'] [h] [h' ⊢ #W] (env [ ⊢ T] [g ⊢ #p])
 ;
 
 rec eval : [g ⊢ term S[]] → Env [g] [h] → Sem [h] [ ⊢ S]  =
 fn tm ⇒ fn env ⇒
-    let env : Env [g] [h] = env
-    in case tm of
-        | [g ⊢ #p] ⇒ env [ ⊢ _] [g ⊢ #p]
-        | [g ⊢ lam (\x. E)] ⇒
-              Arr [h] (mlam h' ⇒ mlam W ⇒ fn sem ⇒
-                          eval [g, x : term _ ⊢ E] (env_ext (env_wkn [h'] [h] [h' ⊢ #W] env) sem))
-        | [g ⊢ app E1 E2] ⇒ let Arr [h] f = eval [g ⊢ E1] env
-                             in f [h] [h ⊢ ..] (eval [g ⊢ E2] env)
+  let env : Env [g] [h] = env
+  in case tm of
+     | [g ⊢ #p] ⇒ env [ ⊢ _] [g ⊢ #p]
+     | [g ⊢ lam (\x. E)] ⇒
+       Arr [h] (mlam h' ⇒ mlam W ⇒ fn sem ⇒
+                  let extEnv = (env_ext (env_wkn [h'] [h] [h' ⊢ #W] env) sem)
+                  in eval [g, x : term _ ⊢ E] extEnv)
+     | [g ⊢ app E1 E2] ⇒ let Arr [h] f = eval [g ⊢ E1] env
+                           in f [h] [h ⊢ ..] (eval [g ⊢ E2] env)
 ;
     `);
+    }
+
     +Code.code(`
 mlam R ⇒ fn n ⇒ let [g ⊢ N] = n in [g ⊢ rapp R N];
 
 rec reify : Sem [h] [ ⊢ A] → [h ⊢ norm A[]] =
 fn sem ⇒ case sem of
-    | Base [h ⊢ R] ⇒ [h ⊢ R]
-    | Arr [g] f ⇒ let  [g, x : neut _ ⊢ N] =
+| Base [h ⊢ R] ⇒ [h ⊢ R]
+| Arr [g] f ⇒ let  [g, x : neut _ ⊢ N] =
                    reify (f [g, x : neut _] [g, x ⊢ ..] (reflect [g, x : neut _ ⊢ x]))
                    in [g ⊢ nlam (\x. N)]
 and reflect : [h ⊢ neut A[]] → Sem [h] [ ⊢ A] =
