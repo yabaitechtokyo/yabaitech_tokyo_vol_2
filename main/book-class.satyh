@@ -124,13 +124,19 @@ module Book : sig
   direct +section : [string?; inline-text; block-text] block-cmd
   direct +subsection : [string?; inline-text; block-text] block-cmd
   direct +definition : [inline-text?; string?; inline-text] block-cmd
+  direct \definition : [inline-text?; string?; inline-text] inline-cmd
   direct +theorem : [inline-text?; string?; inline-text] block-cmd
+  direct \theorem : [inline-text?; string?; inline-text] inline-cmd
   direct +example : [inline-text?; string?; inline-text] block-cmd
+  direct \example : [inline-text?; string?; inline-text] inline-cmd
   direct +notation : [inline-text?; string?; inline-text] block-cmd
+  direct \notation : [inline-text?; string?; inline-text] inline-cmd
   direct +lemma : [inline-text?; string?; inline-text] block-cmd
+  direct \lemma : [inline-text?; string?; inline-text] inline-cmd
   direct +corollary : [inline-text?; string?; inline-text] block-cmd
+  direct \corollary : [inline-text?; string?; inline-text] inline-cmd
   direct +proof : [inline-text?; inline-text] block-cmd
-  direct +environment : [inline-text; inline-text] block-cmd
+  direct \proof : [inline-text?; inline-text] inline-cmd
   direct \emph : [inline-text] inline-cmd
   direct \dfn : [inline-text] inline-cmd
   direct \roman : [inline-text] inline-cmd
@@ -923,17 +929,66 @@ end = struct
       line-break true true ctx
         (ib-heading ++ inline-skip (get-font-size ctx) ++ read-inline ctx inner ++ inline-fil ++ ib-box)
 
-  let-block ctx +environment category inner =
-    let ib-dfn =
-      let ctx =
-        ctx |> set-latin-font font-latin-sans
-            |> set-cjk-font font-cjk-gothic
-      in
-        read-inline ctx {#category;}
-    in
-    let ib-inner = read-inline ctx inner in
-      line-break true true ctx
-        (ib-dfn ++ inline-skip (get-font-size ctx) ++ ib-inner ++ inline-fil)
+  let-inline ctx \definition ?:wordopt ?:labelopt inner =
+    inline-fil ++ embed-block-breakable ctx
+      (read-block ctx (match (wordopt, labelopt) with
+                       | (None, None) -> '<+definition(inner);>
+                       | (Some(word), None) -> '<+definition?:(word)(inner);>
+                       | (None, Some(label)) -> '<+definition?*?:(label)(inner);>
+                       | (Some(word), Some(label)) -> '<+definition?:(word)?:(label)(inner);>
+                       ))
+
+  let-inline ctx \theorem ?:wordopt ?:labelopt inner =
+    inline-fil ++ embed-block-breakable ctx
+      (read-block ctx (match (wordopt, labelopt) with
+                       | (None, None) -> '<+theorem(inner);>
+                       | (Some(word), None) -> '<+theorem?:(word)(inner);>
+                       | (None, Some(label)) -> '<+theorem?*?:(label)(inner);>
+                       | (Some(word), Some(label)) -> '<+theorem?:(word)?:(label)(inner);>
+                       ))
+
+  let-inline ctx \lemma ?:wordopt ?:labelopt inner =
+    inline-fil ++ embed-block-breakable ctx
+      (read-block ctx (match (wordopt, labelopt) with
+                       | (None, None) -> '<+lemma(inner);>
+                       | (Some(word), None) -> '<+lemma?:(word)(inner);>
+                       | (None, Some(label)) -> '<+lemma?*?:(label)(inner);>
+                       | (Some(word), Some(label)) -> '<+lemma?:(word)?:(label)(inner);>
+                       ))
+
+  let-inline ctx \corollary ?:wordopt ?:labelopt inner =
+    inline-fil ++ embed-block-breakable ctx
+      (read-block ctx (match (wordopt, labelopt) with
+                       | (None, None) -> '<+corollary(inner);>
+                       | (Some(word), None) -> '<+corollary?:(word)(inner);>
+                       | (None, Some(label)) -> '<+corollary?*?:(label)(inner);>
+                       | (Some(word), Some(label)) -> '<+corollary?:(word)?:(label)(inner);>
+                       ))
+
+  let-inline ctx \example ?:wordopt ?:labelopt inner =
+    inline-fil ++ embed-block-breakable ctx
+      (read-block ctx (match (wordopt, labelopt) with
+                       | (None, None) -> '<+example(inner);>
+                       | (Some(word), None) -> '<+example?:(word)(inner);>
+                       | (None, Some(label)) -> '<+example?*?:(label)(inner);>
+                       | (Some(word), Some(label)) -> '<+example?:(word)?:(label)(inner);>
+                       ))
+
+  let-inline ctx \notation ?:wordopt ?:labelopt inner =
+    inline-fil ++ embed-block-breakable ctx
+      (read-block ctx (match (wordopt, labelopt) with
+                       | (None, None) -> '<+notation(inner);>
+                       | (Some(word), None) -> '<+notation?:(word)(inner);>
+                       | (None, Some(label)) -> '<+notation?*?:(label)(inner);>
+                       | (Some(word), Some(label)) -> '<+notation?:(word)?:(label)(inner);>
+                       ))
+
+  let-inline ctx \proof ?:wordopt inner =
+    inline-fil ++ embed-block-breakable ctx
+      (read-block ctx (match wordopt with
+                       | None -> '<+proof(inner);>
+                       | Some(word) -> '<+proof?:(word)(inner);>
+                       ))
 
   let get-number prefix label =
       match get-cross-reference (prefix ^ label ^ `:num`) with

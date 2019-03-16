@@ -261,6 +261,13 @@ let article = '<
 }
 +p{
   ${\Lambda}の帰納法を説明するために\dfn{写像の自由変数}について説明します．
+  先ほど定義した互換${\paren{x\ x'} : \Tm \to \Tm}は${\alpha}同値性を保ちます．
+
+  \lemma{
+    ${M_1 =_\alpha M_2}のとき${\paren{x\ x'} \cdot M_1 =_\alpha \paren{x\ x'} \cdot M_2}．
+  }
+
+  よって，互換は${\Lambda}上でwell-definedな写像です．
   ${f_1 : \Var \to \Lambda}を写像とします．
   ${f_1}に\dfn{自由変数の集合が定義される}とは，変数の有限集合${F \subseteq \Var}が存在して
 
@@ -302,25 +309,25 @@ let article = '<
   \footnote{より正確な定義は教科書を参照してください．
   Nominal set theoryでは写像${f}に自由変数の集合が定義されていることを${f}は\dfn{finitely supported}であると言います．
   また，${\fv{f}}を${\app{\mathrm{supp}}{f}}と書きます．}
-}
-+theorem?*?:(`alpha-structural-induction`) {
-  写像${f_1 : \Var \to \Lambda}，${f_2 : \Var \times \Lambda \to \Lambda}，${f_3 : \Lambda \times \Lambda \to \Lambda}をとる．
-  ${f_1,f_2,f_3}それぞれに自由変数の集合が定義されているとする．
-  さらに，以下の条件を満たすとする．
 
-  \eqn(${
-    x \nin \fv{f_1},\fv{f_2},\fv{f_3} \Longrightarrow \forall M.\ x \fresh \app{f_2}{x,M}
-  });
+  \theorem?*?:(`alpha-structural-induction`) {
+    写像${f_1 : \Var \to \Lambda}，${f_2 : \Var \times \Lambda \to \Lambda}，${f_3 : \Lambda \times \Lambda \to \Lambda}をとる．
+    ${f_1,f_2,f_3}それぞれに自由変数の集合が定義されているとする．
+    さらに，以下の条件を満たすとする．
 
-  すると写像${f : \Lambda \to \Lambda}であって，
-  \listing{
-  * ${\app{f}{x} = \app{f_1}{x}}
-  * ${\app{f}{\lambda x.M} = \app{f_2}{x, \app{f}{M}}} (ただし，${x \nin \fv{f_1},\fv{f_2},\fv{f_3}})
-  * ${\app{f}{M_1 M_2} = \app{f_3}{\app{f}{M_1}, \app{f}{M_2}}}
+    \eqn(${
+      x \nin \fv{f_1},\fv{f_2},\fv{f_3} \Longrightarrow \forall M.\ x \fresh \app{f_2}{x,M}
+    });
+
+    すると写像${f : \Lambda \to \Lambda}であって，
+    \listing{
+    * ${\app{f}{x} = \app{f_1}{x}}
+    * ${\app{f}{\lambda x.M} = \app{f_2}{x, \app{f}{M}}} (ただし，${x \nin \fv{f_1},\fv{f_2},\fv{f_3}})
+    * ${\app{f}{M_1 M_2} = \app{f_3}{\app{f}{M_1}, \app{f}{M_2}}}
+    }
+    を満たし，かつ自由変数の集合が定義されているようなものがただ一つ存在する．
   }
-  を満たし，かつ自由変数の集合が定義されているようなものがただ一つ存在する．
-}
-+p{
+
   この定理を用いることで，ラムダ項の\dfn{置換}を定義することができます．
   変数${x}とラムダ項${M}について，以下の写像${f_1,f_2,f_3}で定理により誘導される写像を${\app{\subst{M}{x}}{-} : \Lambda \to \Lambda}と書きます．
   ${\app{\subst{M}{x}}{-}}を適用することを${x}を${M}で\dfn{置換する}と言います．
@@ -736,14 +743,14 @@ let article = '<
   ラムダ項${M}と型${\tau}について，適当な環境${\Gamma}が存在して${\Gamma \vdash M : \tau}であるとき，${M}は\dfn{型${\tau}を持つ (has type ${\tau})}と言います．
   また，${M}が何らかの型を持つとき${M}は\dfn{型付け可能である (typeable)}と言います．
   このとき，以下の事実が成り立ちます．
-}
-+theorem?*?:(`curry-prop`){
-  \listing{
-    * ${M =_\beta M'}のとき，${\Gamma \vdash M : \tau \iff \Gamma \vdash M' : \tau}
-    * ${M}が型付け可能ならば${M}は強正規化可能．
+
+  \theorem?*?:(`curry-prop`){
+    \listing{
+      * ${M =_\beta M'}のとき，${\Gamma \vdash M : \tau \iff \Gamma \vdash M' : \tau}
+      * ${M}が型付け可能ならば${M}は強正規化可能．
+    }
   }
-}
-+p{
+
   型付け可能なラムダ項には${\beta}簡約と並んで有名な\dfn{${\eta}展開}という変換規則が定義されます．
   \footnote{${\eta}展開は型無しのラムダ項にも定義できますが，今回は型付きの場合しか考えません．}
   ${\eta}展開は以下の規則に加えて${\beta}簡約のときと同様の追加規則により定義されます．
@@ -755,13 +762,13 @@ let article = '<
   ${\mathord{\to_\beta} \cup \mathord{\to_\eta}}の反射推移対称閉包を${=_{\beta\eta}}と書きます．
   ${M =_{\beta\eta} N}であるとき，${M}と${N}は\dfn{${\beta\eta}同値である}と言います．
   ${\beta\eta}同値性について\ref-theorem(`curry-prop`);の前半の一般化が成り立ちます．
-}
-+theorem{
-  \listing{
-    * ${M =_{\beta\eta} M'}のとき，${\Gamma \vdash M : \tau \iff \Gamma \vdash M' : \tau}
+
+  \theorem{
+    \listing{
+      * ${M =_{\beta\eta} M'}のとき，${\Gamma \vdash M : \tau \iff \Gamma \vdash M' : \tau}
+    }
   }
-}
-+p{
+
   しかし，\ref-theorem(`curry-prop`);の後半の一般化は成り立ちません．
   なぜなら，例えば${\lambda x.M}や${M N}のような項について(それらが適当な型を持つなら)以下のような無限簡約列が存在するからです．\cite[`JayG95`];
 
@@ -788,13 +795,13 @@ let article = '<
   加えて，定義より${\to_{\eta'} \subseteq \to_\eta}です．
   よって${M =_{\beta\eta'} N}と${M =_{\beta\eta} N}は同値です．
   さらに${\eta'}展開に対しては\ref-theorem(`curry-prop`);の後半の一般化が成立します．
-}
-+theorem?*?:(`curry-prop2`){
-  \listing{
-    * ${M}が型付け可能ならば${M}は${\beta\eta'}強正規化可能．
+
+  \theorem?*?:(`curry-prop2`){
+    \listing{
+      * ${M}が型付け可能ならば${M}は${\beta\eta'}強正規化可能．
+    }
   }
-}
-+p{
+
   長${\eta}${\beta}正規形を\dfn{標準形 (canonical form)}と言います．
   \ref-theorem(`curry-prop2`);より任意の項に対してその標準形が存在し\footnote{この性質を\dfn{canonicity}と言います}，しかもそれが計算可能です．
   以降では単に\dfn{正規化}といった場合標準形を計算する操作を指します．
@@ -1804,11 +1811,11 @@ let article = '<
   この項は${\omicron}型なので，論理式です．
   この論理式を${\phi_1 \mathrel{\spadesuit} \phi_2}と書くことにします．
   すると，以下が成り立ちます．
-}
-+lemma{
-  任意の構造${\M}と付値${\theta}について，${\M,\theta \vDash \phi_1 \mathrel{\spadesuit} \phi_2}であるとき，かつそのときに限り${\M,\theta \vDash \phi_1}かつ${\M,\theta \vDash \phi_2}
-}
-+p{
+
+  \lemma{
+    任意の構造${\M}と付値${\theta}について，${\M,\theta \vDash \phi_1 \mathrel{\spadesuit} \phi_2}であるとき，かつそのときに限り${\M,\theta \vDash \phi_1}かつ${\M,\theta \vDash \phi_2}
+  }
+
   よって，上で定義した${\mathrel{\spadesuit}}は通常の論理で言う論理積 (conjunction)と見なせます．
   これと同じことがより一般に直観主義論理の基本的な論理結合子\footnote{線形論理でいうところのnegativeな結合子．あるいは，圏論的意味論で右随伴によって意味が定められる結合子．}について成り立ちます．\cite[`Farmer08`];
   論理結合子${\top}，${\land}，${\to}，${\forall}を以下のように定義します．
@@ -1821,18 +1828,18 @@ let article = '<
   ];
 
   すると，以下の補題が成り立ちます．
-}
-+lemma{
-  任意の構造${\M}と付値${\theta}について
-  \listing{
-    * ${\M,\theta \vDash \top}
-    * ${\M,\theta \vDash \phi_1 \land \phi_2}であるとき，かつそのときに限り，${\M,\theta \vDash \phi_1}かつ${\M,\theta \vDash \phi_2}
-    * ${\M,\theta \vDash \phi_1 \to \phi_2}であるとき，かつそのときに限り，${\M,\theta \vDash \phi_1}ならば${\M,\theta \vDash \phi_2}
-    * ${\M,\theta \vDash \forall x^\tau.\phi}であるとき，かつそのときに限り，任意の元${a \in D_\tau}について${\M,\subst{a}{x} \theta \vDash \phi}
+
+  \lemma{
+    任意の構造${\M}と付値${\theta}について
+    \listing{
+      * ${\M,\theta \vDash \top}
+      * ${\M,\theta \vDash \phi_1 \land \phi_2}であるとき，かつそのときに限り，${\M,\theta \vDash \phi_1}かつ${\M,\theta \vDash \phi_2}
+      * ${\M,\theta \vDash \phi_1 \to \phi_2}であるとき，かつそのときに限り，${\M,\theta \vDash \phi_1}ならば${\M,\theta \vDash \phi_2}
+      * ${\M,\theta \vDash \forall x^\tau.\phi}であるとき，かつそのときに限り，任意の元${a \in D_\tau}について${\M,\subst{a}{x} \theta \vDash \phi}
+    }
+    が成り立つ．
   }
-  が成り立つ．
-}
-+p{
+
   以上の論理結合子を用いることで，他の様々な論理結合子も定義することができます．
 
   \align[
@@ -1867,24 +1874,25 @@ let article = '<
 
   この${\doteq}は\dfn{Leibniz equality}と呼ばれる等号の定義です．
   ややびっくりするような定義ですが，これが実際に等号としての機能を果たすことはすぐにわかります．
-}
-+lemma{
-  上で定義した${\doteq}について，${\M,\theta \vDash M_1 \doteq M_2}であるとき，かつそのときに限り，${\den{M_1}^\M_{\tau,\theta} = \den{M_2}^\M_{\tau,\theta}}．
-}
-+proof{
-  ${\M,\theta \vDash M_1 \doteq M_2}ならば${\den{M_1}^\M_{\tau,\theta} = \den{M_2}^\M_{\tau,\theta}}を示す．(逆は明らか．)
-  定義より${\M,\theta \vDash \forall P^{\tau \to \omicron}. \mathop{P} M_1 \to \mathop{P} M_2}なので，任意の関数${P : D_\tau \to \Omega}について${\app{P}{\den{M_1}^\M_{\tau,\theta}} = 0}ならば${\app{P}{\den{M_2}^\M_{\tau,\theta}} = 0}である．
-  ここで，${P}として，
-  \eqn(${
-    \app{P}{x} = \cases![
-      (${0}, {${x = \den{M_1}^\M_{\tau,\theta}}のとき});
-      (${1}, {そうでないとき})
-    ]
-  });%
-  をとると，${\app{P}{\den{M_1}^\M_{\tau,\theta}} = 0}なので，${\app{P}{\den{M_2}^\M_{\tau,\theta}} = 0}である．
-  ${\app{P}{x}}が${0}を値にとるのは${x = \den{M_1}^\M_{\tau,\theta}}のときだけなので，${\den{M_1}^\M_{\tau,\theta} = \den{M_2}^\M_{\tau,\theta}}である．
-}
-+p{
+
+  \lemma{
+    上で定義した${\doteq}について，${\M,\theta \vDash M_1 \doteq M_2}であるとき，かつそのときに限り，${\den{M_1}^\M_{\tau,\theta} = \den{M_2}^\M_{\tau,\theta}}．
+  }
+
+  \proof{
+    ${\M,\theta \vDash M_1 \doteq M_2}ならば${\den{M_1}^\M_{\tau,\theta} = \den{M_2}^\M_{\tau,\theta}}を示す．(逆は明らか．)
+    定義より${\M,\theta \vDash \forall P^{\tau \to \omicron}. \mathop{P} M_1 \to \mathop{P} M_2}なので，任意の関数${P : D_\tau \to \Omega}について${\app{P}{\den{M_1}^\M_{\tau,\theta}} = 0}ならば${\app{P}{\den{M_2}^\M_{\tau,\theta}} = 0}である．
+    ここで，${P}として，
+    \eqn(${
+      \app{P}{x} = \cases![
+        (${0}, {${x = \den{M_1}^\M_{\tau,\theta}}のとき});
+        (${1}, {そうでないとき})
+      ]
+    });%
+    をとると，${\app{P}{\den{M_1}^\M_{\tau,\theta}} = 0}なので，${\app{P}{\den{M_2}^\M_{\tau,\theta}} = 0}である．
+    ${\app{P}{x}}が${0}を値にとるのは${x = \den{M_1}^\M_{\tau,\theta}}のときだけなので，${\den{M_1}^\M_{\tau,\theta} = \den{M_2}^\M_{\tau,\theta}}である．
+  }
+
   このように${\doteq}を基本とせずとも等価な表現能力を持つ高階論理を定義することができます．
   \footnote{ただし，高階論理の演繹体系を考える場合(少なくともこの記事の範囲では)${\doteq}を基本とする形式のほうが都合がよいです．}
 }
@@ -1937,36 +1945,36 @@ let article = '<
 +p{
   この体系では，自然演繹に通常要請される性質が問題なく成立します．
   たとえば，証明の構造規則として弱化と置換の規則が許容可能になります．
-}
-+lemma{
-  以下の規則は許容可能である．
-  \math-list(${
-  | \derive{| \Phi \vdash_\Gamma \phi |}{ \psi, \Phi \vdash_\Gamma \phi }
-  | \derive{| \Phi \vdash_\Gamma \psi | \psi, \Phi \vdash_\Gamma \phi |}{ \Phi \vdash_\Gamma \phi }
-  |});
-}
-+p{
+
+  \lemma{
+    以下の規則は許容可能である．
+    \math-list(${
+    | \derive{| \Phi \vdash_\Gamma \phi |}{ \psi, \Phi \vdash_\Gamma \phi }
+    | \derive{| \Phi \vdash_\Gamma \psi | \psi, \Phi \vdash_\Gamma \phi |}{ \Phi \vdash_\Gamma \phi }
+    |});
+  }
+
   また，仮定についてのみならず型環境についても期待される性質が成り立ちます．
-}
-+lemma{
-  以下の規則は許容可能である．
-  \math-list(${
-  | \derive{| \Phi \vdash_\Gamma \phi |}{ \Phi \vdash_{\set{x : \app{\A}{x}} \cup \Gamma} \phi }
-  | \derive{| \Gamma \vdash M : \tau | \Phi \vdash_{\set{x : \tau} \cup \Gamma} \phi |}{ \subst{M}{x} \Phi \vdash_\Gamma \subst{M}{x} \phi }
-  |});
-}
-+p{
+
+  \lemma{
+    以下の規則は許容可能である．
+    \math-list(${
+    | \derive{| \Phi \vdash_\Gamma \phi |}{ \Phi \vdash_{\set{x : \app{\A}{x}} \cup \Gamma} \phi }
+    | \derive{| \Gamma \vdash M : \tau | \Phi \vdash_{\set{x : \tau} \cup \Gamma} \phi |}{ \subst{M}{x} \Phi \vdash_\Gamma \subst{M}{x} \phi }
+    |});
+  }
+
   ${\IPC^\to}の場合と同様の理由で高階論理の判断の左辺は集合ではなく(有限の)リストとして定義しても証明可能性は変わりません．
   その場合，交換規則と縮約規則が許容可能になります．
   同様に，型環境をリストとして定義することも可能です．
 }
 +p{
   この演繹体系は集合論的意味論に対して(強い)健全性を持ちます．
-}
-+theorem{
-  ${E \vdash_\Gamma \phi}のとき${E \vDash \phi}が成り立つ．
-}
-+p{
+
+  \theorem{
+    ${E \vdash_\Gamma \phi}のとき${E \vDash \phi}が成り立つ．
+  }
+
   一方でその逆，つまり集合論的意味論に対する完全性は成立しません．
   \footnote{一般に，高階論理の集合論的意味論に対して健全性・完全性・実効性(証明体系のある種の有限性)の全てを満たす演繹体系は存在しないことが知られています．
   今回の体系は健全性と実効性を持つので完全性を持ちません．
