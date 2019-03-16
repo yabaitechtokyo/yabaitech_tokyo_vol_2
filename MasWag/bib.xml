@@ -131,6 +131,16 @@ Robust Satisfaction of Temporal Logic over Real-Valued Signals.
 <crossref>conf/formats/2010</crossref>
 <url>db/conf/formats/formats2010.html#DonzeM10</url>
 </inproceedings>
+<inproceedings key="conf/formats/Finkel06" mdate="2017-05-26">
+<author>Olivier Finkel</author>
+<title>Undecidable Problems About Timed Automata.</title>
+<pages>187-199</pages>
+<year>2006</year>
+<crossref>conf/formats/2006</crossref>
+<booktitle>FORMATS</booktitle>
+<ee>https://doi.org/10.1007/11867340_14</ee>
+<url>db/conf/formats/formats2006.html#Finkel06</url>
+</inproceedings>
 <book key="HopcroftMU2003">
 <author>J. ホップクロフト</author>
 <author>R. モトワニ</author>
@@ -169,6 +179,34 @@ Specifying Real-Time Properties with Metric Temporal Logic.
 <ee>https://doi.org/10.1007/BF01995674</ee>
 <ee>https://www.wikidata.org/entity/Q56225957</ee>
 </article>
+<article key="journals/fmsd/KrichenT09" mdate="2018-11-30">
+<author>Moez Krichen</author>
+<author orcid="0000-0002-1777-493X">Stavros Tripakis</author>
+<title>Conformance testing for real-time systems.</title>
+<pages>238-304</pages>
+<year>2009</year>
+<volume>34</volume>
+<journal>Formal Methods in System Design</journal>
+<number>3</number>
+<ee>https://doi.org/10.1007/s10703-009-0065-1</ee>
+<url>db/journals/fmsd/fmsd34.html#KrichenT09</url>
+</article>
+<article key="journals/rts/LorberRNA17" mdate="2018-11-30">
+<author>Florian Lorber</author>
+<author orcid="0000-0003-0255-0885">Amnon Rosenmann</author>
+<author>Dejan Nickovic</author>
+<author>Bernhard K. Aichernig</author>
+<title>
+Bounded determinization of timed automata with silent transitions.
+</title>
+<pages>291-326</pages>
+<year>2017</year>
+<volume>53</volume>
+<journal>Real-Time Systems</journal>
+<number>3</number>
+<ee type="oa">https://doi.org/10.1007/s11241-017-9271-x</ee>
+<url>db/journals/rts/rts53.html#LorberRNA17</url>
+</article>
 <inproceedings key="conf/formats/MalerN04" mdate="2018-11-14">
 <author>Oded Maler</author>
 <author>Dejan Nickovic</author>
@@ -182,5 +220,32 @@ Monitoring Temporal Properties of Continuous Signals.
 <crossref>conf/formats/2004</crossref>
 <booktitle>FORMATS/FTRTFT</booktitle>
 <url>db/conf/formats/formats2004.html#MalerN04</url>
+</inproceedings>
+<inproceedings key="conf/formats/UlusFAM14" mdate="2017-05-26">
+<author>Dogan Ulus</author>
+<author>Thomas Ferrère</author>
+<author>Eugene Asarin</author>
+<author>Oded Maler</author>
+<title>Timed Pattern Matching.</title>
+<pages>222-236</pages>
+<year>2014</year>
+<booktitle>FORMATS</booktitle>
+<ee>https://doi.org/10.1007/978-3-319-10512-3_16</ee>
+<crossref>conf/formats/2014</crossref>
+<url>db/conf/formats/formats2014.html#UlusFAM14</url>
+</inproceedings>
+<inproceedings key="conf/formats/WagaHS17" mdate="2018-11-02">
+<author orcid="0000-0001-9360-7490">Masaki Waga</author>
+<author>Ichiro Hasuo</author>
+<author orcid="0000-0002-7466-8789">Kohei Suenaga</author>
+<title>
+Efficient Online Timed Pattern Matching by Automata-Based Skipping.
+</title>
+<pages>224-243</pages>
+<year>2017</year>
+<booktitle>FORMATS</booktitle>
+<ee>https://doi.org/10.1007/978-3-319-65765-3_13</ee>
+<crossref>conf/formats/2017</crossref>
+<url>db/conf/formats/formats2017.html#WagaHS17</url>
 </inproceedings>
 </dblp>

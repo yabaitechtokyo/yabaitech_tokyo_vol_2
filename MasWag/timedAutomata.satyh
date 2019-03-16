@@ -29,13 +29,16 @@ let timedAutomata = '<+section{時間オートマトン} <
 >
 +subsection{時間オートマトン (構文論)} <
 +p {時間オートマトンでは、有限個の\dfn{クロック変数} (clock variable)を用いることで時刻付きワードのタイムスタンプ間の制約を表現します。
+各クロック変数は時刻付きワードのタイムスタンプの増加と同じだけ増えます。
+また、遷移の際にはクロック変数の値を${0}にリセットすることもできるので、遷移が起こった際のイベントからの時間経過を表すこともできます。
+遷移の際にガード制約を用いることで、クロック変数の値が特定の条件を充たすときだけ遷移を許可することができます。
 クロック変数の集合${\Clock}について、以下のBNFで定義される制約の集合を${\Guard}で表します。
-   但し${\clock \in \Clock}、${\bowtie \in \set{\geq, >, =, <, \leq}}、${k \in \Z}とする。
+   但し${\clock \in \Clock}、${\bowtie \in \set{\geq, >, =, <, \leq}}、${k \in \Z}とします。
 }
 +BNF (${\guard}) ([[${\clock \bowtie k}; ${\guard \land \guard}]]);
 +definition ?:({時間オートマトン}) ?:(`def:TA`)
 {
-  有限の文字集合${\alphabet}とについて、\dfn{時間オートマトン}${\Autom}は6つ組${\paren{\alphabet,\Loc,\InitLoc,\AccLoc,\Clock,\Edge}}である。
+  有限の文字集合${\alphabet}について、\dfn{時間オートマトン}${\Autom}は6つ組${\paren{\alphabet,\Loc,\InitLoc,\AccLoc,\Clock,\Edge}}である。
   但し、${\alphabet}は有限の文字集合、
   ${\Loc}は有限の状態集合、
   ${\InitLoc\subseteq \Loc}は初期状態の集合、
@@ -64,22 +67,31 @@ ${\edge_4 = \paren{\loc_1, y \geq 5, b, \emptyset,\loc_2}}と表記する。
 >
 +subsection{時間オートマトン (意味論)} <
 +p{
-クロック変数の集合 ${\Clock}について、関数${\cval\colon \Clock \to \Rnn}を\dfn{クロック割り当て} (clock valuation) と呼ぶ。
-クロック割り当て${\cval}と${\duration \in \Rnn}について、${\cval + \duration}を${\app{\paren{\cval + \duration}}{\clock} = \app{\cval}{\clock} + \duration}を充たすクロック割り当てと定義する。
-クロック割り当て${\paren{\cval + \duration}}の直感は、${\cval}を${\duration}時間経過させたクロック割り当てである。
-クロック割り当て${\cval}とクロック変数の部分集合${\resets \subseteq \Clock}について、${\reset{\cval}{\resets}}を以下を充たすクロック割り当てと定義する。
-クロック割り当て${\reset{\cval}{\resets}}の直感は${\cval}を${\clock \in \resets}についてリセットしたクロック割り当てである。
+クロック変数の集合 ${\Clock}について、関数${\cval\colon \Clock \to \Rnn}を\dfn{クロック割り当て} (clock valuation) と呼びます。
+クロック割り当て${\cval}と${\duration \in \Rnn}について、${\cval + \duration}を用いて、${\cval}を${\duration}時間だけ経過させたクロック割り当てを表記します。
+つまり、${\cval + \duration}は各${\clock \in \Clock}について、${\app{\paren{\cval + \duration}}{\clock} = \app{\cval}{\clock} + \duration}を充たすクロック割り当てです。
+クロック変数のリセットは、
+クロック割り当て${\cval}とクロック変数の部分集合${\resets \subseteq \Clock}について、各${\clock \in \resets}がリセットされ、それ以外のクロック変数はそのままである様なクロック割り当てを${\reset{\cval}{\resets}}と表記します。
+形式的には、${\reset{\cval}{\resets}}は以下を充たすクロック割り当てです。
 \eqn(${
 \app{\reset{\cval}{\resets}}{\clock} = 
 \cases!(
         [(${0}, {${\clock \in \resets} のとき});
         (${\app{\cval}{\clock}}, {${\clock \nin \resets} のとき})])
 });
-クロック割り当て${\cval}とクロック制約${\guard}について、${\cval}が${\guard}を充たすとき${\cval \models \guard}と表記し、充たさないとき${\cval \nmodels \guard}と表記する。
-全てのクロック変数 ${\clock \in \Clock}について${0}を返すクロック割り当てを${\initcval}と表記する。
+クロック割り当て${\cval}とクロック制約${\guard}について、${\cval}が${\guard}を充たすとき${\cval \models \guard}と表記し、充たさないとき${\cval \nmodels \guard}と表記します。
+全てのクロック変数 ${\clock \in \Clock}について${0}を返すクロック割り当てを${\initcval}と表記します。
+}
++p{
+  時間オートマトンの意味論は\dfn{時間状態遷移システム} (timed transition system, TTS) と呼ばれる状態遷移システムを用いて定式化されます。
+  時間状態遷移システムは時間オートマトンの\dfn{状況} (configuration) ${\state \in \State}の移り変りを表現します。
+  時間オートマトンの状況は状態${\loc \in \Loc}とクロック割り当て${\cval \in \CVal}の対です。
+  直感的には状況 ${\paren{\loc, \cval}}は、「状態${\loc}にいて、クロック変数${\clock \in \Clock}の値が${\cval\paren{\clock}}である」という状況を表しています。
+  時間状態遷移システムの状況${\paren{\loc, \cval}}の、クロック割り当て${\cval \in \CVal}は時間${\duration}が経過すると${\cval + \duration}へと変化し、ガード条件${\guard}を充たす、つまり ${\paren{\cval + \duration} \models \guard}でありイベント${a}が起こったときに遷移を行うことができ、変数${\clock \in \resets}がリセットされます。
+  一連の状況の移り変わりを\dfn{動作} (run)と呼びます。
 }
 +definition ?:({時間状態遷移システム}) ?:(`def:TTS`) {
-時間オートマトン${\AutomWith}について、\dfn{時間状態遷移システム} (timed transition system, TTS) は以下の4つ組${\paren{\State, \InitState, \AccState, \Transition}}である。
+時間オートマトン${\AutomWith}について、\dfn{時間状態遷移システム} (timed transition system, TTS) は4つ組${\paren{\State, \InitState, \AccState, \Transition}}である。
 但し、${\State = \Loc \times \CVal}は\dfn{状況} (configuration)の集合、
 ${\InitState = \InitLoc \times \set{\initcval} \paren{\subseteq \State}}は\dfn{初期状況} (initial configuration)の集合、
 ${\AccState = \AccLoc \times \CVal \paren{\subseteq \State}}は\dfn{受理状況} (accepting configuration)の集合、

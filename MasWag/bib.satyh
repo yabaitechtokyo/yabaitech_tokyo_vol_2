@@ -39,7 +39,7 @@ let maswag-bibliography = [
 
 
   (`series/lncs/BartocciDDFMNS18`, InProceedings(|
-    author = {|Ezio Bartocci, Jyotirmoy V. Deshmukh, Alexandre Donzé, Georgios E. Fainekos, Oded Maler, Dejan Nickovic, Sriram Sankaranarayanan|};
+    author = {|Ezio Bartocci, Jyotirmoy V. Deshmukh, Alexandre Donz, Georgios E. Fainekos, Oded Maler, Dejan Nickovic, Sriram Sankaranarayanan|};
     title = {Specification-Based Monitoring of Cyber-Physical Systems: A Survey on Theory, Tools and Applications.};
     booktitle = {Lectures on Runtime Verification};
     series = None; 
@@ -51,7 +51,7 @@ let maswag-bibliography = [
 
 
   (`series/lncs/10457`, Book(|
-    author = {|Ezio Bartocci, Yliès Falcone|};
+    author = {|Ezio Bartocci, Ylis Falcone|};
     title = {Lectures on Runtime Verification - Introductory and Advanced Topics};
     publisher = {Springer};
     year = 2018;
@@ -59,7 +59,7 @@ let maswag-bibliography = [
 
 
   (`conf/qest/BehrmannDLHPYH06`, InProceedings(|
-    author = {|Gerd Behrmann, Alexandre David, Kim Guldstrand Larsen, John Håkansson, Paul Pettersson, Wang Yi, Martijn Hendriks|};
+    author = {|Gerd Behrmann, Alexandre David, Kim Guldstrand Larsen, John Hkansson, Paul Pettersson, Wang Yi, Martijn Hendriks|};
     title = {UPPAAL 4.0.};
     booktitle = {QEST};
     series = None; 
@@ -83,7 +83,7 @@ let maswag-bibliography = [
 
 
   (`conf/cav/Donze10`, InProceedings(|
-    author = {|Alexandre Donzé|};
+    author = {|Alexandre Donz|};
     title = {Breach, A Toolbox for Verification and Parameter Synthesis of Hybrid Systems.};
     booktitle = {CAV};
     series = None; 
@@ -95,7 +95,7 @@ let maswag-bibliography = [
 
 
   (`conf/formats/DonzeM10`, InProceedings(|
-    author = {|Alexandre Donzé, Oded Maler|};
+    author = {|Alexandre Donz, Oded Maler|};
     title = {Robust Satisfaction of Temporal Logic over Real-Valued Signals.};
     booktitle = {FORMATS};
     series = None; 
@@ -103,6 +103,18 @@ let maswag-bibliography = [
     number = None; 
     pages = (92,106);
     year = 2010;
+  |));
+
+
+  (`conf/formats/Finkel06`, InProceedings(|
+    author = {|Olivier Finkel|};
+    title = {Undecidable Problems About Timed Automata.};
+    booktitle = {FORMATS};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (187,199);
+    year = 2006;
   |));
 
 
@@ -136,6 +148,28 @@ let maswag-bibliography = [
   |));
 
 
+  (`journals/fmsd/KrichenT09`, Article(|
+    author = {|Moez Krichen, Stavros Tripakis|};
+    title = {Conformance testing for real-time systems.};
+    journal = {Formal Methods in System Design};
+    volume = Some(34);
+    number = Some({3});
+    pages = (238,304);
+    year = 2009;
+  |));
+
+
+  (`journals/rts/LorberRNA17`, Article(|
+    author = {|Florian Lorber, Amnon Rosenmann, Dejan Nickovic, Bernhard K. Aichernig|};
+    title = {Bounded determinization of timed automata with silent transitions.};
+    journal = {Real-Time Systems};
+    volume = Some(53);
+    number = Some({3});
+    pages = (291,326);
+    year = 2017;
+  |));
+
+
   (`conf/formats/MalerN04`, InProceedings(|
     author = {|Oded Maler, Dejan Nickovic|};
     title = {Monitoring Temporal Properties of Continuous Signals.};
@@ -145,6 +179,30 @@ let maswag-bibliography = [
     number = None; 
     pages = (152,166);
     year = 2004;
+  |));
+
+
+  (`conf/formats/UlusFAM14`, InProceedings(|
+    author = {|Dogan Ulus, Thomas Ferrre, Eugene Asarin, Oded Maler|};
+    title = {Timed Pattern Matching.};
+    booktitle = {FORMATS};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (222,236);
+    year = 2014;
+  |));
+
+
+  (`conf/formats/WagaHS17`, InProceedings(|
+    author = {|Masaki Waga, Ichiro Hasuo, Kohei Suenaga|};
+    title = {Efficient Online Timed Pattern Matching by Automata-Based Skipping.};
+    booktitle = {FORMATS};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (224,243);
+    year = 2017;
   |));
 
 

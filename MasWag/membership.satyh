@@ -4,17 +4,22 @@
 @import: bib
 
 let membership = '<+section{所属性判定} <
-+problem{所属性判定問題}
- {文字集合${\alphabet}上の時間オートマトン${\Autom}と時刻付きワード ${\word}}
- {${\word \in \Lg{\Autom}} であるかどうかを判定する。}
 +p {
-\figure ?:(`fig:membership-algorithm`){所属性判定問題を解くアルゴリズムの例}<
+  \figure ?:(`fig:membership-algorithm`){所属性判定問題を解くアルゴリズムの例}<
    +image-frame{
    \insert-pdf-image(12cm)(`../MasWag/figs/algorithm.pdf`)(1);
-}
->
+   }
+ >
+ \dfn{所属性判定問題}は、時間オートマトン${\Autom}と時刻付きワード ${\word}について、${\word}が${\Autom}の表わす言語に所属しているかどうかを判定する問題です。
+ 所属判定問題は、\ref-figure(`fig:membership-algorithm`);にあるように、
+ 時刻付きワードの各イベント${\eventi{i}}とそのタイムスタンプ${\tsi{i}}について、状況${\paren{\state,\cval} \in \CurrConf}の移り変わりを追っていくことで解くことができます。
+ NFAについて同様のアルゴリズムを用いて所属性判定問題を解く場合、${\CurrConf}は${\Loc}の部分集合なので${\CurrConf}の大きさが時間オートマトンの大きさで抑えられます。
+ 一方で時間オートマトンの場合は${\CurrConf}は${\Loc \times \CVal}の部分集合であり、${\CVal}は一般には無限集合なので${\CurrConf}の大きさを定数で抑えることができません。
 }
 +subsection{所属性判定問題の計算量}<
++p{
+  時間オートマトンの所属性判定問題はNP完全であることが知られています\cite([`conf/rtss/AlurKV98`]);が、本節ではその証明をします。まずは所属性判定問題がNPに含まれることを示します。
+}
 +theorem ?* ?:(`theorem:NP-complete`) {
 時間オートマトンの所属性判定問題はNPに属する。
 }
@@ -29,16 +34,21 @@ let membership = '<+section{所属性判定} <
 制約${\mathcal{C}}は線形計画問題であるので、例えばカーマーカーのアルゴリズム\cite([`journals/combinatorica/Karmarkar84`]); を用いることで制約の大きさについて多項式時間で解くことができる。
 \footnote{線形計画問題の充足可能性問題は線形計画法で解くことができます。例えば${Ax \geq b}の充足可能性問題は制約${Ax + \paren{y y \cdots y}^{T} \geq b}の元で${y}を最小化することで線形計画法に帰着することができます。具体的には${y}の最小値が${0}以下のときに${Ax \geq b}が充足可能となります。}今回制約の大きさは時刻付きワード ${\word}の長さと各状態遷移 ${\edge \in \Edge}に含まれる制約${\guard}の大きさ、及びクロック変数${\Clock}の個数についての多項式で表わすことができる。従って時間オートマトンの所属性判定問題はNPに属する。
 }
++p{
+ 次に所属性判定問題がNP困難であることを示します。
+}
 +theorem ?* ?:(`theorem:NP-hard`) {
 任意のNP問題は時間オートマトンの所属性判定問題に帰着できる。
 }
++p{
+ 所属性判定問題がNP困難であることを、ハミルトニアン路問題を所属性判定問題に多項式時間帰着させることで示します。
+ ハミルトニアン路とは、有向グラフの路 (path)で、全ての頂点を一度だけ通るようなもののことで、ハミルトニアン路問題は、与えられた有向グラフがハミルトニアン路を持つかどうかを判定する問題です。
+ ハミルトニアン路問題はNP困難であることが知られているので、この問題を時間オートマトンの所属性判定問題に多項式時間帰着させることで、所属性判定問題もNP困難であることが示せます。
+}
 +problem{ハミルトニアン路問題} 
 {有向グラフ ${G = \paren{V,E}}}
-{有向グラフ${G}がハミルトニアン路を持つかどうかを判定する。つまり${G}上の閉路${v_0,e_1,v_1,\ldots,e_n,v_n}で全ての頂点を一度だけ通るものが存在するかどうかを判定する。}
-+p{
-TODO: ハミルトニアン路問題の定義と説明
-}
-+proof {
+{有向グラフ${G}がハミルトニアン路を持つかどうかを判定する。つまり${G}上の路${v_0,e_1,v_1,\ldots,e_n,v_n}で全ての頂点を一度だけ通るものが存在するかどうかを判定する。}
++proof ?:({\ref-theorem(`theorem:NP-hard`);}) {
 ハミルトニアン路問題を時間オートマトンの所属性判定問題に多項式時間帰着させることで\ref-theorem(`theorem:NP-complete`);を示す。
 ハミルトニアン路問題の入力の有向グラフを${G = \paren{V,E}}とする。
 時間オートマトン${\AutomWith}を以下の様に定義する。
@@ -85,7 +95,15 @@ ${z}がこれまでに通過した頂点の個数、${\clock_{i}}が頂点${\loc
 時間オートマトンの所属性判定問題はNP完全問題である。
 }
 >
-+subsection{オートマトンを固定したときの所属性判定問題}<
++subsection ?:(`subsec:polynomial-membership`) {オートマトンを固定したときの所属性判定問題}<
++p{
+  モニタリングの文脈では、モニタリングする仕様を表わす時間オートマトン${\Autom}は固定されていて、モニタリング対象のログを表わす時刻付きワード${\word}が長くなっていくような問題設定を考えることが自然です。
+  時間オートマトンの所属性判定問題は、時間オートマトン${\Autom}を固定した際には多項式時間で解くことができることがわかります。
+  これは直感としては以下の理由によるものです。
+  各イベントとタイムスタンプ${\paren{\eventi{i},\tsi{i}}}を読んだとき、各クロック変数${\clock \in \Clock}について、値${\cval\paren{\clock}}は直近で${\clock}がリセットされた時刻${\ts}を用いて${\cval\paren{\clock} = \tsi{i} - \ts}と表わすことができますが、変数のリセットは過去に読んだイベントと同時にしか起こらないため、各クロック変数のの値の取り方は入力の時刻付きワード${\word}の長さ${\abs{\word}}通りで抑えることができます。
+  従って、\ref-figure(`fig:membership-algorithm`);の疑似コード中の${\CurrConf}の大きさは${\abs{\Loc} \times \abs{\word}^{\abs{\Clock}}}で抑えられ、現在クロック変数${\Clock}は固定されているので、${\CurrConf}の大きさは時刻付きワード${\word}の長さの多項式で抑えることができます。
+  全体としては、${\CurrConf}の更新は${\abs{\word}}回行われますが、結局${\abs{\word}}についての多項式時間で所属性判定問題を解くことができます。
+}
 +theorem {
 入力の時間オートマトンを固定したとき、時間オートマトンの所属性は時刻付きワード${\word}の長さについて多項式時間で判定することができる。
 }
@@ -108,7 +126,41 @@ ${\forall \clock \in \Clock, \exists j. \app{\cval}{\clock} = \tau_{i-1} - \tau_
 ${\exists j. \app{\reset{\cval + \tsi{i} - \tsi{i-1}}{\resets}}{\clock} = 
  \tau_{i-1} - \tau_j + \tsi{i} - \tsi{i-1} = \tau_{i} - \tau_{j}}となる。
 \par;
-このとき、${\CurrConf}の要素数は、${\abs{\Loc} \times \paren{\abs{\word} + 1}^{\abs{\Clock}}}で抑えられる。従って2行目から7行目のループの回数は${\paren{\abs{\Loc} \times \paren{\abs{\word} + 1}^{\abs{\Clock}}} \times \abs{\word}}で抑えられる。それ以外の集合演算や${\cval \models\guard}は${\word}の長さに依存しないので、\ref-figure(`fig:membership-algorithm`); のアルゴリズムは時刻付きワードの長さについて多項式時間で判定することができる。
+このとき、${\CurrConf}の要素数は、${\abs{\Loc} \times \paren{\abs{\word} + 1}^{\abs{\Clock}}}で抑えられる。従って3行目から6行目のループの回数は${\paren{\abs{\Loc} \times \paren{\abs{\word} + 1}^{\abs{\Clock}}} \times \abs{\word}}で抑えられる。それ以外の集合演算や${\cval \models\guard}の計算時間、及び${\Edge}についてのループの回数は${\word}の長さに依存しないので、\ref-figure(`fig:membership-algorithm`); のアルゴリズムは時刻付きワードの長さについて多項式時間で判定することができる。
+}
+>
++subsection{決定的時間オートマトンの所属性判定問題}<
++p{
+\ref-subsection(`subsec:polynomial-membership`);で示した様に、時間オートマトンの所属性判定問題は、入力の時間オートマトン${\Autom}を固定した場合、時刻付きワード${\word}の長さについて多項式時間で解くことができます。
+一方でこれは実際にモニタリングを行なう場合、単位時間当たりにモニタリングできる時刻付きワードの長さが徐々に短かくなるということになるので好ましくありません。
+時間オートマトンが\dfn{決定的}である場合には所属性判定問題を線形時間で解くことができる、つまり単位時間当たりにモニタリングできる時刻付きワードの長さが一定であるということがわかります。
+}
++theorem ?* ?:(`theorem:linear-membership`) {
+時間オートマトン${\AutomWith}が決定的であるとき、つまり
+\listing {
+* ${\InitLoc}が単元集合で、
+* 各状況${\paren{\loc,\cval}}と${\duration \in \Rp}について、状態遷移${\paren{\loc,\guard,\event,\resets,\loc'} \in \Edge}で${\paren{\cval + \duration} \models \guard}を充たすようなものが高々一つしか存在しないとき、
+}
+時間オートマトンの所属性は時刻付きワード${\word}の長さについて線形時間で判定することができる。
+}
++proof {
+\ref-figure(`fig:membership-algorithm`); のアルゴリズムが時刻付きワードの長さについて線形時間で停止することを示す。
+\par;
+まず、疑似コードの3行目において${\CurrConf}の要素数が高々1であることを帰納法で示す。
+${i = 1}のとき、${\CurrConf = \setsep{\paren{\loc_0,\initcval}}{\loc_0\in\InitLoc}}であり、${\InitLoc}は単元集合であるので、${\CurrConf}も単元集合である。また、${\NextConf}は空集合である。
+${i > 1}のとき、
+${\CurrConf}が更新されるのは\ref-figure(`fig:membership-algorithm`);の7行目であるが、ここでは${\NextConf}の内容に更新されている。
+状況${\paren{\loc,\cval} \in \CurrConf}について、
+状態遷移${\paren{\loc,\guard,\event,\resets,\loc'} \in \Edge}で${\paren{\cval + \tsi{i} - \tsi{i-1}} \models \guard}を充たすようなものは高々一つしか存在しないので、
+6行目で${\NextConf}に追加される${\paren{\loc,\reset{\cval + \tsi{i} - \tsi{i-1}}{\resets}}} も高々一つしか存在しない。
+帰納法の仮定より状況${\paren{\loc,\cval} \in \CurrConf}は高々一つしか存在しないので、${\CurrConf}の要素数も高々1となる。
+\par;
+従って2行目から7行目のループの計算量は、5行目の線形制約の充足判定の${\abs{\Edge} \times \abs{\word}}倍で抑えられる。それ以外の集合演算や${\cval \models\guard}は${\word}の長さに依存しないので、\ref-figure(`fig:membership-algorithm`); のアルゴリズムは時刻付きワードの長さについて線形時間で判定することができる。
+}
++p {
+時間オートマトンが決定的であるというのは厳しい制約に見えるかもしれません。
+実際、(非決定的)時間オートマトンが表現する言語のクラスは決定的時間オートマトンが表現する言語のクラスより真に大きいことが知られています\cite([`journals/tcs/AlurD94`]);。
+一方で、例えば\ref-figure(`fig:TA`);の時間オートマトンや、それ以外にも様々なオートマトンが決定的であることが知られています。
 }
 >
 >

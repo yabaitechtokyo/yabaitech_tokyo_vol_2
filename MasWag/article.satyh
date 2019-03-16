@@ -4,9 +4,10 @@
 @import: timedAutomata
 @import: membership
 @import: experiment
+@import: conclusion
 
 let maswag-article = '<
-  +chapter ?:(`maswag-article`) ?:({vol.1 所属性判定}) (|
+  +chapter ?:(`maswag-article`) ?:({所属性判定}) (|
     bibliography = maswag-bibliography;
     title = {モニタリングのための時間オートマトン入門};
     author = {MasWag};
@@ -14,6 +15,7 @@ let maswag-article = '<
     #introduction;
     #timedAutomata;
     #membership;
-    #experiment;
+%    #experiment;
+    #conclusion;
   >
 >
