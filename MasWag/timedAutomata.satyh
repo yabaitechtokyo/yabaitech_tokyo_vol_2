@@ -49,20 +49,20 @@ let timedAutomata = '<+section{時間オートマトン} <
 +example ?* ?:(`example:TA`)
 {
 \ref-figure(`fig:TA`); は時間オートマトンの例 ${\AutomWith}である。但し、
-${\alphabet = \set{a,b}}、
+${\alphabet = \set{\eventstyle{a},\eventstyle{b}}}、
 ${\Loc = \set{\loc_0,\loc_1,\loc_2}}、
 ${\InitLoc = \set{\loc_0}}、
 ${\AccLoc = \set{\loc_2}}、
 ${\Clock = \set{x,y}}、
-${\Edge = \set{\paren{\loc_0, x < 1 \land y < 5, a, \emptyset,\loc_1},\lb-math
-               \paren{\loc_1, x < 1 \land y < 5, b, \set{x},\loc_0},               
-               \paren{\loc_0, y \geq 5, a, \emptyset,\loc_2},               
-               \paren{\loc_1, y \geq 5, b, \emptyset,\loc_2}}} である。
+${\Edge = \set{\paren{\loc_0, x < 1 \land y < 5, \eventstyle{a}, \emptyset,\loc_1},\lb-math
+               \paren{\loc_1, x < 1 \land y < 5, \eventstyle{b}, \set{x},\loc_0},               
+               \paren{\loc_0, y \geq 5, \eventstyle{a}, \emptyset,\loc_2},               
+               \paren{\loc_1, y \geq 5, \eventstyle{b}, \emptyset,\loc_2}}} である。
 以後、
-${\edge_1 = \paren{\loc_0, x < 1 \land y < 5, a, \emptyset,\loc_1}}、
-${\edge_2 = \paren{\loc_1, x < 1 \land y < 5, b, \set{x},\loc_0}}、
-${\edge_3 = \paren{\loc_0, y \geq 5, a, \emptyset,\loc_2}}、
-${\edge_4 = \paren{\loc_1, y \geq 5, b, \emptyset,\loc_2}}と表記する。
+${\edge_1 = \paren{\loc_0, x < 1 \land y < 5, \eventstyle{a}, \emptyset,\loc_1}}、
+${\edge_2 = \paren{\loc_1, x < 1 \land y < 5, \eventstyle{b}, \set{x},\loc_0}}、
+${\edge_3 = \paren{\loc_0, y \geq 5, \eventstyle{a}, \emptyset,\loc_2}}、
+${\edge_4 = \paren{\loc_1, y \geq 5, \eventstyle{b}, \emptyset,\loc_2}}と表記する。
 }
 >
 +subsection{時間オートマトン (意味論)} <
@@ -87,7 +87,7 @@ ${\edge_4 = \paren{\loc_1, y \geq 5, b, \emptyset,\loc_2}}と表記する。
   時間状態遷移システムは時間オートマトンの\dfn{状況} (configuration) ${\state \in \State}の移り変りを表現します。
   時間オートマトンの状況は状態${\loc \in \Loc}とクロック割り当て${\cval \in \CVal}の対です。
   直感的には状況 ${\paren{\loc, \cval}}は、「状態${\loc}にいて、クロック変数${\clock \in \Clock}の値が${\cval\paren{\clock}}である」という状況を表しています。
-  時間状態遷移システムの状況${\paren{\loc, \cval}}の、クロック割り当て${\cval \in \CVal}は時間${\duration}が経過すると${\cval + \duration}へと変化し、ガード条件${\guard}を充たす、つまり ${\paren{\cval + \duration} \models \guard}でありイベント${a}が起こったときに遷移を行うことができ、変数${\clock \in \resets}がリセットされます。
+  時間状態遷移システムの状況${\paren{\loc, \cval}}の、クロック割り当て${\cval \in \CVal}は時間${\duration}が経過すると${\cval + \duration}へと変化し、ガード条件${\guard}を充たす、つまり ${\paren{\cval + \duration} \models \guard}でありイベント${\event}が起こったときに遷移を行うことができ、変数${\clock \in \resets}がリセットされます。
   一連の状況の移り変わりを\dfn{動作} (run)と呼びます。
 }
 +definition ?:({時間状態遷移システム}) ?:(`def:TTS`) {
@@ -129,7 +129,7 @@ ${\app{\cval_1}{x} = 0.3},${\app{\cval_1}{y} = 0.3}
 ${\app{\cval_2}{x} = 0},${\app{\cval_2}{y} = 1.2}
 ${\app{\cval_3}{x} = 0.5},${\app{\cval_3}{y} = 1.7}
 を充たすクロック割り当てである。
-時刻付きワード${\paren{a,0.3},\paren{b,1.2},\paren{a,1.7}}は、動作${\path}に対応する。
+時刻付きワード${\paren{\eventstyle{a},0.3},\paren{\eventstyle{b},1.2},\paren{\eventstyle{a},1.7}}は、動作${\path}に対応する。
 }
 +definition ?:({言語}) ?:(`def:language`) {
 時間オートマトン${\Autom}の時間状態遷移システムを${\TTS}とする。
@@ -139,18 +139,18 @@ ${\app{\cval_3}{x} = 0.5},${\app{\cval_3}{y} = 1.7}
 +example ?* ?:(`example:language`) {
 \ref-figure(`fig:TA`); の時間オートマトン${\Autom}の言語${\Lg{\Autom}}は、
 \listing {
-* ${ababab\ldots}という文字の列で、
+* ${\eventstyle{a}\eventstyle{b}\eventstyle{a}\eventstyle{b}\eventstyle{a}\eventstyle{b}\ldots}という文字の列で、
 * 最後の文字の時刻は${5}以上であり、
 * それ以外の文字の時刻は${5}未満であり、
-* 最後の文字以外の文字について、直近の${b} (直近の${b}が存在しない場合は時刻${0}) からの時間経過が${1}未満である
+* 最後の文字以外の文字について、直近の${\eventstyle{b}} (直近の${\eventstyle{b}}が存在しない場合は時刻${0}) からの時間経過が${1}未満である
 }
-ような時刻付きワードの集合である。形式的には${\Lg{\Autom} = \mathcal{L}_a \cup \mathcal{L}_b}である。但し${\mathcal{L}_a}及び${\mathcal{L}_b}は以下。
+ような時刻付きワードの集合である。形式的には${\Lg{\Autom} = \mathcal{L}_\eventstyle{a} \cup \mathcal{L}_\eventstyle{b}}である。但し${\mathcal{L}_\eventstyle{a}}及び${\mathcal{L}_\eventstyle{b}}は以下。
 
-\math-list([${\mathcal{L}_a =
-                   \setsep{\paren{a, \tsi{1}}, \paren{b, \tsi{2}},\paren{a, \tsi{3}},\ldots,\paren{a, \tsi{2k+1}}}{k \in \Znn, \tau_{2k+1} \geq 5, \tau_{2k} < 5, \forall k' < k. \tau_{2k'+2} - \tau_{2k'} < 1}
+\math-list([${\mathcal{L}_\eventstyle{a} =
+                   \setsep{\paren{\eventstyle{a}, \tsi{1}}, \paren{\eventstyle{b}, \tsi{2}},\paren{\eventstyle{a}, \tsi{3}},\ldots,\paren{\eventstyle{a}, \tsi{2k+1}}}{k \in \Znn, \tau_{2k+1} \geq 5, \tau_{2k} < 5, \forall k' < k. \tau_{2k'+2} - \tau_{2k'} < 1}
                    };
-            ${\mathcal{L}_b =
-                   \setsep{\paren{a, \tsi{1}}, \paren{b, \tsi{2}},\paren{a, \tsi{3}},\ldots,\paren{b, \tsi{2k}}}{k \in \Zp, \tau_{2k} \geq 5, \tau_{2k-1} - \tau_{2k-2} < 1, \tau_{2k-1} < 5, \lb-math \fill-math \forall k' < k-1. \tau_{2k'+2} - \tau_{2k'} < 1}}]);
+            ${\mathcal{L}_\eventstyle{b} =
+                   \setsep{\paren{\eventstyle{a}, \tsi{1}}, \paren{\eventstyle{b}, \tsi{2}},\paren{\eventstyle{a}, \tsi{3}},\ldots,\paren{\eventstyle{b}, \tsi{2k}}}{k \in \Zp, \tau_{2k} \geq 5, \tau_{2k-1} - \tau_{2k-2} < 1, \tau_{2k-1} < 5, \lb-math \fill-math \forall k' < k-1. \tau_{2k'+2} - \tau_{2k'} < 1}}]);
 }
 %%% ここひどい。SATySFi側でよしなに対応して欲しい
 >
