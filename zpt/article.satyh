@@ -258,7 +258,9 @@ and reflect: (term, typ) => semantics =
       }
       を指すのですが、この章ではこれらがどういうものかを実際にコードを書いていきながら解説します。
       }
-      +p{まずは型の定義をしてみましょう。Belugaでは\dfn{LF}と呼ばれる言語でSTLCをエンコードできます。
+      +p{\todo{Belugaのコンセプトについて説明する。具体的にはLFレベルと計算レベルの分離について}}
+      +subsection {LFによるSTLCのエンコード} <
+        +p{まずは型の定義をしてみましょう。Belugaでは\dfn{LF}と呼ばれる言語でSTLCをエンコードできます。
       \Code.d-code(`
 LF tp : type =
 | base : tp
@@ -288,7 +290,9 @@ LF term : tp → type =
             { \judgeStlc{\Gamma}{\lam{x}{A}{M}}{\arr{A}{B}} }
             {| \judgeStlc{\Gamma, x:A}{M}{B} |}
       |});
-      この規則と\Code.code(`lam`);は一見対応してないように見えますが、以下のような見方において一致しています。すなわち(Abs)のルールは「${A}の型の項が環境にある時に、仮にそれの名前をxとして${B}の型の項をつくることができる」ときに「${\arr{A}{B}}の型の項」をつくる規則であると考えることができます。この前者の部分がSTLCだと${\Gamma, x : A \vdash M : B}の形になり、一方でHOASではメタ言語の関数の形をとると考えることができるわけです。}
+      この規則と\Code.code(`lam`);は一見対応してないように見えますが、以下のような見方において一致しています。すなわち(Abs)のルールは「${A}の型の項が環境にある時に、仮にそれの名前をxとして${B}の型の項をつくることができる」ときに「${\arr{A}{B}}の型の項」をつくる規則であると考えることができます。この前者の部分がSTLCだと${\Gamma, x : A \vdash M : B}の形になり、一方でHOASではメタ言語の関数の形をとると考えることができるわけです。
+      \todo{具体的にいくつか項をつくってみる}
+      }
       +p{変数名を文字列で管理する方法に比べて、HOASは変数の取り扱いの面倒な部分をメタ言語に任せることができるため実装が楽になります。\todo{β簡約の例}
       }
       +p{依存型は大変強力なので、STLCのβη正規形のためのデータ型をつくることさえ可能です。以前の章でβη簡約に基く正規形の定義をお見せしましたが、以下のような導出規則でも定義が可能です。
@@ -305,13 +309,16 @@ embed : neut base → norm base.
       `);
       正規形の定義は相互再帰的になっているため\Code.code(`LF`);では定義できません。変わりに今回使っている構文では一行ずつ新しいLF項を定義しています\footnote{\Code.code(`LF`);はコードを構造化するための糖衣構文で特に何か特別なことをやっているわけではありません。}。
       }
-      +p{
-        \Code.d-code(`
+      >
+      +subsection {文脈様相型によるLF項と計算の分離} <
+        +p{\todo{文脈様相型の目的と説明}}
+        +p{
+          \Code.d-code(`
 schema ctx = some [a:tp] block x:neut a;
 
 stratified Sem : {g : ctx} [ ⊢ tp] -> ctype =
 | Base : [g ⊢ norm base] → Sem [g] [ ⊢ base]
-| Arr : {g : ctx} ({ h : ctx } {#S: [h ⊢ g]} Sem [h] [ ⊢ A] → Sem [h] [ ⊢ B])
+| Arr : {g : ctx} ({h : ctx} {#S: [h ⊢ g]} Sem [h] [ ⊢ A] → Sem [h] [ ⊢ B])
                   → Sem [g] [ ⊢ arr A B]
 ;
 
@@ -320,10 +327,10 @@ rec sem_wkn : {h : ctx} {g : ctx} {#S : [h ⊢ g]} Sem [g] [ ⊢ A] → Sem [h] 
   | Base [g ⊢ R] ⇒ Base [h ⊢ R[#S]]
   | Arr [g] f ⇒ Arr [h] (mlam h' ⇒ mlam S' ⇒ f [h'] [h' ⊢ #S[#S']])
 ;
-        `);
-      }
+          `);
+        }
 
-    +p{\Code.d-code(`
+        +p{\Code.d-code(`
 schema tctx = some [t : tp] block x : term t;
 
 typedef Env : {g : tctx} {h : ctx} ctype =
@@ -355,10 +362,10 @@ fn tm ⇒ fn env ⇒
      | [g ⊢ app E1 E2] ⇒ let Arr [h] f = eval [g ⊢ E1] env
                            in f [h] [h ⊢ ..] (eval [g ⊢ E2] env)
 ;
-    `);
-    }
+      `);
+      }
 
-    +Code.code(`
+      +Code.code(`
 mlam R ⇒ fn n ⇒ let [g ⊢ N] = n in [g ⊢ rapp R N];
 
 rec reify : Sem [h] [ ⊢ A] → [h ⊢ norm A[]] =
@@ -378,7 +385,8 @@ fn n ⇒ let [h ⊢ R] : [h ⊢ neut A[]] = n
 rec nbe : Env [g] [h] → [g ⊢ term A[]] → [h ⊢ norm A[]] =
 fn env ⇒ fn tm ⇒ reify (eval tm env)
 ;
-    `);
+        `);
+      >
     >
     +section {理論的背景について} <
     >

@@ -34,7 +34,7 @@ schema ctx = some [a:tp] block x:neut a;
 
 stratified Sem : {g : ctx} [ ⊢ tp] -> ctype =
 | Base : [g ⊢ norm base] → Sem [g] [ ⊢ base]
-| Arr : {g : ctx} ({ h : ctx } {#S: [h ⊢ g]} Sem [h] [ ⊢ A] → Sem [h] [ ⊢ B])
+| Arr : {g : ctx} ({h : ctx} {#S: [h ⊢ g]} Sem [h] [ ⊢ A] → Sem [h] [ ⊢ B])
                   → Sem [g] [ ⊢ arr A B]
 ;
 
