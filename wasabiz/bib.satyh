@@ -250,4 +250,15 @@ let wasabiz-bibliography = [
   publisher = {North Holland};
   year = 1999;
   |));
+
+  (`Akama93`, InProceedings(|
+    author = {| Yohji Akama |};
+    title = {On Mints' Reduction for ccc-Calculus};
+    booktitle = {International Conference on Typed Lambda Calculi and Applications, TLCA '93};
+    series = None; 
+    volume = None; 
+    number = None; 
+    pages = (1,12);
+    year = 1993;
+  |));
 ]

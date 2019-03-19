@@ -777,28 +777,37 @@ let article = '<
   | M N \to_\eta \paren{\lambda x. M x} N \to_\beta M N
   |});
 
-  この問題を回避するため${\eta}展開の規則をやや変更し，新たな展開規則${\to_{\eta'}}を導入します．
-  ${\to_{\eta'}}は以下のように帰納的に定義されます．
+  この問題を回避するため${\eta}展開の規則をやや変更し，新たな展開規則${\to_{\eta^\ast}}を導入します．\cite[`Akama93`];
+  ${\to_{\eta^\ast}}を定めるために\dfn{穴付き文脈 (contexts with holes)}(以下単に文脈という)を定義します．
+  文脈は以下のBNFにより定義されます．
 
-  \math-list(${|
-  | \derive{| \text!{${y} has ${\tau \to \sigma}} | x \fresh y |}{ y \to_{\eta'} \lambda x.y x }
-  | \derive{| \text!{${M N} has ${\tau \to \sigma}} | x \fresh M N |}{ M N \to_{\eta'} \lambda x .\paren{M N} x }
-  | \derive{| M \to_{\eta'} M' |}{ \lambda x.M \to_{\eta'} \lambda x.M' }
-  | \derive{| M \to_{\eta'} M' |}{ N M \to_{\eta'} N M' }
-  |});
+  \eqn(${
+    C \Coloneq \sqbracket{\cdot} \mid \lambda x.C \mid C\ M \mid M\ C
+  });
 
-  つまり，ラムダ抽象でなくかつ適用されていない項のみ${\eta}展開を行えるという規則が${\to_{\eta'}}です．
-  ${\to_{\eta'}}にも${\to_\beta}同様簡約列などの概念が定義できます．
-  \footnote{${\to_{\eta'}}は項書き換え系をなさないので一部の用語はここだけの定義としておきます．}
-  特に，${\eta'}正規形を\dfn{長${\eta}形 (${\eta}-long form)}と呼びます．
-  ${\eta'}展開と${\beta}\emph{展開}(i.e., ${\beta}簡約の逆向き)を用いることで${\eta}展開の規則を再現できます．
-  加えて，定義より${\to_{\eta'} \subseteq \to_\eta}です．
-  よって${M =_{\beta\eta'} N}と${M =_{\beta\eta} N}は同値です．
-  さらに${\eta'}展開に対しては\ref-theorem(`curry-prop`);の後半の一般化が成立します．
+  文脈${C}の中の唯一の${\sqbracket{\cdot}}を\dfn{穴 (hole)}と言い，${C}の穴を項${M}で置き換えて得られる項を${C\sqbracket{M}}と書きます．
+  文脈${C}が\dfn{関数的 (functional)}とは，穴が適用されていること，つまり，ある文脈${C'}と項${M}が存在して${C = C'\sqbracket{\sqbracket{\cdot}M}}が成り立つことを言います．
+  このとき，関係${\to_{\eta^\ast}}を
+  \listing{
+    * 項${M}，変数${x}，文脈${C}が存在して，
+    * ${M}は関数型${\tau \to \sigma}を持ち，
+    * ${M}はラムダ抽象ではなく，
+    * ${x}は${M}にたいして自由ではなく，
+    * ${C}は関数的ではない
+  }
+  ときかつその時に限り${C\sqbracket{M} \to_{\eta^\ast} C\sqbracket{\lambda x.M x}}であると定義します．
+  つまり，ラムダ抽象でなくかつ適用されていない項のみ${\eta}展開を行えるという規則が${\to_{\eta^\ast}}です．
+  ${\to_{\eta^\ast}}にも${\to_\beta}同様簡約列などの概念が定義できます．
+  \footnote{${\to_{\eta^\ast}}は項書き換え系をなさないので一部の用語はここだけの定義としておきます．}
+  特に，${\eta^\ast}正規形を\dfn{長${\eta}形 (${\eta}-long form)}と呼びます．
+  ${\eta^\ast}展開と${\beta}\emph{展開}(i.e., ${\beta}簡約の逆向き)を用いることで${\eta}展開の規則を再現できます．
+  加えて，定義より${\to_{\eta^\ast} \subseteq \to_\eta}です．
+  よって${M =_{\beta\eta^\ast} N}と${M =_{\beta\eta} N}は同値です．
+  さらに${\eta^\ast}展開に対しては\ref-theorem(`curry-prop`);の後半の一般化が成立します．
 
   \theorem?*?:(`curry-prop2`){
     \listing{
-      * ${M}が型付け可能ならば${M}は${\beta\eta'}強正規化可能．
+      * ${M}が型付け可能ならば${M}は${\beta\eta^\ast}強正規化可能．
     }
   }
 
