@@ -7,7 +7,7 @@ let membership = '<+section{所属性判定} <
 +p {
   \figure ?:(`fig:membership-algorithm`){所属性判定問題を解くアルゴリズムの例}<
    +image-frame{
-   \insert-pdf-image(12cm)(`../MasWag/figs/algorithm.pdf`)(1);
+   \insert-pdf-image(14.5cm)(`../MasWag/figs/algorithm.pdf`)(1);
    }
  >
  \dfn{所属性判定問題}は、時間オートマトン${\Autom}と時刻付きワード ${\word}について、${\word}が${\Autom}の表わす言語に所属しているかどうかを判定する問題です。
@@ -25,7 +25,7 @@ let membership = '<+section{所属性判定} <
 }
 +proof {
 所属性判定問題の入力の時間オートマトンを${\AutomWith}、時刻付きワードを${\wordWith}とする。
-まず始めに、時間オートマトン${\Autom}の遷移の列 ${\edgei{0}{1},\edgei{1}{2},\ldots,\edgei{n-1}{n} \in \sequence{\Edge}} で ${\loc_0 \in \InitLoc}、${\loc_n\in \AccLoc} を充たすものを非決定的に選択する。
+まず始めに、時間オートマトン${\Autom}の遷移の列 ${\edgei{0}{1},\edgei{1}{2},\ldots,\edgei{n-1}{n} \in \Edge^\ast} で ${\loc_0 \in \InitLoc}、${\loc_n\in \AccLoc} を充たすものを非決定的に選択する。
 次に、制約
 \eqn(${
         \mathcal{C} = \paren{\nu_0 = \initcval} \land \bigwedge_{i \in \set{1,2,\ldots,n}} \paren{\paren{\cval_{i-1} + \tsi{i} - \tsi{i-1} \models \guard_i} \land \paren{\cval_{i} = \reset{\cval_{i-1} + \tsi{i} - \tsi{i-1}}{\resets_i}}}
@@ -41,7 +41,7 @@ let membership = '<+section{所属性判定} <
 任意のNP問題は時間オートマトンの所属性判定問題に帰着できる。
 }
 +p{
- 所属性判定問題がNP困難であることを、ハミルトニアン路問題を所属性判定問題に多項式時間帰着させることで示します。
+ 所属性判定問題がNP困難であることを、\dfn{ハミルトニアン路問題}を所属性判定問題に多項式時間帰着させることで示します。
  ハミルトニアン路とは、有向グラフの路 (path)で、全ての頂点を一度だけ通るようなもののことで、ハミルトニアン路問題は、与えられた有向グラフがハミルトニアン路を持つかどうかを判定する問題です。
  ハミルトニアン路問題はNP困難であることが知られているので、この問題を時間オートマトンの所属性判定問題に多項式時間帰着させることで、所属性判定問題もNP困難であることが示せます。
 }
@@ -73,7 +73,7 @@ ${z}がこれまでに通過した頂点の個数、${\clock_{i}}が頂点${\loc
 従って、${\Autom}の受理動作における各制約は以下のハミルトニアン路の特徴付けと対応する。
 \listing {
 * グラフのどの頂点から始めても良い (${\InitLoc = V})
-* グラフのどの頂点で終わっても良い (各状態${v \in \Loc}から受理状態${v_f}への遷移がある)
+* グラフのどの頂点で終わっても良い (各状態${v \in V}から受理状態${v_f}への遷移がある)
 * 頂点を${\abs{V}}回通過している(${z = \abs{V}})
 * 最後に通過した頂点以外は過去に一度以上通過している(${\bigwedge_{v' \in V \setminus\set{v}} \clock_{v'} < \abs{V}})
 * 最後に通過した頂点はこれまで一度も通過していない (${ \clock_{v} = \abs{V}})
@@ -98,8 +98,8 @@ ${z}がこれまでに通過した頂点の個数、${\clock_{i}}が頂点${\loc
 +subsection ?:(`subsec:polynomial-membership`) {オートマトンを固定したときの所属性判定問題}<
 +p{
   モニタリングの文脈では、モニタリングする仕様を表わす時間オートマトン${\Autom}は固定されていて、モニタリング対象のログを表わす時刻付きワード${\word}が長くなっていくような問題設定を考えることが自然です。
-  時間オートマトンの所属性判定問題は、時間オートマトン${\Autom}を固定した際には多項式時間で解くことができることがわかります。
-  これは直感としては以下の理由によるものです。
+  時間オートマトンの所属性判定問題は、時間オートマトン${\Autom}を固定した際には\emph{多項式時間}で解くことができることがわかります。
+  これは直観としては以下の理由によるものです。
   各イベントとタイムスタンプ${\paren{\eventi{i},\tsi{i}}}を読んだとき、各クロック変数${\clock \in \Clock}について、値${\cval\paren{\clock}}は直近で${\clock}がリセットされた時刻${\ts}を用いて${\cval\paren{\clock} = \tsi{i} - \ts}と表わすことができますが、変数のリセットは過去に読んだイベントと同時にしか起こらないため、各クロック変数のの値の取り方は入力の時刻付きワード${\word}の長さ${\abs{\word}}通りで抑えることができます。
   従って、\ref-figure(`fig:membership-algorithm`);の疑似コード中の${\CurrConf}の大きさは${\abs{\Loc} \times \abs{\word}^{\abs{\Clock}}}で抑えられ、現在クロック変数${\Clock}は固定されているので、${\CurrConf}の大きさは時刻付きワード${\word}の長さの多項式で抑えることができます。
   全体としては、${\CurrConf}の更新は${\abs{\word}}回行われますが、結局${\abs{\word}}についての多項式時間で所属性判定問題を解くことができます。
@@ -139,7 +139,7 @@ ${\exists j. \app{\reset{\cval + \tsi{i} - \tsi{i-1}}{\resets}}{\clock} =
 時間オートマトン${\AutomWith}が決定的であるとき、つまり
 \listing {
 * ${\InitLoc}が単元集合で、
-* 各状況${\paren{\loc,\cval}}と${\duration \in \Rp}について、状態遷移${\paren{\loc,\guard,\event,\resets,\loc'} \in \Edge}で${\paren{\cval + \duration} \models \guard}を充たすようなものが高々一つしか存在しないとき、
+* 各状況${\paren{\loc,\cval} \in \Loc \times \CVal}と${\duration \in \Rp}について、状態遷移${\paren{\loc,\guard,\event,\resets,\loc'} \in \Edge}で${\paren{\cval + \duration} \models \guard}を充たすようなものが高々一つしか存在しないとき、
 }
 時間オートマトンの所属性は時刻付きワード${\word}の長さについて線形時間で判定することができる。
 }
@@ -150,7 +150,7 @@ ${\exists j. \app{\reset{\cval + \tsi{i} - \tsi{i-1}}{\resets}}{\clock} =
 ${i = 1}のとき、${\CurrConf = \setsep{\paren{\loc_0,\initcval}}{\loc_0\in\InitLoc}}であり、${\InitLoc}は単元集合であるので、${\CurrConf}も単元集合である。また、${\NextConf}は空集合である。
 ${i > 1}のとき、
 ${\CurrConf}が更新されるのは\ref-figure(`fig:membership-algorithm`);の7行目であるが、ここでは${\NextConf}の内容に更新されている。
-状況${\paren{\loc,\cval} \in \CurrConf}について、
+各状況${\paren{\loc,\cval} \in \CurrConf}について、
 状態遷移${\paren{\loc,\guard,\event,\resets,\loc'} \in \Edge}で${\paren{\cval + \tsi{i} - \tsi{i-1}} \models \guard}を充たすようなものは高々一つしか存在しないので、
 6行目で${\NextConf}に追加される${\paren{\loc,\reset{\cval + \tsi{i} - \tsi{i-1}}{\resets}}} も高々一つしか存在しない。
 帰納法の仮定より状況${\paren{\loc,\cval} \in \CurrConf}は高々一つしか存在しないので、${\CurrConf}の要素数も高々1となる。

@@ -6,7 +6,7 @@
 let timedAutomata = '<+section{時間オートマトン} <
 +subsection{時刻付きワード} <
 +p {
-先ず、時間オートマトンに与える入力として、時刻付きワード (timed word)を定義します。時刻付きワードで考える文字集合${\alphabet}は、通常のオートマトンにおける文字列と同様に有限集合ですが、時刻付きワードでは各文字${\event_i \in \alphabet}に正実数値のタイムスタンプ${\tsi{i} \in \Rp}が付いています。
+先ず、時間オートマトンに与える入力として、\dfn{時刻付きワード (timed word)}を定義します。時刻付きワードで考える文字集合${\alphabet}は、通常のオートマトンにおける文字列と同様に有限集合ですが、時刻付きワードでは各文字${\event_i \in \alphabet}に正実数値のタイムスタンプ${\tsi{i} \in \Rp}が付いています。
 これは「イベント ${\event_i} が時刻${\tsi{i}}で起こった」と読むことができます。
 }
 +definition ?:({時刻付きワード}) ?:(`def:timedWord`)
@@ -70,9 +70,8 @@ ${\edge_4 = \paren{\loc_1, y \geq 5, \eventstyle{b}, \emptyset,\loc_2}}と表記
 クロック変数の集合 ${\Clock}について、関数${\cval\colon \Clock \to \Rnn}を\dfn{クロック割り当て} (clock valuation) と呼びます。
 クロック割り当て${\cval}と${\duration \in \Rnn}について、${\cval + \duration}を用いて、${\cval}を${\duration}時間だけ経過させたクロック割り当てを表記します。
 つまり、${\cval + \duration}は各${\clock \in \Clock}について、${\app{\paren{\cval + \duration}}{\clock} = \app{\cval}{\clock} + \duration}を充たすクロック割り当てです。
-クロック変数のリセットは、
 クロック割り当て${\cval}とクロック変数の部分集合${\resets \subseteq \Clock}について、各${\clock \in \resets}がリセットされ、それ以外のクロック変数はそのままである様なクロック割り当てを${\reset{\cval}{\resets}}と表記します。
-形式的には、${\reset{\cval}{\resets}}は以下を充たすクロック割り当てです。
+つまり、${\reset{\cval}{\resets}}は以下を充たすクロック割り当てです。
 \eqn(${
 \app{\reset{\cval}{\resets}}{\clock} = 
 \cases!(
@@ -86,7 +85,7 @@ ${\edge_4 = \paren{\loc_1, y \geq 5, \eventstyle{b}, \emptyset,\loc_2}}と表記
   時間オートマトンの意味論は\dfn{時間状態遷移システム} (timed transition system, TTS) と呼ばれる状態遷移システムを用いて定式化されます。
   時間状態遷移システムは時間オートマトンの\dfn{状況} (configuration) ${\state \in \State}の移り変りを表現します。
   時間オートマトンの状況は状態${\loc \in \Loc}とクロック割り当て${\cval \in \CVal}の対です。
-  直感的には状況 ${\paren{\loc, \cval}}は、「状態${\loc}にいて、クロック変数${\clock \in \Clock}の値が${\cval\paren{\clock}}である」という状況を表しています。
+  直観的には状況 ${\paren{\loc, \cval}}は、「状態${\loc}にいて、クロック変数${\clock \in \Clock}の値が${\cval\paren{\clock}}である」という状況を表しています。
   時間状態遷移システムの状況${\paren{\loc, \cval}}の、クロック割り当て${\cval \in \CVal}は時間${\duration}が経過すると${\cval + \duration}へと変化し、ガード条件${\guard}を充たす、つまり ${\paren{\cval + \duration} \models \guard}でありイベント${\event}が起こったときに遷移を行うことができ、変数${\clock \in \resets}がリセットされます。
   一連の状況の移り変わりを\dfn{動作} (run)と呼びます。
 }
@@ -113,12 +112,12 @@ ${\app{\cval'}{x} = 0},${\app{\cval'}{y} = 3.1}
 }
 +definition ?:({動作}) ?:(`def:run`) {
 時間オートマトン${\AutomWith}の
-時間状態遷移システム${\TTS = \paren{\State, \InitState, \AccState, \Transition}}について、
+時間状態遷移システム${\paren{\State, \InitState, \AccState, \Transition}}について、
 状況${\paren{\loc,\cval} \in \State}と状態遷移${\edgeInside \in \Edge}が交互に表れる列、 
 \eqn(${\path = \rstatei{0},\edgei{0}{1},\rstatei{1},\ldots,\edgei{n-1}{n},\rstatei{n}});
 が${\rstatei{0} \in \InitState}、及び各${i \in \set{1,2,\ldots,n}}について${\paren{\rstatei{i-1},\rstatei{i}} \in \Transition}を充たすとき、${\path}を${\TTS}上の\dfn{動作} (run)と定義する。
-上記の動作${\path}と、${\alphabet}上の時刻付きワード\promote-linebreak;${\wordWith}が、各${i \in \set{1,2,\ldots,n}}について、${\cval_i = \reset{\cval_{i-1} + \tsi{i} - \tsi{i-1}}{\resets_i}}を充たすとき、${\word}が${\path}に\dfn{対応する}と言う。
-時間状態遷移システム${\TTS = \paren{\State, \InitState, \AccState, \Transition}}上の動作${\path = \state_{0},\edge_{1},\state_{1},\ldots,\edge_{n},\state_{n}}が${\state_n \in \AccState}を充たすとき、${\path}を\dfn{受理動作} (accepting run)と定義する。
+上記の動作${\path}と、${\alphabet}上の時刻付きワード\promote-linebreak;${\wordWith}が、各${i \in \set{1,2,\ldots,n}}について、${\paren{\cval_{i-1} + \tsi{i} - \tsi{i-1}} \models \guard_i}と${\cval_i = \reset{\cval_{i-1} + \tsi{i} - \tsi{i-1}}{\resets_i}}を充たすとき、${\word}が${\path}に\dfn{対応する}と言う。
+時間状態遷移システム${\TTS = \paren{\State, \InitState, \AccState, \Transition}}上の動作${\path = \state_{0},\edge_{1},\state_{1},\ldots,\edge_{n},\state_{n}}が${\state_n \in \AccState}を充たすとき、${\path}を\dfn{受理動作} (accepting run)という。
 }
 +example ?* ?:(`example:run`) {
 \ref-figure(`fig:TA`); の時間オートマトン${\AutomWith}について、
@@ -126,10 +125,10 @@ ${\app{\cval'}{x} = 0},${\app{\cval'}{y} = 3.1}
 は${\Autom}の受理動作である。但し${\cval_0,\cval_1,\cval_2,\cval_3}は
 ${\app{\cval_0}{x} = 0},${\app{\cval_0}{y} = 0}
 ${\app{\cval_1}{x} = 0.3},${\app{\cval_1}{y} = 0.3}
-${\app{\cval_2}{x} = 0},${\app{\cval_2}{y} = 1.2}
-${\app{\cval_3}{x} = 0.5},${\app{\cval_3}{y} = 1.7}
+${\app{\cval_2}{x} = 0},${\app{\cval_2}{y} = 4.2}
+${\app{\cval_3}{x} = 0.5},${\app{\cval_3}{y} = 5.4}
 を充たすクロック割り当てである。
-時刻付きワード${\paren{\eventstyle{a},0.3},\paren{\eventstyle{b},1.2},\paren{\eventstyle{a},1.7}}は、動作${\path}に対応する。
+時刻付きワード${\paren{\eventstyle{a},0.3},\paren{\eventstyle{b},1.2},\paren{\eventstyle{a},5.4}}は、動作${\path}に対応する。
 }
 +definition ?:({言語}) ?:(`def:language`) {
 時間オートマトン${\Autom}の時間状態遷移システムを${\TTS}とする。
@@ -144,13 +143,14 @@ ${\app{\cval_3}{x} = 0.5},${\app{\cval_3}{y} = 1.7}
 * それ以外の文字の時刻は${5}未満であり、
 * 最後の文字以外の文字について、直近の${\eventstyle{b}} (直近の${\eventstyle{b}}が存在しない場合は時刻${0}) からの時間経過が${1}未満である
 }
-ような時刻付きワードの集合である。形式的には${\Lg{\Autom} = \mathcal{L}_\eventstyle{a} \cup \mathcal{L}_\eventstyle{b}}である。但し${\mathcal{L}_\eventstyle{a}}及び${\mathcal{L}_\eventstyle{b}}は以下。
-
-\math-list([${\mathcal{L}_\eventstyle{a} =
-                   \setsep{\paren{\eventstyle{a}, \tsi{1}}, \paren{\eventstyle{b}, \tsi{2}},\paren{\eventstyle{a}, \tsi{3}},\ldots,\paren{\eventstyle{a}, \tsi{2k+1}}}{k \in \Znn, \tau_{2k+1} \geq 5, \tau_{2k} < 5, \forall k' < k. \tau_{2k'+2} - \tau_{2k'} < 1}
-                   };
-            ${\mathcal{L}_\eventstyle{b} =
-                   \setsep{\paren{\eventstyle{a}, \tsi{1}}, \paren{\eventstyle{b}, \tsi{2}},\paren{\eventstyle{a}, \tsi{3}},\ldots,\paren{\eventstyle{b}, \tsi{2k}}}{k \in \Zp, \tau_{2k} \geq 5, \tau_{2k-1} - \tau_{2k-2} < 1, \tau_{2k-1} < 5, \lb-math \fill-math \forall k' < k-1. \tau_{2k'+2} - \tau_{2k'} < 1}}]);
+ような時刻付きワードの集合である。
+%形式的には${\Lg{\Autom} = \mathcal{L}_\eventstyle{a} \cup \mathcal{L}_\eventstyle{b}}である。但し${\mathcal{L}_\eventstyle{a}}及び${\mathcal{L}_\eventstyle{b}}は以下。
+%
+%\math-list([${\mathcal{L}_\eventstyle{a} =
+%                   \setsep{\paren{\eventstyle{a}, \tsi{1}}, \paren{\eventstyle{b}, \tsi{2}},\paren{\eventstyle{a}, %\tsi{3}},\ldots,\paren{\eventstyle{a}, \tsi{2k+1}}}{k \in \Znn, \tau_{2k+1} \geq 5, \tau_{2k} < 5, \forall k' < k. \tau_{2k'+2} - \tau_{2k'} < 1}
+%                   };
+%            ${\mathcal{L}_\eventstyle{b} =
+%                   \setsep{\paren{\eventstyle{a}, \tsi{1}}, \paren{\eventstyle{b}, \tsi{2}},\paren{\eventstyle{a}, \tsi{3}},\ldots,\paren{\eventstyle{b}, \tsi{2k}}}{k \in \Zp, \tau_{2k} \geq 5, \tau_{2k-1} - \tau_{2k-2} < 1, \tau_{2k-1} < 5, \lb-math \fill-math \forall k' < k-1. \tau_{2k'+2} - \tau_{2k'} < 1}}]);
 }
 %%% ここひどい。SATySFi側でよしなに対応して欲しい
 >

@@ -43,6 +43,19 @@ S-TaLiRo: A Tool for Temporal Logic Falsification for Hybrid Systems.
 <crossref>conf/tacas/2011</crossref>
 <url>db/conf/tacas/tacas2011.html#AnnpureddyLFS11</url>
 </inproceedings>
+<article key="journals/jacm/AsarinCM02" mdate="2018-11-06">
+<author>Eugene Asarin</author>
+<author>Paul Caspi</author>
+<author>Oded Maler</author>
+<title>Timed regular expressions.</title>
+<pages>172-206</pages>
+<year>2002</year>
+<volume>49</volume>
+<journal>J. ACM</journal>
+<number>2</number>
+<ee>https://doi.org/10.1145/506147.506151</ee>
+<url>db/journals/jacm/jacm49.html#AsarinCM02</url>
+</article>
 <incollection key="series/lncs/BartocciDDFMNS18" mdate="2018-11-02">
 <author orcid="0000-0002-8004-6601">Ezio Bartocci</author>
 <author>Jyotirmoy V. Deshmukh</author>

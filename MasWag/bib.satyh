@@ -38,8 +38,19 @@ let maswag-bibliography = [
   |));
 
 
+  (`journals/jacm/AsarinCM02`, Article(|
+    author = {|Eugene Asarin, Paul Caspi, Oded Maler|};
+    title = {Timed regular expressions.};
+    journal = {J. ACM};
+    volume = Some(49);
+    number = Some({2});
+    pages = (172,206);
+    year = 2002;
+  |));
+
+
   (`series/lncs/BartocciDDFMNS18`, InProceedings(|
-    author = {|Ezio Bartocci, Jyotirmoy V. Deshmukh, Alexandre Donz, Georgios E. Fainekos, Oded Maler, Dejan Nickovic, Sriram Sankaranarayanan|};
+    author = {|Ezio Bartocci, Jyotirmoy V. Deshmukh, Alexandre Donzé, Georgios E. Fainekos, Oded Maler, Dejan Nickovic, Sriram Sankaranarayanan|};
     title = {Specification-Based Monitoring of Cyber-Physical Systems: A Survey on Theory, Tools and Applications.};
     booktitle = {Lectures on Runtime Verification};
     series = None; 
@@ -51,7 +62,7 @@ let maswag-bibliography = [
 
 
   (`series/lncs/10457`, Book(|
-    author = {|Ezio Bartocci, Ylis Falcone|};
+    author = {|Ezio Bartocci, Yliès Falcone|};
     title = {Lectures on Runtime Verification - Introductory and Advanced Topics};
     publisher = {Springer};
     year = 2018;
@@ -59,7 +70,7 @@ let maswag-bibliography = [
 
 
   (`conf/qest/BehrmannDLHPYH06`, InProceedings(|
-    author = {|Gerd Behrmann, Alexandre David, Kim Guldstrand Larsen, John Hkansson, Paul Pettersson, Wang Yi, Martijn Hendriks|};
+    author = {|Gerd Behrmann, Alexandre David, Kim Guldstrand Larsen, John Håkansson, Paul Pettersson, Wang Yi, Martijn Hendriks|};
     title = {UPPAAL 4.0.};
     booktitle = {QEST};
     series = None; 
@@ -83,7 +94,7 @@ let maswag-bibliography = [
 
 
   (`conf/cav/Donze10`, InProceedings(|
-    author = {|Alexandre Donz|};
+    author = {|Alexandre Donzé|};
     title = {Breach, A Toolbox for Verification and Parameter Synthesis of Hybrid Systems.};
     booktitle = {CAV};
     series = None; 
@@ -95,7 +106,7 @@ let maswag-bibliography = [
 
 
   (`conf/formats/DonzeM10`, InProceedings(|
-    author = {|Alexandre Donz, Oded Maler|};
+    author = {|Alexandre Donzé, Oded Maler|};
     title = {Robust Satisfaction of Temporal Logic over Real-Valued Signals.};
     booktitle = {FORMATS};
     series = None; 
@@ -183,7 +194,7 @@ let maswag-bibliography = [
 
 
   (`conf/formats/UlusFAM14`, InProceedings(|
-    author = {|Dogan Ulus, Thomas Ferrre, Eugene Asarin, Oded Maler|};
+    author = {|Dogan Ulus, Thomas Ferrère, Eugene Asarin, Oded Maler|};
     title = {Timed Pattern Matching.};
     booktitle = {FORMATS};
     series = None; 

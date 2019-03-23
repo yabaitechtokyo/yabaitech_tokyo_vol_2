@@ -66,7 +66,7 @@ let-math \TransitionRel = ${to}
 let-math \Transition = let ord = math-char MathOrd in ord `→`
 let-math \reset cval resets = ${\angle-bracket{#cval}_{#resets}}
 let-math \initcval = ${\mathbb{0}_{\Clock}}
-let-math \path = ${\pi}
+let-math \path = ${\rho}
 let-math \Lg a = ${\app{\mathcal{L}}{#a}}
 
 let-math \Conf = ${\mathit-token!(`Conf`)}
@@ -113,7 +113,7 @@ let-block ctx +problem title input output =
   let pads = (5pt, 5pt, 0pt, 0pt) in
   let decoset = VDecoSet.simple-frame-stroke 1pt (Gray(0.75)) in
     block-frame-breakable ctx pads decoset (fun ctx ->
-      block-skip 0pt
+        block-skip 0pt
         +++ (let ctx-title = ctx
                      |> set-font HanIdeographic (`ipaexg`, 1.0, 0.)
                      |> set-font Kana (`ipaexg`, 1.0, 0.) in 
