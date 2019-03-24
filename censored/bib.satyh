@@ -1,6 +1,18 @@
 @import: ../main/book-class
 
 let censored-bibliography = [
+  (`awslambdaofficial`, WebSite(|
+    author = {|Amazon Web Service|};
+    title  = {AWS Lambda (サーバーレスでコードを実行・自動管理) \| AWS};
+    url    = `https://aws.amazon.com/jp/lambda/`;
+    year   = 2019;
+  |));
+  (`awscliofficial`, WebSite(|
+    author = {|Amazon Web Service|};
+    title  = {AWS CLI のインストールと設定 - Amazon Kinesis Data Streams};
+    url    = `https://docs.aws.amazon.com/ja_jp/streams/latest/dev/kinesis-tutorial-cli-installation.html`;
+    year   = 2019;
+  |));
   (`speakerdeck2017`, WebSite(|
     author = {|Satoru Kadowaki|};
     title  = {AWS APIGateway + Python Lambda + NEologdで作るサーバレス日本語形態素解析API - Speaker Deck};
