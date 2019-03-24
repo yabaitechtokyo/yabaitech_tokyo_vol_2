@@ -251,25 +251,37 @@ and reflect: (term, typ) => semantics =
         * 上記の要因によって実行時エラーが発生しうる
       }
       \todo{もうちょっと詳しくかきたいよね}
-      Belugaはこれらの問題点をユニークな手法によって解決しており、型安全なNbEを実装することができます。ここでいうユニークな手法とは具体的には
-      \listing{
-        * 依存型及びLFによるプログラミング言語のエンコード
-        * 文脈様相型による束縛の管理とメタレベルからの操作
-      }
       を指すのですが、この章ではこれらがどういうものかを実際にコードを書いていきながら解説します。
       }
-      +p{\todo{Belugaのコンセプトについて説明する。具体的にはLFレベルと計算レベルの分離について}}
-      +subsection {LFによるSTLCのエンコード} <
-        +p{まずは型の定義をしてみましょう。Belugaでは\dfn{LF}と呼ばれる言語でSTLCをエンコードできます。
+      
+      +subsection {Belugaの概要} <
+        +p{
+          冒頭でも説明したように、BelugaはMcGill大のBrigitte Pientkaらによって開発されている定理証明支援系あるいはプログラミング言語です。定理証明支援系というとCoqやAgda,Isabelleなどが有名ですが、Belugaがそれらと異なるのは「プログラミング言語\footnote{もう少し抽象的に言うと「束縛構造を持つような構造」一般のことを指しますが、プログラミング言語はこれに含まれると考えて差し支えないでしょう。}の形式化とその性質の証明」に特化している点です。
+        }
+        +p{
+          Belugaでは「プログラミング言語を形式化する部分」と「形式化されたプログラミング言語についての性質を記述する部分を」異なるレイヤに分離しています。
+          前者のレイヤは\dfn{LF}と呼ばれる言語によって記述され、一方で後者のレイヤはLFに対する\emph{メタプログラミング}として記述されます(\ref-figure(`fig:overview_twolayer`);)。これらの概念がどういうものかを実際にコードを書きながら示すことがこの章の目標です。
+          \figure ?:(`fig:overview_twolayer`) {Belugaの二つのレイヤ} <
+            +image-frame{
+              \insert-pdf-image(14cm)(`../zpt/figure/overview_twolayer.pdf`)(1);
+            }
+          >
+        }        
+      >
+      +subsection {LFによるSTLCの形式化} <
+        +p{
+          NbEをBelugaで記述する上で最初にすることはSTLCの形式化です。Belugaではこれを\dfn{LF}\cite[`Harper93`; `Pfenning02`];によって実現します。LFは依存型理論をベースとした言語で、論理体系やプログラミング言語を形式化するのに用いられます。しかしまあ技術的詳細や理論的背景にいちいち触れていたら締切に間に合わなくなってしまうのでね、実際にコードを書きながらLFのエッセンスを理解していきましょう。
+        }
+        +p{
+          まずは型の定義をしてみましょう。STLCの型は基底型と関数型から成るのでした。これは以下のようなLFのコードで表せます。
       \Code.d-code(`
 LF tp : type =
 | base : tp
 | arr  : tp → tp → tp
 ;
   `);
-      \Code.code(`LF`);は新しい定数定義するためのキーワードです\footnote{BelugaではLF\cite[`Harper93`];という依存型理論を用いた定理証明手法を用いており、\Code.code(`LF`);というキーワード名はそれに由来しています。}。まず最初の行で\Code.code(`tp`);というSTLCの型を表す型を定義しています(Belugaにおいて型は\Code.code(`type`);という型を持つ値のことです)。その後に\Code.code(`tp`);に関係する定数として\Code.code(`base`);と\Code.code(`arr`);を定義します。これらはそれぞれSTLCの基底型と関数型に対応させています。\Code.code(`arr`);の型は\Code.code(`tp → tp → tp`);となっていますが、これは「\Code.code(`tp`);の値をを二つとる\Code.code(`tp`);の型コンストラクタ」と思うとわかりやすいかと思います。例えば${\arr{A}{B}}が\Code.code(`arr A B`);に対応するわけです。}
-      +p{なお、\Code.code(`LF`);で定義する定数名は\emph{全て小文字である必要があります}。これはBelugaが多くの種類の変数を扱っているが故の制限です。}
-      +p{次にSTLCの項の定義を行います。Belugaの型システムは依存型を持っているため、「STLCにおいて正しい型判断を伴う項」を表現することが可能です。定義はたったの4行です。
+      このコードでは3つの新しい定数\Code.code(`tp`);, \Code.code(`base`);, \Code.code(`arr`);を定義しています。\Code.code(`LF`);は新しい定数を定義するためのキーワードです。まず最初の行で\Code.code(`tp`);というSTLCの型を表す型を定義しています。その後に\Code.code(`tp`);に関係する定数として\Code.code(`base`);と\Code.code(`arr`);を定義します。これらはそれぞれSTLCの基底型と関数型に対応します。\Code.code(`arr`);の型は\Code.code(`tp → tp → tp`);となっていますが、これは「\Code.code(`tp`);の値をを二つとる\Code.code(`tp`);の型コンストラクタ」と思うとわかりやすいかと思います。例えば${\arr{A}{B}}が\Code.code(`arr A B`);に対応するわけです。なお、\Code.code(`LF`);で定義する定数名は\emph{全て小文字である必要があります}。これはBelugaが多くの種類の変数を扱っているが故の制限です。}
+      +p{次にSTLCの項を定義します。LFは依存型に基くため、「STLCにおいて正しい型判断を伴う項」を表現することが可能です。見てみましょう、定義はたったの4行です。
       \Code.d-code(`
 LF term : tp → type =
 | app : term (arr a b) → term a → term b
@@ -284,7 +296,7 @@ LF term : tp → type =
                | \judgeStlc{\Gamma}{N}{A}
                |}
       |});
-      一方で\Code.code(`lam`);は関数の項に対応する定数で、「型\Code.code(`a`);の項から型\Code.code(`b`);の項への関数」から型\Code.code(`arr a b`);の項をつくります。このように対象言語(STLC)の関数をメタ言語(Beluga)の関数によって表現する手法を\dfn{Higher Order Abstract Syntax}(HOAS)と呼びます。ところでSTLCの(Abs)の規則は以下のようなものでした。
+      一方で\Code.code(`lam`);は関数の項に対応する定数で、「型\Code.code(`a`);の項から型\Code.code(`b`);の項への関数」から型\Code.code(`arr a b`);の項をつくります。このように対象言語(STLC)の関数をメタ言語(LF)の関数によって表現する手法を\dfn{Higher Order Abstract Syntax}(HOAS)と呼びます。ところでSTLCの(Abs)の規則は以下のようなものでした。
       \math-list (${
         | \bderive?:!{Abs}
             { \judgeStlc{\Gamma}{\lam{x}{A}{M}}{\arr{A}{B}} }

@@ -16,4 +16,13 @@ let zpt-bibliography = [
     pages = (143, 184);
     year = 1993;
     |));
+    (`Pfenning02`, Article(|
+    author = {| Frank Pfenning |};
+    title = {Logical Frameworks—A Brief Introduction};
+    journal = {Proof and System-Reliability};
+    volume = None;
+    number = None;
+    pages = (137, 166);
+    year = 2002;
+    |))
 ]
