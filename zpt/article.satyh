@@ -341,8 +341,8 @@ embed : neut base → norm base.
       正規形の定義は相互再帰的になっているため\Code.code(`LF`);文では定義できません。変わりに一行ずつ新しいLF定数を定義しています。
       }
       >
-      +subsection {文脈様相型によるLF項と計算の分離} <
-        +p{\todo{文脈様相型の目的と説明}}
+      +subsection {計算の階層からNormalization by Evaluationを定義する} <
+        +p{先ほどLFで定義したSTLCの言語と正規項を用いてNormalization by Evaluationを実装していきましょう。しかしながらLFは実体を伴わない定数を持っていてため計算ができませんし、代数的データ構造と違ってパターンマッチすることもできません。これらを解決するためにBelugaでは一つ上のレベルを用意して、そこからLFで書かれたコードをオブジェクトとして扱い計算することができるようになっています。いわゆるメタプログラミングですが、Belugaではこれを\dfn{計算の階層}と呼んでいます。}
         +p{
           \Code.d-code(`
 schema ctx = some [a:tp] block x:neut a;
