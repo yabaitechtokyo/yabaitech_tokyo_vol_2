@@ -280,7 +280,12 @@ LF tp : type =
 | arr  : tp → tp → tp
 ;
   `);
-      このコードでは3つの新しい定数\Code.code(`tp`);, \Code.code(`base`);, \Code.code(`arr`);を定義しています。\Code.code(`LF`);は新しい定数を定義するためのキーワードです。まず最初の行で\Code.code(`tp`);というSTLCの型を表す型を定義しています。その後に\Code.code(`tp`);に関係する定数として\Code.code(`base`);と\Code.code(`arr`);を定義します。これらはそれぞれSTLCの基底型と関数型に対応します。\Code.code(`arr`);の型は\Code.code(`tp → tp → tp`);となっていますが、これは「\Code.code(`tp`);の値をを二つとる\Code.code(`tp`);の型コンストラクタ」と思うとわかりやすいかと思います。例えば${\arr{A}{B}}が\Code.code(`arr A B`);に対応するわけです。なお、\Code.code(`LF`);で定義する定数名は\emph{全て小文字である必要があります}。これはBelugaが多くの種類の変数を扱っているが故の制限です。}
+      このコードでは3つの新しい定数\Code.code(`tp`);, \Code.code(`base`);, \Code.code(`arr`);を定義しています。\Code.code(`LF`);は新しいLF定数を定義するためのキーワードです。まず最初の行で\Code.code(`tp`);というSTLCの型を表す型を定義しています。その後に\Code.code(`tp`);に関係する定数として\Code.code(`base`);と\Code.code(`arr`);を定義します。これらはそれぞれSTLCの基底型と関数型に対応します。\Code.code(`arr`);の型は\Code.code(`tp → tp → tp`);となっていますが、これは「\Code.code(`tp`);の値をを二つとる\Code.code(`tp`);の型コンストラクタ」と思うとわかりやすいかと思います。例えば${\arr{A}{B}}が\Code.code(`arr A B`);に対応するわけです。なお、\Code.code(`LF`);で定義する定数名は\emph{全て小文字である必要があります}。これはBelugaが多くの種類の変数を扱っているが故の制限です。ちなみに\Code.code(`LF`);は糖衣構文で、以下のように1行ずつLF定数の定義を行うこともできます。
+            \Code.d-code(`
+tp   : type.
+base : tp.
+arr  : tp → tp → tp.
+  `);}
       +p{次にSTLCの項を定義します。LFは依存型に基くため、「STLCにおいて正しい型判断を伴う項」を表現することが可能です。見てみましょう、定義はたったの4行です。
       \Code.d-code(`
 LF term : tp → type =
@@ -309,20 +314,23 @@ LF term : tp → type =
       }
       +p{依存型は大変強力なので、STLCのβη正規形のためのデータ型をつくることさえ可能です。以前の章でβη簡約に基く正規形の定義をお見せしましたが、以下のような導出規則でも定義が可能です。
       \math-list (${
-      | \bderive
+      | \bderive?:!{NVar}
               { \judgeNeut{\Gamma}{x}{A} }
               {| x:A \in \Gamma |}
-      | \bderive
-              { \judgeNorm{\Gamma}{R}{A} }
-              {| \judgeNeut{\Gamma}{R}{A} |}
-      | \bderive
+      | \bderive?:!{NLam}
+              { \judgeNorm{\Gamma}{\lam{x}{A}{M}}{\arr{A}{B}} }
+              {| \judgeNorm{\Gamma, x\colon A}{M}{B} |}
+      | \bderive?:!{Embed}
+              { \judgeNorm{\Gamma}{R}{\base} }
+              {| \judgeNeut{\Gamma}{R}{\base} |}
+      | \bderive?:!{RApp}
               { \judgeNeut{\Gamma}{\app{R}{M}}{B}}
               {| \judgeNeut{\Gamma}{R}{\arr{A}{B}}
                | \judgeNorm{\Gamma}{M}{A}
                |}
       | 
-      |});      
-      この定義が簡約ベースの正規形の定義と一致していることは当然自明ではないので証明が必要ですが、とりあえずここではそういうものだと思ってください。これをBelugaのコードに落としこむと以下のようになります。
+      |});
+      この導出規則においては中立項${Neut}と正規項${Norm}を相互再帰的に定義しています。この結果として得られる${Norm}がβη正規形の集合になります。この定義が簡約ベースの正規形の定義と一致していることは当然自明ではないので証明が必要ですが、とりあえずここではそういうものだと思ってください。これをBelugaのコードに落としこむと以下のようになります。
       \Code.d-code(`
 neut  : tp → type.
 norm  : tp → type.
@@ -330,7 +338,7 @@ nlam  : (neut a → norm b) → norm (arr a b).
 rapp  : neut (arr a b) → norm a → neut b.
 embed : neut base → norm base.
       `);
-      正規形の定義は相互再帰的になっているため\Code.code(`LF`);では定義できません。変わりに今回使っている構文では一行ずつ新しいLF項を定義しています\footnote{\Code.code(`LF`);はコードを構造化するための糖衣構文で特に何か特別なことをやっているわけではありません。}。
+      正規形の定義は相互再帰的になっているため\Code.code(`LF`);文では定義できません。変わりに一行ずつ新しいLF定数を定義しています。
       }
       >
       +subsection {文脈様相型によるLF項と計算の分離} <
