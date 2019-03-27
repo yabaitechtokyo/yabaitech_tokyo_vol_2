@@ -29,10 +29,9 @@ let-inline ctx \todo inner =
 
 let article = '<
   +chapter ?:(`zpt-article`)
-  ?:({LFと文脈様相型によるNormalization by Evaluationの定式化})
-   (|
+  (|
     bibliography = zpt-bibliography;
-    title = {Belugaによるメタプログラミング};
+    title = {Belugaによるプログラミング言語の定式化};
     author = {zeptometer};
     |) <
     +section {はじめに} <
@@ -342,7 +341,8 @@ embed : neut base → norm base.
       }
       >
       +subsection {計算の階層からNormalization by Evaluationを定義する} <
-        +p{先ほどLFで定義したSTLCの言語と正規項を用いてNormalization by Evaluationを実装していきましょう。しかしながらLFは実体を伴わない定数を持っていてため計算ができませんし、代数的データ構造と違ってパターンマッチすることもできません。これらを解決するためにBelugaでは一つ上のレベルを用意して、そこからLFで書かれたコードをオブジェクトとして扱い計算することができるようになっています。いわゆるメタプログラミングですが、Belugaではこれを\dfn{計算の階層}と呼んでいます。}
+        +p{先ほどLFで定義したSTLCの項と正規項を用いてNormalization by Evaluationを実装していきましょう。ただここで問題がでてきます。例えばCoqであればSTLCの項を代数的データ構造として定義して、それに対するプログラムないし証明を書くことでSTLCの性質を書くことができます。しかしながら今回我々がSTLCを表現するために定義したLF定数はあくまでただの定数でパターンマッチができるようなデータ構造ではありません。
+        これらを解決するためにBelugaではメタプログラミングの階層を提供して、そこから\emph{LFのコードをオブジェクトとして扱って}、それに対して計算することができるようになっています。Belugaではこれを\dfn{計算の階層}と呼んでいます。}
         +p{
           \Code.d-code(`
 schema ctx = some [a:tp] block x:neut a;
