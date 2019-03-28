@@ -1,0 +1,21 @@
+@import: book-class
+
+module Postscript : sig
+  val article : block-text
+end = struct
+
+let article = '<
++chapter ?:(`postscript-article`) (|
+    bibliography = [];
+    title = {あとがき};
+    author = {};
+    |) <
++section{あうあうあー} <
++p{
+  ぽへ
+}
+>
+>
+>
+
+end
