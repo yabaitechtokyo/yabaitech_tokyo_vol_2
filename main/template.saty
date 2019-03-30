@@ -6,6 +6,7 @@
 @import: ../zpt/article
 @import: ../pohe/article
 @import: ../gfn/article
+@import: postscript
 
 document (|
   title = `yabaitech.tokyo vol.2`;
@@ -18,4 +19,5 @@ document (|
   #Wasabiz.article;
   #Zpt.article;
   #pohe-article;
+  #Postscript.article;
 >
