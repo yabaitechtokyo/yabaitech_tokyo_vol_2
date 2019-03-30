@@ -1,0 +1,30 @@
+@require: itemize
+@require: code
+@import: bib
+@import: ../main/book-class
+
+
+let-inline ctx \dfnen it-en =
+  read-inline (ctx |> Book.set-latin-font Book.font-latin-italic) {#it-en;}
+
+
+let-inline ctx \dfnjaen it-ja it-en =
+  let ib-ja = read-inline (ctx |> Book.set-cjk-font Book.font-cjk-gothic) it-ja in
+  ib-ja ++ read-inline ctx {(\dfnen{#it-en;})}
+
+let red-letters ctx =
+  ctx |> Book.set-cjk-font Book.font-cjk-gothic
+      |> set-text-color Color.red
+
+let-inline ctx \NEEDSREF =
+  read-inline (red-letters ctx) {［要引用］}
+
+let-inline ctx \REMAINS it =
+  read-inline (red-letters ctx) {［要加筆： #it;］}
+
+let-inline \lambda-circle = {${\lambda^{\bigcirc}}}
+let-inline \lambda-square = {${\lambda^{\text!{□}}}}
+let-inline \MetaML-square = {${\text!{MetaML}^{\text!{□}}_{e}}}
+let-inline \lambda-open-poly =
+%  {${\lambda_{\mathit-token!(`open`)}^{\mathit-token!(`poly`)}}}
+  {${\lambda_{open}^{poly}}}
