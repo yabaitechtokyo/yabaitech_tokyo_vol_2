@@ -4,6 +4,9 @@ module Postscript : sig
   val article : block-text
 end = struct
 
+let-block ctx +right-align it =
+  line-break false false ctx (inline-fil ++ (read-inline ctx it))
+
 let article = '<
 +chapter ?:(`postscript-article`) (|
     bibliography = [];
@@ -49,6 +52,7 @@ let article = '<
   本誌の(見かけ上の)出来上がりを参考に，\SATySFi;を使ってみようという方が増えれば幸いです．
   その際はぜひ本誌を複数冊ご購入いただき，\SATySFi;の布教活動に使用していただければと思います．
 }
++right-align{(文責: wasabiz)}
 >
 >
 >
