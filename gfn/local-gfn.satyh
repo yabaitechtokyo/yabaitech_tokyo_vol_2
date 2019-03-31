@@ -9,7 +9,7 @@
 
 
 let-math \lnot = math-char MathOrd `¬`
-
+let-math \nsynteq = math-char MathRel `≢`
 
 let-inline ctx \dfnen it-en =
   read-inline (ctx |> Book.set-latin-font Book.font-latin-italic) {#it-en;}
@@ -80,4 +80,5 @@ let-math \funNotIn mb menv = ${\lnot\mathrm{In}\paren{#mb, #menv}}
 let-math \funFind mG mU mx = ${\mathrm{Find}\paren{#mG, #mU, #mx}}
 let-math \funConstType m = ${\mathrm{ConstType}\paren{#m}}
 let-math \concat m1 m2 = ${#m1\cdot#m2}
+let-math \concats ms = Math.join ${\cdot} ms
 let-math \subscope mU mg1 mg2 = ${#mU \vDash #mg1 \succcurlyeq #mg2}

@@ -40,22 +40,21 @@ let-inline ctx \todo inner =
     read-inline ctx-todo {[TODO: #inner;]}
 
 let article = '<
-  +chapter ?:(`zpt-article`) ?:({面倒なことはBelugaにやらせよう})
+  +chapter ?:(`zpt-article`)
   (|
     bibliography = zpt-bibliography;
     title = {Belugaによる型システムの形式化};
     author = {zeptometer};
     |) <
     +section {はじめに} <
-    +p {Beluga\footnote{http://complogic.cs.mcgill
-    
-    .ca/beluga/}はMcGill大学のBrigitte Pientkaらによって開発されている定理証明支援系というか関数型プログラミング言語というか、なんかそんなかんじのものです\footnote{Curry-Howard同型が理論的背景にあるから境目が曖昧になるんですわ、しゃーない}。公式サイトによる紹介は以下の通りです。}
+    +p {Beluga\footnote{http://complogic.cs.mcgill.ca/beluga/}はMcGill大学のBrigitte Pientkaらによって開発されている定理証明支援系というか関数型プログラミング言語というか、なんかそんなかんじのものです\footnote{Curry-Howard同型が理論的背景にあるから境目が曖昧になるんですわ、しゃーない}。公式サイトによる紹介は以下の通りです。}
     
     +p {\> Beluga is a functional programming language designed for reasoning about formal systems. It features direct support for object-level binding constructs using higher order abstract syntax and treats contexts as first class objects.}
     
-    +p {なんかわかるようなわからないようなことが書いてありますね。これの意味するところがわかるところまで持っていくのがこの記事の目標となっております。がんばるぞー。記事の流れは以下のようになっております:
+    +p {なんかわかるようなわからないようなことが書いてありますね。これの意味するところがなんとなくわかるところまで持っていくのがこの記事の目標となっております。がんばるぞー。記事の流れは以下のようになっております:
     \listing{
-    * Normalization by Evaluationというテクニックについて解説をしながらReasonで実装し\footnote{Reasonを選んだのはなんとなく触ってみたかったからです!}、その実装の問題点について考える
+    * 背景として単純型付きλ計算とそのβη正規形について説明する
+    * Normalization by Evaluationというテクニックについて解説をしながらReasonで実装し、その実装の問題点について考える
     * Belugaの言語機能について解説しつつNormalization by Evaluationを再実装し、先の問題点が解消されていることを確認する
     }
     }
@@ -63,7 +62,7 @@ let article = '<
 
 
     +section {インストール} <
-    +p{GithubのREADMEを読め。\todo{真面目に書く必要あるかなこれ}}
+    +p{今のところBelugaをインストールするにはソースコードから直接コンパイルするのが確実そうです。GitHubのリポジトリ(https://github.com/Beluga-lang/Beluga)のINSTALLに各環境へのインストール方法が書いてあります。筆者はLinuxでの動作を確認しました。}
     >
 
 
@@ -145,7 +144,7 @@ let article = '<
                |}
       | 
       |});
-      この導出規則においては中立項${Neut}と正規項${Norm}を相互再帰的に定義しています。この結果として得られる${Norm}がβη正規形の項の集合になります。この定義がβ簡約とη展開の定義に基く正規形と一致していることは当然自明ではないので証明が必要ですが、とりあえずここではそういうものだと思ってください。\todo{cite}
+      この導出規則においては中立項${Neut}と正規項${Norm}を相互再帰的に定義しています。この結果として得られる${Norm}がβη正規形の項の集合になります。この定義がβ簡約とη展開の定義に基く正規形と一致していることは当然自明ではないので証明が必要ですが、とりあえずここではそういうものだと思ってください。
     }
     
     +p{さて、これまでの話をふまえるとSTLCの項が与えられた時にそれに対応するβη正規形の項を得たい、というのはごく自然な考えであると思われます。
@@ -289,7 +288,7 @@ let gensym: unit => string =
   }
     `);
    
-    reify本体は以下のように定義できます。
+    reify本体は以下のように定義できます。これはもう一つの関数reflectとの相互再帰によって実装されています。
    
     \Code.d-code(`
 type exn +=
@@ -317,22 +316,21 @@ and reflect: (term, typ) => semantics =
     }
   }
     `);
-    \todo{何が起こっているかを説明する}
+    基底型の意味についてはそれが持っている正規形を取り出すだけで大丈夫です。関数型の場合には、とりあえずλ抽象の項を作って、bodyの部分にはλ抽象によって導入された変数\code(`x`);に対応する意味を関数\code(`fn`);に渡して帰ってきた意味に対してreifyを再帰的に適用します。この「変数\code(`x`);に対応する意味」を担当するのがreflectで、これは${Neut}に属する項についてそれに対応する意味を返します。
     }
    
-    +p{以上がReasonによるNbEの実装です。\todo{SKIコンビネータとかで簡単な例を示す}}
+    +p{煙に巻かれたような気持ちになるかもしれませんが、実際にこれでβη正規形を得ることができます。以上がReasonによるNbEの実装です。}
     >
    
     +section {BelugaによるNormalization by Evaluationの定式化} <
-      +p{さて、先ほどの実装にはいくつか問題点があります。\footnote{Reasonの型システムでもこれらの問題点をある程度解決することは可能です。Belugaがどのような問題を解決したいかを説明するためあえて改善の余地のある実装にしています、ご了承ください。}
+      +p{さて、先ほど示したReasonによる実装にはいくつかうれしくない点があります。\footnote{Reasonの型システムでもこれらの問題点をある程度解決することは可能です。Belugaがどのような問題を解決したいかを説明するためあえて改善の余地のある実装にしています、ご了承ください。}
       \listing{
         * 束縛の管理に本質的でないコードが必要
         * 項が型判断を伴わない場合がある
         * 正規形の項の型がない
         * 上記の要因によって実行時エラーが発生しうる
       }
-      \todo{もうちょっと詳しくかきたいよね}
-      を指すのですが、この章ではこれらがどういうものかを実際にコードを書いていきながら解説します。
+      しかしBelugaを使えばこれらの問題に悩まされることはありません。実際に見ていきましょう。
       }
       
 
@@ -483,7 +481,7 @@ stratified Sem : {g : ctx} [ ⊢ tp] -> ctype =
 
         +p{若干説明が長くなってしまいましたが、これらを踏まえると先ほどの型は「もとの環境\code(`g`);よりも弱い任意の環境\code(`h`);について、その環境における型\code(`A`);の意味から型\code(`B`);の意味への関数を与えるもの」ということになります。これを\code(`Arr`);に与えることで関数型の項の意味を与えることができます。}
         
-        +p{
+        +p{次に補助関数として\code(`sem_wkn`);を定義しましょう。これはある環境\code(`g`);における意味があった時に、それをより弱い環境\code(`h`);の意味へ変換する関数です。
   \Code.d-code(`
 rec sem_wkn : {h : ctx} {g : ctx} {#S : [h ⊢ g]} Sem [g] [ ⊢ A] → Sem [h] [ ⊢ A]  =
   mlam h ⇒ mlam g ⇒ mlam S ⇒ fn e ⇒ case e of 
@@ -491,15 +489,21 @@ rec sem_wkn : {h : ctx} {g : ctx} {#S : [h ⊢ g]} Sem [g] [ ⊢ A] → Sem [h] 
   | Arr [g] f ⇒ Arr [h] (mlam h' ⇒ mlam S' ⇒ f [h'] [h' ⊢ #S[#S']])
 ;
           `);
-        }
+        \code(`rec`);という名前が示すようにこれは再帰関数となっていて、\code(`Sem`);の構造に沿って定義しています。BelugaではLFのコードに対するパターンマッチが可能で、上のコードだと\code(`case e of ...`);の部分が\code(`Sem`);とその引数に対するパターンマッチをやっています。}
+        +p{与えられた意味がBaseの場合、それは\code(`[g ⊢ norm base]`);のコードを伴うはずです。そのため\code(`Base [g ⊢ R]`);というようにLF項の部分をメタ変数\code(`R`);にマッチさせています。\code(`R`);はLFのコードを表すメタ変数なので、\code(`[g ⊢ norm base]`);の型のコードが代入されます。然る後にこれを使って\code(`[h ⊢ norm base]`);の型のコードを作りますが、ここで\code(`g`);から\code(`h`);への置換\code(`#S`);を使います。具体的には\code(`R[#S]`);と書くことで\code(`[h ⊢ norm base]`);を得ることができます。これを環境\code(`h`);のコードに埋め込むことで弱化を実現させています。\code(`Arr`);の場合も似たような感じで、こちらは\code(`#S[#S']`);のように置換に対して置換を行うことで新しい置換を作り出しています。}
 
-        +p{\Code.d-code(`
+        +p{意味が定義できたのでお次はeval関数を定義しましょう。まずは環境を表すデータ型を定義します。
+           \Code.d-code(`
 schema tctx = some [t : tp] block x : term t;
 
 typedef Env : {g : tctx} {h : ctx} ctype =
   {T : [ ⊢ tp]} {#p : [g ⊢ term T[]]} Sem [h] [ ⊢ T]
 ;
-
+`);
+          一行目で新しいschemaの\code(`tctx`);を定義していて、これはSTLCの項からなる環境を表しています。この定義には新しい概念として\dfn{パラメータ変数}が出てきます。これも計算の階層の概念で、ある環境の中の特定の変数を表します。上のコードの例だと\code(`{#p : [g ⊢ term T[]]}`);は環境\code(`g`);中における\code(`term T`);型の変数を表しています。つまるところある環境の型\code(`Env g h`);は\code(`g`);の中の型\code(`T`);変数\code(`#p`);が与えられた時に、それに対応するような\code(`Sem [h] [ ⊢ T]`);の意味を返す関数になっています。
+        }
+        +p{eval関数は以下のように定義できます。いくつかの補助関数が必要ですが、STLCの項の構造に沿って再帰していくのはReasonの場合とあまり変わりません。\footnote{説明が雑ではないかと思われたかもしれません。締切が30分前なので端折られたのです。申し訳ありません… 一応必要な概念の説明はしたつもりなので練習問題のつもりで読んでいただければと思います。}
+          \Code.d-code(`
 rec env_ext : Env [g] [h] → Sem [h] [ ⊢ S] → Env [g, x : term S[]] [h]  =
   fn env ⇒ let env : Env [g] [h] = env
     in fn sem ⇒ mlam T ⇒ mlam p ⇒ case [g, x : term _ ⊢ #p] of 
@@ -528,32 +532,63 @@ fn tm ⇒ fn env ⇒
       `);
       }
 
-      +Code.code(`
+      +p{またreify/reflectについても同様に、Reasonのコードを精緻化した形で書くことができます。
+      \d-code(`
+rec app' : (g:ctx) {R : [g ⊢ neut (arr T[] S[])]}
+           [g ⊢ norm T[]] → [g ⊢ neut S[]]  =
 mlam R ⇒ fn n ⇒ let [g ⊢ N] = n in [g ⊢ rapp R N];
 
 rec reify : Sem [h] [ ⊢ A] → [h ⊢ norm A[]] =
 fn sem ⇒ case sem of
-| Base [h ⊢ R] ⇒ [h ⊢ R]
-| Arr [g] f ⇒ let  [g, x : neut _ ⊢ N] =
-                   reify (f [g, x : neut _] [g, x ⊢ ..] (reflect [g, x : neut _ ⊢ x]))
+    | Base [h ⊢ R] ⇒ [h ⊢ R]
+    | Arr [g] f ⇒ let  [g, x : neut _ ⊢ N] =
+                   reify (f [g, x : neut _]
+                            [g, x ⊢ ..]
+                            (reflect [g, x : neut _ ⊢ x]))
                    in [g ⊢ nlam (\x. N)]
 and reflect : [h ⊢ neut A[]] → Sem [h] [ ⊢ A] =
 fn n ⇒ let [h ⊢ R] : [h ⊢ neut A[]] = n
         in case [ ⊢ A] of
             | [ ⊢ base ] ⇒ Base [h ⊢ embed R]
-            | [ ⊢ arr B C ] ⇒ Arr [h] (mlam h' ⇒ mlam W ⇒ fn tm ⇒
-                                           reflect (app' [h' ⊢ R[#W]] (reify tm)))
-;
+            | [ ⊢ arr B C ] 
+              ⇒ Arr [h] (mlam h' ⇒ mlam W ⇒ fn tm ⇒
+                           reflect (app' [h' ⊢ R[#W]] (reify tm)))
+;`);
+      }
 
-rec nbe : Env [g] [h] → [g ⊢ term A[]] → [h ⊢ norm A[]] =
+      +p{仕上げに正規化関数\code(`normalize`);を定義します。
+      \d-code(`
+rec normalize : Env [g] [h] → [g ⊢ term A[]] → [h ⊢ norm A[]] =
 fn env ⇒ fn tm ⇒ reify (eval tm env)
 ;
         `);
+      このBelugaによって記述された正規化関数は型レベルで期待される動作が実現されていることを確認できます。これはReasonの正規化関数に対する大きな利点であると言えます。
+      }
+      +p{最後にこのコードがBelugaの型検査を通ることを確認してこの章の締めとしましょう。今回のコードは http://bit.ly/2I36EmP からダウンロードできます。
+      \d-code(`
+$ beluga nbe.bel
+
+## Type Reconstruction: nbe.bel ##
+
+## Type Reconstruction done: nbe.bel  ##
+
+
+
+`);
+      お疲れさまです。
+      }
       >
     >
-    +section {理論的背景について} <
-    >
-    +section {補遺} <
+    +section {あとがき} <
+      +p{最初に筆者の努力が足りずに一部について(特にBelugaによるNbEの実装のあたり)について説明が十分にされていないことをお詫びさせてください。コードを書くと分かったつもりになっていたことが実際に説明を書こうとする時点で分かっていなかったことに気付く、というのはよくある話で一重に筆者の未熟ゆえの帰結です。またBelugaはプログラミング言語としてはかなり特殊な部類に入るため説明が思ったよりも膨大になってしまったことも遅延の要因になってしまいました。他の部分、例えばNormalization by Evaluationやその周辺の背景知識やBelugaの基本的なアイデアについてはなんとなく概観を伝えることができたのではないかと思います。}
+      
+      +p{Belugaについてより詳しく知ってみたいという方はBelugaのホームページ(http://complogic.cs.mcgill.ca/beluga/)を訪れてみることをお勧めします。特にMechanizing Types and Programming Languages: A Companion\cite[`META`];はプログラミング言語の様々な性質を証明しながらBelugaの機能を学習していくという体裁をとっておりよい教材になると思われます。Belugaの理論的な側面を知りたいという人は\cite[`AB12`; `BA15`; `NPP08`];あたりを見るといいのではないかと思います。}
+
+      +p{Belugaを実際に触ってみた感想としては「まだ開発途上の言語である」という気持ちが強いです。大学で研究の対象として開発されている状況を考えると当然といえば当然ですが。ツールとしての機能やドキュメントの整備についてはまだまだ改善の余地があるように感じました。一方でコアの部分のアイデアはかなり魅力的に感じるのでこのままいい感じに発展していくことを期待しています。}
+
+      +p{この記事を書いたことは筆者にとっては大変良い経験となりました。以前からBelugaについて知ってみたいと考えていたもののなかなか進捗がなく、技術書典6に寄稿するというモチベーションの下にようやくとりかかることができました。記事を書こうとすると自分が思っていたほど物事を理解していないことに気付くということを何度も繰り返しており、実際にアウトプットを出すことの大切さを痛感しています。おかげでBelugaについてそれなりに深い知識を得ることができたという実感があります。}
+
+      +p{こんなところですかね。それでは。}
     >
   >
 >

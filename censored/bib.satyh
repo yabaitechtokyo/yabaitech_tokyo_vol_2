@@ -1,18 +1,34 @@
 @import: ../main/book-class
 
 let censored-bibliography = [
+  (`kemofrewiki`, WebSite(|
+    author = {|フリー百科事典　ウィキペディア日本語版|};
+    title  = {けものフレンズ};
+    url    = `https://ja.wikipedia.org/wiki/けものフレンズ`;
+    year   = 2019;
+  |));
+
+  (`kemofreanimewiki`, WebSite(|
+    author = {|フリー百科事典　ウィキペディア日本語版|};
+    title  = {けものフレンズ (アニメ)};
+    url    = `https://ja.wikipedia.org/wiki/けものフレンズ_(アニメ)`;
+    year   = 2019;
+  |));
+
   (`awslambdaofficial`, WebSite(|
     author = {|Amazon Web Service|};
     title  = {AWS Lambda (サーバーレスでコードを実行・自動管理) \| AWS};
     url    = `https://aws.amazon.com/jp/lambda/`;
     year   = 2019;
   |));
+
   (`awscliofficial`, WebSite(|
     author = {|Amazon Web Service|};
     title  = {AWS CLI のインストールと設定 - Amazon Kinesis Data Streams};
     url    = `https://docs.aws.amazon.com/ja_jp/streams/latest/dev/kinesis-tutorial-cli-installation.html`;
     year   = 2019;
   |));
+  
   (`speakerdeck2017`, WebSite(|
     author = {|Satoru Kadowaki|};
     title  = {AWS APIGateway + Python Lambda + NEologdで作るサーバレス日本語形態素解析API - Speaker Deck};
@@ -40,7 +56,14 @@ let censored-bibliography = [
     url    = `https://qiita.com/rtaguchi/items/e6cb594196fa8186e9a2`;
     year   = 2018;
   |));
-  
+
+  (`neologd`, WebSite(|
+    author = {|Toshinori Sato|};
+    title  = {mecab-ipadic-NEologd : Neologism dictionary for MeCab};
+    url    = `https://github.com/neologd/mecab-ipadic-neologd/`;
+    year   = 2015;
+  |));
+
   (`qiita201812`, WebSite(|
     author = {|\@carrotflakes|};
     title  = {AWS Lambda で MeCab + NEologd 辞書を Node.js で動かす – Qiita};

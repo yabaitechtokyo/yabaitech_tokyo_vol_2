@@ -42,7 +42,7 @@ let zpt-bibliography = [
     |));
     (`Pfenning02`, Article(|
         author = {| Frank Pfenning |};
-        title = {Logical Frameworks—A Brief Introduction};
+        title = {Logical Framework : A Brief Introduction};
         journal = {Proof and System-Reliability};
         volume = None;
         number = None;
@@ -50,7 +50,7 @@ let zpt-bibliography = [
         year = 2002;
     |));
     (`BA15`, InProceedings(|
-        author = {| Brigitte Pientka, Andrew Cave|};
+        author = {| Brigitte Pientka | Andrew Cave|};
         title = { Inductive Beluga: Programming Proofs };
         booktitle = { Automated Deduction - CADE-25 };
         series = None; 
@@ -59,4 +59,29 @@ let zpt-bibliography = [
         pages = (272,281);
         year = 2015;
     |));
+    (`META`, WebSite(|
+        author = {| Brigitte Pientka |};
+        title  = { Mechanizing Types and Programming Languages: A Companion };
+        url    = (`https://github.com/Beluga-lang/Meta`);
+        year   = 2018;
+    |));
+    (`AB12`, InProceedings(|
+        author = {| Andrew Cave | Brigitte Pientka |};
+        title = { Programming with Binders and Indexed Data-types };
+        booktitle = { 39th ACM SIGPLAN-SIGACT Symposium on Principles of Programming Languages (POPL'12) };
+        series = None; 
+        volume = None; 
+        number = None; 
+        pages = (413, 424);
+        year = 2012;
+    |));
+    (`NPP08`, Article(|
+        author = {| Aleksandar Nanevski | Frank Pfenning | Brigitte Pientka |};
+        title = {Contextual Modal Type Theory};
+        journal = {ACM Trans. Comput. Logic};
+        volume = Some(9);
+        number = Some({3});
+        pages = (1, 49);
+        year = 2008;
+    |)); 
 ]
