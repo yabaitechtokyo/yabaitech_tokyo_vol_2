@@ -18,7 +18,7 @@ let string-to-int str =
     let string-to-list str = string-to-list-args str [] in
     let consume-one c i =
     match c with
-      | `0` -> i * 10 
+      | `0` -> i * 10
       | `1` -> i * 10 + 1
       | `2` -> i * 10 + 2
       | `3` -> i * 10 + 3
@@ -670,7 +670,7 @@ end = struct
                 let it-num = embed-string (get-cross-reference-number `chapter:` label) in
                 let it-page = embed-string (arabic ((string-to-int (get-cross-reference-page `chapter:` label)) - 2)) in
                 let ib-title =
-                    read-inline ctx {#title;} ++ 
+                    read-inline ctx {#title;} ++
                     (match subtitle with
                     | None -> inline-nil
                     | Some(st) -> inline-skip 10pt ++ (read-inline ctx {―}) ++ (read-inline ctx {#st;}) ++ (read-inline ctx {―}))
@@ -806,7 +806,7 @@ end = struct
     let ib-caption-inside = read-inline ctx-category {#category; #it-num;} ++ inline-skip (get-font-size ctx) ++ read-inline ctx caption in
     % Centerize only if the length is less than the length of the page
     let ib-caption = if get-natural-width ib-caption-inside >' text-width then
-            ib-caption-inside ++ inline-fil 
+            ib-caption-inside ++ inline-fil
         else
             inline-fil ++ ib-caption-inside ++ inline-fil in
     let bb-inner =
