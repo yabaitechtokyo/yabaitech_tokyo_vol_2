@@ -42,7 +42,7 @@ let article = '<
   +chapter ?:(`zpt-article`)
   (|
     bibliography = zpt-bibliography;
-    title = {Belugaによるプログラミング言語の定式化};
+    title = {Belugaで楽に型システムを形式化する話};
     author = {zeptometer};
     |) <
     +section {はじめに} <
@@ -188,9 +188,9 @@ let article = '<
       {NbEの基本的なアイデア(\cite[`Lindley16`];より引用)}
       <+image-frame{\insert-image(14cm)(`../zpt/figure/nbe.jpg`);}>
       
-      これがNbEの基本的なアイデアです(\cite[`Lindley16`];にこれを端的に表した図があったので\ref-figure(`fig:nbe_in_one_pic`);として引用しておきます)。このアイデアのキモの部分はreify関数を如何に実装するかという点にありますが、実際にReasonでNbEを実装しながらその辺りを見ていくことにしましょう。\footnote{Reasonを選んだのは代数的データ型をサポートした静的型付け言語で綺麗なコードが書けそうだったからで特に深い意味はないです:)}}
-      +p{
-\todo{適切な場所に移す}これをReasonのコードで表してみましょう。STLCの型と項は以下のような代数的データ構造として定義可能です。
+      これがNbEの基本的なアイデアです(\cite[`Lindley16`];にこれを端的に表した図があったので\ref-figure(`fig:nbe_in_one_pic`);として引用しておきます)。}
+
+      +p{NbEのキモの部分はreify関数を如何に実装するかという点にあります。これを実際にReasonでNbEを実装しながら見ていくことにしましょう。\footnote{Reasonを選んだのは代数的データ型をサポートした静的型付け言語で綺麗なコードが書けそうだったからで特に深い意味はないです:)}。最初にすることはSTLCの型と項をReasonのデータ型として定義することです。
     \Code.d-code(`
 type typ =
   | Base
@@ -201,10 +201,9 @@ type term =
   | Abs(string, typ, term)
   | App(term, term);
     `);
-    }
-    +p{変数名はstringで表すことにしています。termは型判断とは独立して定義されているので導出できない項も表現できてしまいますが、今のところは妥当な型判断を伴う項だけを考えることにしましょう。}
-    +p{最初に${Sem}に対応するものとして\Code.code(`semantics`);という型を定義します。
-
+    変数名はstringで表すことにしています。termは型判断とは独立して定義されているので導出できない項も表現できてしまいますが、今のところは妥当な型判断を伴う項だけを考えることにしましょう。}
+    
+    +p{次に${Sem}に対応するものとして\Code.code(`semantics`);という型を定義します。
     \Code.d-code(`
 type semantics =
   | MBase(term)
@@ -330,17 +329,16 @@ and reflect: (term, typ) => semantics =
       >
       +subsection {LFによるSTLCの形式化} <
         +p{
-          NbEをBelugaで記述する上で最初にすることはSTLCの形式化です。Belugaではこれを\dfn{LF}\cite[`Harper93`; `Pfenning02`];によって実現します。LFは依存型理論をベースとした言語で、論理体系やプログラミング言語を形式化するのに用いられます。しかしまあ技術的詳細や理論的背景にいちいち触れていたら締切に間に合わなくなってしまうのでね、実際にコードを書きながらLFのエッセンスを理解していきましょう。
+          NbEをBelugaで記述する上で最初にすることはSTLCの形式化です。Belugaではこれを\dfn{LF}\cite[`Harper93`; `Pfenning02`];によって実現します。LFは依存型理論をベースとした言語で、論理体系やプログラミング言語を形式化するのに用いられます。この章では実際にコードを書きながらLFのエッセンスを理解していくことにしましょう。
         }
-        +p{
-          まずは型の定義をしてみましょう。STLCの型は基底型と関数型から成るのでした。これは以下のようなLFのコードで表せます。
+        +p{まずは型の定義をしましょう。STLCの型は基底型と関数型から成るのでした。型に関する判断をLFにエンコードすると、以下のようなコードになります。
       \Code.d-code(`
 LF tp : type =
 | base : tp
 | arr  : tp → tp → tp
 ;
   `);
-      このコードでは3つの新しい定数\Code.code(`tp`);, \Code.code(`base`);, \Code.code(`arr`);を定義しています。\Code.code(`LF`);は新しいLF定数を定義するためのキーワードです。まず最初の行で\Code.code(`tp`);というSTLCの型を表す型を定義しています。その後に\Code.code(`tp`);に関係する定数として\Code.code(`base`);と\Code.code(`arr`);を定義します。これらはそれぞれSTLCの基底型と関数型に対応します。\Code.code(`arr`);の型は\Code.code(`tp → tp → tp`);となっていますが、これは「\Code.code(`tp`);の値をを二つとる\Code.code(`tp`);の型コンストラクタ」と思うとわかりやすいかと思います。例えば${\arr{A}{B}}が\Code.code(`arr A B`);に対応するわけです。なお、\Code.code(`LF`);で定義する定数名は\emph{全て小文字である必要があります}。これはBelugaが多くの種類の変数を扱っているが故の制限です。ちなみに\Code.code(`LF`);は糖衣構文で、以下のように1行ずつLF定数の定義を行うこともできます。
+      このコードでは3つの新しい定数\Code.code(`tp`);, \Code.code(`base`);, \Code.code(`arr`);を定義しています。\Code.code(`LF`);は新しいLF定数を定義するためのキーワードです。まず最初の行で\Code.code(`tp`);というSTLCの型を表す型を定義しています。その後に\Code.code(`tp`);に関係する定数として\Code.code(`base`);と\Code.code(`arr`);を定義します。これらはそれぞれSTLCの基底型と関数型に対応します。\Code.code(`arr`);の型は\Code.code(`tp → tp → tp`);となっていますが、これは関数型に関する導出規則が判断を二つとって判断を一つ返すことに対応しています。例えば${\arr{A}{B}}が\Code.code(`arr A B`);に対応するわけです。なお、\Code.code(`LF`);で定義する定数名は\emph{全て小文字である必要があります}。これはBelugaが多くの種類の変数を扱っているが故の制限です。ちなみに\Code.code(`LF`);は糖衣構文で、以下のように1行ずつLF定数の定義を行うこともできます。
             \Code.d-code(`
 tp   : type.
 base : tp.
@@ -361,26 +359,36 @@ LF term : tp → type =
                | \judgeStlc{\Gamma}{N}{A}
                |}
       |});
-      一方で\Code.code(`lam`);は関数の項に対応する定数で、「型\Code.code(`a`);の項から型\Code.code(`b`);の項への関数」から型\Code.code(`arr a b`);の項をつくります。このように対象言語(STLC)の関数をメタ言語(LF)の関数によって表現する手法を\dfn{Higher Order Abstract Syntax}(HOAS)と呼びます。ところでSTLCの(Abs)の規則は以下のようなものでした。
+      ところで上の定義の中に変数に対応するものがないことに気付かれたかもしれません。LFでは\emph{エンコードする対象の言語の変数をLFの変数で直接表わします}。例えばSTLCの項とそのLFにおけるエンコードは以下のようになります。
+      \align [
+        ${|| \text!{STLCの項}  || \text!{LFによる表現} |};
+        ${|| \var{x} || \text!{\Code.code(`x`);} |};
+        ${|| \app{\var{x}}{\var{y}} || \text!{\Code.code(`app x y`);} |};
+      ];
+      関数の項に対応する定数\Code.code(`lam`);はこのアイデアの延長線上にあります。(Abs)の規則を思い出してみましょう。
       \math-list (${
         | \bderive?:!{Abs}
             { \judgeStlc{\Gamma}{\lam{x}{A}{M}}{\arr{A}{B}} }
             {| \judgeStlc{\Gamma, x:A}{M}{B} |}
       |});
-      この規則と\Code.code(`lam`);は一見対応してないように見えますが、以下のような見方において一致しています。すなわち(Abs)のルールは「${A}の型の項が環境にある時に、仮にそれの名前をxとして${B}の型の項をつくることができる」ときに「${\arr{A}{B}}の型の項」をつくる規則であると考えることができます。この前者の部分がSTLCだと${\Gamma, x : A \vdash M : B}の形になり、一方でHOASではメタ言語の関数の形をとると考えることができるわけです。
-      \todo{具体的にいくつか項をつくってみる}
+      環境の中に型${A}の変数${x}がある時にそれを項の方へ持っていってλ抽象にすることができるというルールです。先ほどのLFの変数でSTLCの変数を表すというアイデアに基づくと、前者の状況は\Code.code(`term a → term b`);の型を持つLF項で表せるはずです。この項から\Code.code(`term \arr{a}{b}`);のLF項をつくるのが\Code.code(`lam`);の役割で、これは丁度(Abs)の規則に一致します。\Code.code(`lam`);を使うと以下のようにエンコードができます。
+      \align [
+        ${|| \text!{STLCの項}  || \text!{LFによる表現} |};
+        ${|| \lam{x}{A}{\var{x}} || \text!{\Code.code(`lam (\x.x)`);} |};
+        ${|| \lam{x}{\arr{A}{B}}{\lam{y}{A}{\app{\var{x}}{\var{y}}}} || \text!{\Code.code(`lam (\x. (lam \y. (app x y)))`);} |};
+      ];
+      このようにエンコードの対象の言語(ここではSTLC)の変数をエンコードする言語(ここではLF)の変数で表わすテクニックを\dfn{Higher Order Abstract Syntax}(HOAS)と呼びます。変数名を文字列で管理する方法に比べて、HOASは変数の取り扱いの面倒な部分をエンコードする言語に任せることができ実装が大幅に楽になる利点があります。
       }
-      +p{変数名を文字列で管理する方法に比べて、HOASは変数の取り扱いの面倒な部分をメタ言語に任せることができるため実装が楽になります。\todo{β簡約の例}
-      }
-      +p{依存型は大変強力なので、STLCのβη正規形のためのデータ型をつくることさえ可能です。以前に定義したβη正規形をBelugaのコードに落としこむと以下のようになります。
+      +p{依存型は大変強力なので、STLCのβη正規形を表現することも可能です。以前に定義したβη正規形の導出規則をBelugaのコードに落としこむと以下のようになります。
       \Code.d-code(`
 neut  : tp → type.
 norm  : tp → type.
+
 nlam  : (neut a → norm b) → norm (arr a b).
 rapp  : neut (arr a b) → norm a → neut b.
 embed : neut base → norm base.
       `);
-      正規形の定義は相互再帰的になっているため\Code.code(`LF`);文では定義できません。変わりに一行ずつ新しいLF定数を定義しています。
+      正規形の定義は${Neut}と${Norm}の相互再帰的なっているため\Code.code(`LF`);文では定義できません。変わりに一行ずつ新しいLF定数を定義しています。
       }
       >
       +subsection {計算の階層からNormalization by Evaluationを定義する} <
