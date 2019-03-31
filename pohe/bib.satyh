@@ -25,6 +25,18 @@ let pohe-bibliography = [
         url = `https://www.mklinux.org/`;
         year = 2008;
     |));
+    (`sel4_web`, WebSite(|
+        author = {| Data61/CSIRO |};
+        title = {The seL4 Microkernel};
+        url = `https://sel4.systems/`;
+        year = 2016;
+    |));
+    (`sel4_web_faq`, WebSite(|
+        author = {| Data61/CSIRO |};
+        title = {The Proof};
+        url = `http://sel4.systems/Info/FAQ/proof.pml`;
+        year = 2016;
+    |));
     (`hurd`, WebSite(|
         author = {| Free Software Foundation, Inc |};
         title = {GNU Hurd};
@@ -52,6 +64,18 @@ let pohe-bibliography = [
         url = `https://ja.wikipedia.org/wiki/Mach`;
         year = 2019;
     |));
+    (`linus_tan`, WebSite(|
+        author = {| ウィキペディアの執筆者 |};
+        title = {アンドリュー・タネンバウムとリーヌス・トーヴァルズの議論};
+        url = `https://ja.wikipedia.org/wiki/%E3%82%A2%E3%83%B3%E3%83%89%E3%83%AA%E3%83%A5%E3%83%BC%E3%83%BB%E3%82%BF%E3%83%8D%E3%83%B3%E3%83%90%E3%82%A6%E3%83%A0%E3%81%A8%E3%83%AA%E3%83%BC%E3%83%8C%E3%82%B9%E3%83%BB%E3%83%88%E3%83%BC%E3%83%B4%E3%82%A1%E3%83%AB%E3%82%BA%E3%81%AE%E8%AD%B0%E8%AB%96`;
+        year = 2019;
+    |));
+    (`intel_minix`, WebSite(|
+        author = {| NETWORK WORLD |};
+        title = {What is MINIX? The most popular OS in the world, thanks to Intel};
+        url = `https://www.networkworld.com/article/3236064/minix-the-most-popular-os-in-the-world-thanks-to-intel.html`;
+        year = 2017;
+    |));
     (`l4_lessons`, Article(|
         author = {| Kevin Elphinstone and Gernot Heiser |};
         title = {From L3 to seL4 What Have We Learnt in 20 Years of L4 Microkernels?};
@@ -60,5 +84,14 @@ let pohe-bibliography = [
         number = None;
         pages = (0, 0);
         year = 1993;
+    |));
+    (`minix_lessons`, Article(|
+        author = {| Tanenbaum Andrew S |};
+        title = {Lessons Learned from 30 Years of MINIX};
+        journal = {Commun. ACM};
+        volume = Some(59);
+        number = None;
+        pages = (70, 78);
+        year = 2016;
     |));
 ]
