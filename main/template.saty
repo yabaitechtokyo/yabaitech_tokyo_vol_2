@@ -6,6 +6,7 @@
 @import: ../zpt/article
 @import: ../pohe/article
 @import: ../gfn/article
+@import: ../irnbru/article
 @import: postscript
 
 document (|
@@ -19,5 +20,6 @@ document (|
   #Zpt.article;
   #gfn-article;
   #maswag-article;
+  #IB.article;
   #Postscript.article;
 >

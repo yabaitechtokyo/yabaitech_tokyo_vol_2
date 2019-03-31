@@ -1,0 +1,18 @@
+@import: bib
+@import: ../main/book-class
+
+module IB : sig
+  val article : block-text
+end = struct
+
+let article = '<
+  +chapter ?:(`ib-article`)
+  (|
+    bibliography = ib-bibliography;
+    title = {忙しいエンジニアのための Twitch 紹介 ~視聴編~};
+    author = {irnbru};
+    |) <
+    >
+>
+
+end

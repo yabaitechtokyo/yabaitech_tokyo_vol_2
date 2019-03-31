@@ -1,0 +1,4 @@
+@import: ../main/book-class
+
+let ib-bibliography = [
+]
