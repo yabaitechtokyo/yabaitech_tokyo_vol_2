@@ -1,2 +1,10 @@
+@import: ../main/book-class
+
 let pohe-bibliography = [
+    (`microkernel_wikipedia`, WebSite(|
+        author = {| ウィキペディアの執筆者 |};
+        title = {マイクロカーネル};
+        url = `https://ja.wikipedia.org/wiki/%E3%83%9E%E3%82%A4%E3%82%AF%E3%83%AD%E3%82%AB%E3%83%BC%E3%83%8D%E3%83%AB`;
+        year = 2019;
+    |))
 ]
