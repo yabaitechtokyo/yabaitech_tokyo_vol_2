@@ -54,4 +54,11 @@ let censored-bibliography = [
     url    = `https://qiita.com/yukinoi/items/81a707c1317c97f5fdf9`;
     year   = 2015;
   |));
+
+  (`mecabspace2012`, WebSite(|
+    author = {|nullnull|};
+    title  = {mecabで半角スペースを省略せず認識させる - Into the Horizon};
+    url    = `https://nullnull.hatenablog.com/entry/20120629/1340990207`;
+    year   = 2012;
+  |));
 ]
