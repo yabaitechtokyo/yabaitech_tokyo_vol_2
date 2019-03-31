@@ -11,28 +11,40 @@ let-inline ctx \todo inner =
 let censored-article = '<
   +chapter ?:(`censored-article`) (|
     bibliography = censored-bibliography;
-    title = {AWS lambdaでtwitter botを運用する};
+    title = {AWS lambdaでtwitter botを動かす};
     author = {censored};
     |) <
     +p {
       AWSを使ってけものフレンズのtwitter botを動かせるようにしていきます。AWSの１年間限定\emph{ではない}無料枠を使って運用することを目標としていきます。
       本記事の扱う分野としてはAWS lambda、MeCab、twitter botの運用tipsあたりですが、解説というよりは作業記録に近いので、だいぶ分かりづらいかもしれまん。
+      因みに、「AWS lambdaでtwitter botを動かす」でQxxtaで検索すると20件ほどヒットします。
     }
     +section {なぜ今更けものフレンズbotなのか} <
     +p {
-      端的に言えば、１年ほど前までtwitterでけものフレンズbotを運用していたので、手元に基本的なコードがあったからです。作成したのがもう２年前のことになるので最早当時のことは朧げにしか覚えていないですがざっくり経緯を書くと、けものフレンズbotは筆者が先輩の修論発表会に内輪で楽しむために作ったtwitter botです。界隈で有名な人に面白がられて以降フォロワーが増え、１万フォロワー程度まで行きました。後々いろんな機能を付け加えていきましたが、botの基本的なコンセプトは単純です。
+      端的に言えば、１年ほど前までtwitterでけものフレンズbotを運用していたので、手元に基本的なコードがあったからです。
+      作成したのがもう２年前のことになるので最早当時のことは朧げにしか覚えていないですがざっくり経緯を書くと、けものフレンズbotは内輪で楽しむために作ったtwitter botです。
+      界隈で有名な人に面白がられて以降フォロワーが増え、最大で１万フォロワー程度まで行きました。後々いろんな機能を付け加えていきましたが、botの基本的なコンセプトは単純です。
       フォローの誰かが
       「世界一バグを生むのが得意」
       などと特定のキーワード（得意、好き等）を含むツイートしたときに、すかさず
       「すっごーい！あなたは世界一バグを生むのが得意なフレンズなんだね！」
-      と返す、元々は内輪で楽しむために作ったbotでした。
-      大学時代は大学に置きっぱなしだった個人用PCを使って運用していましたが、卒業とともに運用が終了しました。停止した後もちょくちょく復活させてほしいとリプライやDMが来ていたのと、AWSの勉強をしたいと思っていたの、2期もやってることですし（1話も見てないけど）このbotをAWS上に移植することにしました。EC2へ移すだけなら非常に簡単なのですが、こんなbotのために年数千円も払うのも馬鹿馬鹿しいので、AWS の無料枠に収まるように頑張っていきます。
+      と返す、内輪に煽りリプライを飛ばすためのbotでした。
+      大学時代は大学に置きっぱなしだった個人用PCを使って運用していましたが、卒業とともに運用が終了しました。
+      停止した後もちょくちょく復活させてほしいとリプライやDMが来ていたのと、AWSの勉強をしたいと思っていたのと、２期をやっていたのもありこのbotをAWS上に移植することにしました。
+      色々「話題」となった２期もなんとかこの記事を書きながら視聴しています。３話まで見ましたが、３話のイルカちゃんが可愛いと思います。
+      EC2へ移すだけなら非常に簡単なのですが、こんなbotのためにお金を払うのも馬鹿馬鹿しいので、AWSの無料枠に収まるように頑張っていきます。
     }
     >
     +section {AWS lambdaについて} <
     +p {
       AWS lambdaとはサーバーのプロビジョニングや管理をすることなくコードを実行することができるサービス\cite[`awslambdaofficial`];です。
-      AWS lambdaは月あたり1,000,000件のリクエスト、400 GB-秒のメモリ使用、3,200,000 秒の計算時間が\emph{無料}で利用できます。
+      いわゆるサーバーレスアプリケーションを運用するためのクラウドリソースで、常に多くのトラフィックが来ることが期待されないアプリケーションの運用に向いています。
+      サーバーレスアプリケーションでは何かしらのイベント（今回はcronの様な一定時間）をトリガーとして何かしらの処理（今回はtwitterのタイムラインの読み取りとツイート処理）が実行されます。
+      AWS lambdaにはlambda functionとlambda layerの2種類があります。Lambda functionは処理を行うコード本体、lambda layerは様々なlambda functionで使用できるzipアーカイブです。
+      Lambda functionはlambda layerをバージョン区切りで読み込むのでlambda layerを更新した場合、それを使用するlambda functionも更新しなければなりません。
+      よって、lambda layerでは頻繁に開発を行わないコードの共通部分、lambda functionでは頻繁に開発を行うコードを使うように書き分けることで効率よく開発を行うことができます。
+      今回は既存のpythonライブラリやMeCabバイナリ、MeCab辞書などをlayerとして扱っています。
+      AWS lambdaでは月あたり1,000,000件のリクエスト、400 GB-秒のメモリ使用、3,200,000 秒の計算時間が\emph{無料}で利用できます。
       これらの内どれか一つでも超過するとメモリの使用量×計算時間に比例した金額がかかります。
     }
     >
@@ -67,7 +79,8 @@ let censored-article = '<
       g++へのパスを通します。
       \d-code(`
         sudo mkdir /var/task
-        sudo ln -s /usr/libexec/gcc/x86_64-amazon-linux/4.8.5/cc1plus /usr/local/bin/
+        sudo ln -s /usr/libexec/gcc/x86_64-amazon-linux/4.8.5/cc1plus \
+        /usr/local/bin/
       `);
       これで準備は完了です。
     }
@@ -77,10 +90,15 @@ let censored-article = '<
       http://taku910.github.io/mecab へ行って最新のものを確認しましょう。
       \d-code(`
       cd ~
-      curl -L "https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7cENtOXlicTFaRUE" -o mecab-0.996.tar.gz
+      curl -L \
+      "https://drive.google.com/uc"\
+      "?export=download&id=0B4y35FiV1wh7cENtOXlicTFaRUE" \
+      -o mecab-0.996.tar.gz
       tar -zxvf mecab-0.996.tar.gz
       cd mecab-0.996
+      `);
       インストール先を/var/taskに設定します。
+      \d-code(`
       sudo ./configure --prefix=/var/task --with-charset=utf8
       sudo make
       sudo make install
@@ -91,10 +109,14 @@ let censored-article = '<
     +p {
       \d-code(`
       cd ~
-      curl -L "https://drive.google.com/uc?export=download&id=0B4y35FiV1wh7MWVlSDBCSXZMTXM" -o mecab-ipadic-2.7.0-20070801.tar.gz
+      curl -L \
+      "https://drive.google.com/uc"\
+      "?export=download&id=0B4y35FiV1wh7MWVlSDBCSXZMTXM" \
+      -o mecab-ipadic-2.7.0-20070801.tar.gz
       tar -zxvf mecab-ipadic-2.7.0-20070801.tar.gz
       cd mecab-ipadic-2.7.0-20070801
-      sudo ./configure --prefix=/var/task --with-charset=utf8 --with-mecab-config=/var/task/bin/mecab-config
+      sudo ./configure --prefix=/var/task --with-charset=utf8 \
+      --with-mecab-config=/var/task/bin/mecab-config
       sudo make
       sudo make install
       `);
@@ -104,7 +126,9 @@ let censored-article = '<
     +p {
       \d-code(`
       sudo yum install swig -y
-      wget –quiet https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3.sh
+      wget –quiet \
+      https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+      -O ~/miniconda3.sh
       /bin/bash miniconda3.sh -b -p $HOME/miniconda3
       echo 'export PATH=”$HOME/miniconda3/bin:$PATH"' >> ~/.bashrc
       echo 'export "PATH=$PATH:/var/task/bin/"' >> ~/.bashrc
@@ -120,9 +144,13 @@ let censored-article = '<
       git clone –depth 1 https://github.com/neologd/mecab-ipadic-neologd.git
       echo 'export "PATH=$PATH:/var/task/bin/"' >> .bashrc
       echo 'export "LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/var/task/lib/"' >> .bashrc
-      ./bin/install-mecab-ipadic-neologd -y -p $HOME/neologd-minimum -n –eliminate-redundant-enrty
+      ./bin/install-mecab-ipadic-neologd -y \
+      -p $HOME/neologd-minimum -n –eliminate-redundant-enrty
       `);
-      この時点で\code(`$HOME/neologd`);の中身は400MB以上ありますが、圧縮すると90MB程度になるので、S3経由でlambda functionをアップロードすることができます。--elimintate-redundant-entryオプションをつけることによって最小構成でインストールを試みます。ちなみに、他のオプションではt2.micro instanceのメモリが足りずにビルドが途中で落ちます。仕方ないので、t2.medium instanceをお金を払って起動してビルドして見ました。比較してみると、システム辞書の部分が大きく異なっていることが分かります。
+      この時点で\code(`$HOME/neologd`);の中身は400MB以上ありますが、圧縮すると90MB程度になるので、S3経由でlambda functionをアップロードすることができます。
+      --elimintate-redundant-entryオプションをつけることによって最小構成でインストールを試みます。
+      ちなみに、他のオプションではt2.micro instanceのメモリが足りずにビルドが途中で落ちます。
+      仕方ないので、t2.medium instanceをお金を払って起動してビルドして見ました。比較してみると、システム辞書の部分が大きく異なっていることが分かります。
       \d-code(`
       neologd-ignore-all:
       合計 702M
@@ -148,22 +176,26 @@ let censored-article = '<
       -rw-r--r-- 1 ec2-user ec2-user 403M  2月  7 16:21 sys.dic
       -rw-r--r-- 1 ec2-user ec2-user 5.6K  2月  7 16:21 unk.dic
       `);
-      この主な原因はseed/mecab-user-dict-seed.20190204.csv.xzなのですが、中を見てみると結構程頻度そうな単語も多く収録されていることがわかります。ここで、語数の長い単語は低頻出であるという経験的な仮定をおきます。/bin/install-mecab-ipadic-neologdに—max_surface_lengthとmin_surface_lengthというオプションがあるので、これを用いて長単語を辞書から削除していきます。しかし、このままではIPAの辞書にもこの長さ制限がかかってしまうので、execlib/make-mecab-ipadic-neologd.shを修正し、mecab-user-dict-seed.20190204.csvにのみ選択的に反応するようにします。今回は、
+      この主な原因はseed/mecab-user-dict-seed.20190204.csv.xzなのですが、中を見てみると結構程頻度そうな単語も多く収録されていることがわかります。
+      ここで、語数の長い単語は低頻出であるという経験的な仮定をおきます。
+      /bin/install-mecab-ipadic-neologdに—max_surface_lengthとmin_surface_lengthというオプションがあるので、これを用いて長単語を辞書から削除していきます。
+      しかし、このままではIPAの辞書にもこの長さ制限がかかってしまうので、execlib/make-mecab-ipadic-neologd.shを修正し、mecab-user-dict-seed.20190204.csvにのみ選択的に反応するようにします。
+      今回は、
       \d-code(`
       if [[ ${TIM_FILE_NAME} =~ mecab-user-dict-seed ]]; then
       `);
-      を加えました。
-      で、
+      を加えました。その後、
       \d-code(`
-      ./bin/install-mecab-ipadic-neologd -n -y\
-      --ignore_adverb\
-      --ignore_interject\
-      --ignore_noun_ortho\
-      --ignore_noun_sahen_conn_ortho\
-      --ignore_adjective_std\
-      --ignore_adjective_verb\
-      --ignore_ill_formed_words
-      --max_surface_length 11 --min_surface_length 1
+      ./bin/install-mecab-ipadic-neologd -n -y \
+      --ignore_adverb \
+      --ignore_interject \
+      --ignore_noun_ortho \
+      --ignore_noun_sahen_conn_ortho \
+      --ignore_adjective_std \
+      --ignore_adjective_verb \
+      --ignore_ill_formed_words \
+      --max_surface_length 11 \
+      --min_surface_length 1
       `);
       を適用したところ、ファイルサイズは501MBになりました。
       この２つの辞書を比較して見ます。けものフレンズの単語は今では多くの単語が登録されているため、作成当時のようなカスタム辞書を自分で作る手間は必要ありませんでした。すっごーい！
@@ -229,16 +261,22 @@ let censored-article = '<
       ね	助詞,終助詞,*,*,*,*,ね,ネ,ネ
       EOS
       `);
-      --eliminate-redundant-enrtyが非推奨であった通り、やはり精度がだいぶ違っています。特に今回は—eliminate-redundant-entryは辞書に非可逆なnormalizationを加えビルドした後、実際の入力データもnormalizationが施された後にmecabに入力するようなケース、すなわち検索や推薦など単語の標準形のみ得られればそれで十分な場合では有効ですが、今回のような鸚鵡返しを想定した状況では使用するのは難しいことが改めて確認されました。
-ここまでにt2.micro t2.mediumを起動したので\$0.06かかりました。
-Unzipの際にかかるコストは256MBメモリの設定で184MB消費して約33秒かかりました。S3から計500MBのファイル群をダウンロードするよりは早いはずです。
+      --eliminate-redundant-enrtyが非推奨であった通り、やはり性能がだいぶ違っています。
+      --eliminate-redundant-entryは辞書の単語に非可逆な正規化を施しビルドするため、実際の入力データも正規化を施した後にmecabに入力するようなケース、
+      すなわち検索や推薦など単語の正規形のみ得られれば十分な場合では有効ですが、今回のような鸚鵡返しを想定した状況では使用するのは難しいことが改めて確認されました。
+      ここまでにt2.micro t2.mediumを起動したので\$0.06かかりました・・・。MeCab辞書のビルドも無料でできる方法があったらどなたか教えて下さい。
     }
     >
     +subsection{neologd辞書をlambda layerとして固める} <
-      
+    +p {
+      \todo{TODO}
+    }
     >
     >
     +section{実際に動かす} <
+    +p {
+      次にできあがったMeCabライブラリを用いて実際にtwitter botを動かせるようにしていきます。
+    }
     +subsection{Pythonでの日本語処理} <
     +p {
       lambdaはデフォルトだと日本語（多分マルチバイト文字）に対応していないので
@@ -247,7 +285,8 @@ Unzipの際にかかるコストは256MBメモリの設定で184MB消費して�
     >
     +subsection{mecab-python3の処理速度} <
     +p {
-      \cite[`qiita2015`];によれば、mecab-python3のparseToNodeメソッドはparseメソッドに比べ２倍以上遅いようです。４年前の記事だったので一応手元で追試験を行ったところ、確かに2倍程度の差があったので確かなようです。
+      \cite[`qiita2015`];によれば、mecab-python3のparseToNodeメソッドはparseメソッドに比べ２倍以上遅いようです。
+      ４年前の記事だったので一応手元で追試験を行ったところ、確かに2倍程度の差があったので確かなようです。
       機能をフルに使おうとしない限り、自作でparseToNodeを実装した方が良さそうです。
     }
     >
@@ -256,7 +295,14 @@ Unzipの際にかかるコストは256MBメモリの設定で184MB消費して�
       さて、Lambdaの無料枠内でbotで動かすことは実際に可能かを考えてみます。
       実際に動かすのに必要なメモリは1024MBあれば大丈夫そうです。
       Lambdaは月間400,000GB秒なので、400,000 \* 1024 / 1024 / 31 / 24 / 60 = 8.96回/分のペースでfunctionを呼び出すことができます。
-      3,200,000秒のコンピューティング時間が無料なので、3,200,000 / 31 / 24 / 60 = 71.68秒/分functionを呼び出すことができます。けもフレbotを一回稼働させるのにかかる時間は20秒以内なので20秒おき程度に呼び出すことが可能です。    
+      3,200,000秒のコンピューティング時間が無料なので、3,200,000 / 31 / 24 / 60 = 71.68秒/分functionを呼び出すことができます。
+      けもフレbotを一回稼働させるのにかかる時間は20秒以内なので20秒おき程度に呼び出すことが可能です。    
+    }
+    >
+    +subsection{botを運営する上での知見} <
+    +p {
+      twitter botを運営する中で、当初想定していなかった様々な問題が発生します。
+      \todo{TODO}
     }
     >
     >
