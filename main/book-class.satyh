@@ -106,6 +106,7 @@ module Book : sig
   direct \ref-theorem : [string] inline-cmd
   direct \ref-lemma : [string] inline-cmd
   direct \ref-corollary : [string] inline-cmd
+  direct \ref-hypothesis : [string] inline-cmd
   direct \ref-example : [string] inline-cmd
   direct \ref-figure : [string] inline-cmd
   direct \ref-table : [string] inline-cmd
@@ -135,6 +136,9 @@ module Book : sig
   direct \lemma : [inline-text?; string?; inline-text] inline-cmd
   direct +corollary : [inline-text?; string?; inline-text] block-cmd
   direct \corollary : [inline-text?; string?; inline-text] inline-cmd
+  direct +hypothesis : [inline-text?; string?; inline-text] block-cmd
+  direct \hypothesis : [inline-text?; string?; inline-text] inline-cmd
+
   direct +proof : [inline-text?; inline-text] block-cmd
   direct \proof : [inline-text?; inline-text] inline-cmd
   direct \emph : [inline-text] inline-cmd
@@ -917,6 +921,13 @@ end = struct
       theorem-scheme ctx (set-latin-font font-latin-italic) {系} wordopt label inner
 
 
+
+let-block ctx +hypothesis ?:wordopt ?:labelopt inner =
+    let label = make-label `hypothesis:` labelopt in
+      theorem-scheme ctx (set-latin-font font-latin-italic) {仮定} wordopt label inner
+
+
+
   let-block ctx +example ?:wordopt ?:labelopt inner =
     let label = make-label `example:` labelopt in
       theorem-scheme ctx (fun x -> x) {例} wordopt label inner
@@ -975,6 +986,15 @@ end = struct
                        | (Some(word), Some(label)) -> '<+corollary?:(word)?:(label)(inner);>
                        ))
 
+  let-inline ctx \hypothesis ?:wordopt ?:labelopt inner =
+    inline-fil ++ embed-block-breakable ctx
+      (read-block ctx (match (wordopt, labelopt) with
+                       | (None, None) -> '<+hypothesis(inner);>
+                       | (Some(word), None) -> '<+hypothesis?:(word)(inner);>
+                       | (None, Some(label)) -> '<+hypothesis?*?:(label)(inner);>
+                       | (Some(word), Some(label)) -> '<+hypothesis?:(word)?:(label)(inner);>
+                       ))
+
   let-inline ctx \example ?:wordopt ?:labelopt inner =
     inline-fil ++ embed-block-breakable ctx
       (read-block ctx (match (wordopt, labelopt) with
@@ -1025,6 +1045,9 @@ end = struct
     let it-num = get-number `corollary:` label in
       read-inline ctx {系 #it-num;}
 
+  let-inline ctx \ref-hypothesis label =
+    let it-num = get-number `hypothesis:` label in
+      read-inline ctx {系 #it-num;}
 
   let-inline ctx \ref-example label =
     let it-num = get-number `example:` label in

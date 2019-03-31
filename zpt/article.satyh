@@ -14,12 +14,23 @@ let-math \arr ant succ = ${#ant \rightarrow #succ}
 let-math \var name = ${#name}
 let-math \lam name typ body = ${\lambda #name^{#typ} . #body}
 let-math \app fn arg = ${#fn #arg}
+let-math \judgeType typ = ${\vdash #typ : Type}
 let-math \judgeStlc ctx term typ = ${#ctx \vdash #term : #typ}
 let-math \judgeNeut ctx neut typ = ${#ctx \vdash #neut : #typ \in Neut}
 let-math \judgeNorm ctx norm typ = ${#ctx \vdash #norm : #typ \in Norm}
 let-math \br = ${\rightarrow_{\beta}}
 let-math \brm = ${\rightarrow_{\beta}^{*}}
+let-math \er = ${\rightarrow_{\eta}}
+let-math \erm = ${\rightarrow_{\eta}^{*}}
 let-math \subst m x n = ${#m \sqbracket{#x \coloneq #n}}
+
+let-inline ctx \insert-image w path =
+  let img = load-image path in
+    use-image-by-width img w
+
+let-inline ctx \insert-pdf-image w path page =
+  let img = load-pdf-image path page in
+    use-image-by-width img w
 
 let-inline ctx \todo inner =
   let ctx-todo =
@@ -46,18 +57,28 @@ let article = '<
     }
     }
     >
+
+
     +section {インストール} <
     +p{GithubのREADMEを読め。\todo{真面目に書く必要あるかなこれ}}
     >
-    +section {背景の背景: λ計算の正規形と簡約による正規化} <
-    +p{本題に入る前にいくらか背景知識の説明をしておく必要があります。}
-    +p{\todo{構成が変わったので序文を書き直す}\dfn{Normalization by Evaluation}とは、λ計算やその亜種の項が与えられた時にその表示的意味論(あるいはeval関数)を経由して正規形を得るテクニックです。今回は対象として単純型付きλ計算(Simply Typed Lambda Calculus, STLC)を扱います\footnote{厳密にはChurch-styleです}。STLCの型は\dfn{基底型}${\base}と\dfn{関数型}${\arr{A}{B}}からなります。
-    \math-list(${| A, B \coloncoloneq \base \mid \arr{A}{B} |});
 
-    STLCの項は\dfn{変数}${\var{x}}、\dfn{関数}${\lam{x}{A}{M}}、\dfn{関数適用}${\app{M}{N}}からなります。
-    \math-list(${| M, N \coloncoloneq \var{x} \mid \lam{x}{A}{M} \mid \app{M}{N} |});
 
-    \dfn{環境}${\Gamma}を変数と型のペアの集合とするときに、\dfn{型判断}${\judgeStlc{\Gamma}{M}{A}}は「環境${\Gamma}の下で項${M}が型${A}を持つ」ことを表します。型判断は以下の規則に従って導出されます。
+    +section {背景の背景: 単純型付きλ計算の正規形} <
+    +p{この記事ではNormalization by Evaluationを形式化しますが、その前に前提知識としてChurch流の単純型付きλ計算(Simply Typed Lambda Calculus, STLC)\cite[`Barendregt93`];について説明します。STLCは静的な型システムを持つプログラミング言語のエッセンスを抽出した体系のうち最もシンプルなものの一つです。}
+
+    +p{STLCの\dfn{型}は\dfn{基底型}${\base}と\dfn{関数型}${\arr{A}{B}}からなります。${\judgeType{A}}は「${A}はSTLCの型である」ことを表わします。このように何らかの知識を表す記法をここでは\dfn{判断}と呼びます(便宜上この記事での判断は全て${\vdash}を伴う記法を用います)。STLCの型に関する判断は以下の規則によって導出されます。
+    \math-list (${
+    | \bderive{ \judgeType{\base} }
+              {| |}
+    | \bderive{ \judgeType{\arr{A}{B}} }
+              {| \judgeType{A}
+               | \judgeType{B}
+               |}
+    |});
+    以降STLCの型は暗黙にこれらの導出規則によって導かれたものと考えることにしましょう。}
+    +p{一方でSTLCの\dfn{項}は\dfn{変数}${\var{x}}、\dfn{関数}${\lam{x}{A}{M}}、\dfn{関数適用}${\app{M}{N}}からなります。これらはプログラムに相当するものです。
+    さて、\dfn{環境}${\Gamma}を変数と型の対の集合とするときに、型判断${\judgeStlc{\Gamma}{M}{A}}を定義できます。これは「環境${\Gamma}の下で項${M}が型${A}を持つ」ことを表す判断で、以下の規則に従って導出されます。
 
     \math-list (${
     | \bderive?:!{Var}
@@ -72,45 +93,62 @@ let article = '<
                | \judgeStlc{\Gamma}{N}{A}
                |}
     |});
-    
-    さて、これをReasonのコードで表してみましょう。STLCの型と項は以下のような代数的データ構造として定義可能です。
     }
-    +Code.code(`
-type typ =
-  | Base
-  | Arr(typ, typ);
-
-type term =
-  | Var(string)
-  | Abs(string, typ, term)
-  | App(term, term);
-    `);
-    +p{変数名はstringで表すことにしています。termは型判断とは独立して定義されているので導出できない項も表現できてしまいますが、今のところは妥当な型判断を伴う項だけを考えることにしましょう。}
-    +p{さて、λ計算で重要な概念としてβ簡約があります。項の集合を${Term}をするとき、${\br}は${Term}上の二項関係で以下のような性質を満たすものと定義します。
+    +p{λ計算で重要な概念としてβ簡約があります。これは関数適用を実行することでプログラムが進んでいく過程を抽象化した概念です。項の集合を${Term}をするとき、β簡約${\br}は${Term}上の二項関係で以下のような性質を満たすものと定義します。
     \align [
     ${| \app{\paren{\lam{x}{A}{M}}}{N} | \br \subst{M}{x}{N} | |};
     ${| \lam{x}{A}{M} | \br \lam{x}{A}{N} | \text!{if\ } M \br N |};
     ${| \app{M}{L} | \br \app{N}{L} | \text!{if\ } M \br N |};
     ${| \app{L}{M} | \br \app{L}{N} | \text!{if\ } M \br N |};
     ];
-    ここで${\subst{M}{x}{N}}は「項M中における変数xの使用を項Nに置き換えて得られる項」を表しています。厳密な定義は実は結構面倒くさいのでここでは省略します。\todo{η正規形についてもちゃんと説明したい}}
-    +p{さて、STLCに関する重要な性質として今しがた定義したβ簡約の合流性と強正規化性があります。以降において二項関係${\brm}は${\br}の反射推移閉包とします。}
-    +definition{項${M}が正規形である ${\Leftrightarrow} ${M \br N}を満たす項${N}が存在しない}
+    また、二項関係${\brm}を${\br}の反射推移閉包としましょう。上の定義で${\subst{M}{x}{N}}は「項M中における変数xの使用を項Nに置き換えて得られる項」を表していますが、厳密な定義は実は結構面倒くさいのでここでは省略します。一つ目のルールが実際に関数適用を実行している部分で、他は部分項が実行されている場合のルールです。さて、STLCに関する重要な性質の一つとして、STLCで導出可能な項がβ簡約に関して以下に定義する\dfn{合流性}と\dfn{強正規化性}を満たすということが知られています。}
+    +definition{項${M}がβ正規形である ${\Leftrightarrow} ${M \br N}を満たす項${N}が存在しない}
     +definition{
-    ${\br}が\dfn{合流性}を満たす ${\Leftrightarrow} ${M \brm N_1}かつ${M \brm N_2}ならば${N_1 \brm L}かつ${N_2 \brm L}であるようなLが存在する
+    ${\br}が\dfn{合流性}を満たす ${\Leftrightarrow} ${M \brm N_1}かつ${M \brm N_2}ならば${N_1 \brm L}かつ${N_2 \brm L}であるような${L}が存在する
     }
     +definition{
     ${\br}が\dfn{強正規化性}を満たす ${\Leftrightarrow} 無限簡約列 ${M_1 \br M_2 \br \ldots}が存在しない
+    β簡約の合流性と強正規化性の帰結として、「STLC上で導出可能な任意の項\footnote{厳密には「STLCの導出規則によって導出された型判断を伴う項」ですかね}はβ正規形をただ一つもつ」ということが言えます。}
+    +p{もう一つ重要な概念として\dfn{η正規形}があります。ふんわりとした説明になってしまいますが、これは「関数型を持つ項はλ項の形をしていてほしい」という気持ちに基いた概念です。これは形式的は\dfn{η展開}よって記述されますが、素朴なη展開${\er}は以下のような二項関係として定義できます。
+    \align [
+    ${| M | \er \lam{x}{A}{\app{M}{x}} || \text!{when ${M} has type ${\arr{A}{B}}} |};
+    ${| \lam{x}{A}{M} | \er \lam{x}{A}{N} || \text!{if\ } M \br N |};
+    ${| \app{M}{L} | \er \app{N}{L} || \text!{if\ } M \br N |};
+    ${| \app{L}{M} | \er \app{L}{N} || \text!{if\ } M \br N |};
+    ];
+    一つ目のルールで関数型を持つ項をλ項の形に展開しており、先ほど述べた気持ちを表しています。ここでわざわざ「素朴な」η展開と言ったのは、この定義だと強正規化性が満たされなくなってしまうためです。例えば以下のような自明な無限展開列が存在します。
+    \math-list(${| M \er \lam{x}{A}{\app{M}{x}} \er \lam{x}{A}{\app{\paren{\lam{x}{A}{\app{M}{x}}}}{x}} \er \cdots |});
+    この例の場合、二つ目の項で欲しいものは得られているためここでη展開を止めるように定義を制限してやる必要があります。若干ややこしい話になってしまうためここでは詳しく述べませんが\footnote{wasabizの記事で言及があります。興味のある方はそちらを参照してください。}、うまく制限したη展開はβ簡約と同様の合流性と強正規化性を満たすことが知られています\cite[`JG95`];。
     }
-    +p{合流性と強正規化性の帰結として、「STLC上で導出可能な項\footnote{厳密には「STLCの導出規則によって導出された型判断を伴う項」ですかね}は対応する正規形をただ一つもつ」ということが言えます。そうであればある項の正規形を得るプログラムを書きたいというのはごく自然な考えですね。
+    +p{ある項がβ正規形かつη正規形である時、その項は\dfn{βη正規形}と呼ばれます。STLCにおける任意のβη正規形の項は以下の導出規則によって導かれることが知られています。
+      \math-list (${
+      | \bderive?:!{NVar}
+              { \judgeNeut{\Gamma}{x}{A} }
+              {| x:A \in \Gamma |}
+      | \bderive?:!{NLam}
+              { \judgeNorm{\Gamma}{\lam{x}{A}{M}}{\arr{A}{B}} }
+              {| \judgeNorm{\Gamma, x\colon A}{M}{B} |}
+      | \bderive?:!{Embed}
+              { \judgeNorm{\Gamma}{R}{\base} }
+              {| \judgeNeut{\Gamma}{R}{\base} |}
+      | \bderive?:!{RApp}
+              { \judgeNeut{\Gamma}{\app{R}{M}}{B}}
+              {| \judgeNeut{\Gamma}{R}{\arr{A}{B}}
+               | \judgeNorm{\Gamma}{M}{A}
+               |}
+      | 
+      |});
+      この導出規則においては中立項${Neut}と正規項${Norm}を相互再帰的に定義しています。この結果として得られる${Norm}がβη正規形の項の集合になります。この定義がβ簡約とη展開の定義に基く正規形と一致していることは当然自明ではないので証明が必要ですが、とりあえずここではそういうものだと思ってください。\todo{cite}
+    }
+    +p{さて、これまでの話をふまえるとSTLCの項が与えられた時にそれに対応するβη正規形の項を得たい、というのはごく自然な考えであると思われます。
     \listing {
     * プログラム
     ** 入力: STLCの項
-    ** 出力: 入力の項に対応する正規形
+    ** 出力: 入力の項に対応するβη正規形
     ** 実装: ??
-    }}
-    +p{定義に対応する素朴な実装方針として「正規形を得るまで項にβ簡約を繰り返し適用する」というものが考えられます。でも実はこれが結構面倒くさいんです。
-    面倒くささの一つは変数束縛の管理です。例えば以下のような型判断を考えてみましょう。
+    }
+    この問題に対する実装方針としてまず最初に思いつくのは「正規形を得るまで項にβ簡約とη展開を繰り返し適用する」という素朴なアルゴリズムでしょう。しかしながらこれにはいくつか困難な点が存在します。}
+    +p{一つ目の問題点は変数束縛の管理です。例えば以下のような型判断を考えてみましょう。
     \math-list(${| \judgeStlc{y \colon \arr{A}{B}}{\app{\paren{\lam{x}{\arr{A}{B}}{\lam{y}{A}{\app{\var{x}}{\var{y}}}}}}{y}}{\arr{A}{B}} |});
     定義によるとこの項は以下のようにβ簡約できます。
     \math-list(${| \app{\paren{\lam{x}{\arr{A}{B}}{\lam{y}{A}{\app{\var{x}}{\var{y}}}}}}{y} \br \subst{\paren{\lam{y}{A}{\app{\var{x}}{\var{y}}}}}{x}{y} |});
@@ -121,27 +159,50 @@ type term =
     ${| \subst{\paren{\lam{y}{A}{\app{\var{x}}{\var{y}}}}}{x}{y} | = \subst{\paren{\lam{z}{A}{\app{\var{x}}{\var{z}}}}}{x}{y} || \text!{// 束縛変数のyをzに置き換えると} |};
     ${| | = \lam{z}{A}{\app{\var{y}}{\var{z}}} || \text!{// オーケー} |}
     ];
-    このようにちゃんとした置換を実装するためには意図しない変数補足が起きないように確認しつつ必要であれば束縛変数の名前を書き換えていく必要があるわけです\footnote{この束縛変数の名前の書き換えのことを\dfn{α変換}と呼びますが詳細は割愛します}。これをきちんと実装するのが一つ目の面倒くさいポイントです。β簡約に関してあまり本質的でない部分に実装を割かないといけないのがよろしくないですね。
+    このようにちゃんとした置換を実装するためには意図しない変数補足が起きないように確認しつつ必要であれば束縛変数の名前を書き換えていく必要があるわけです\footnote{この束縛変数の名前の書き換えのことを\dfn{α変換}と呼びます。詳細は\cite[`Barendregt93`];をご参照ください。}。これをきちんと実装するのがなかなか面倒です。β簡約に関してあまり本質的でない部分に実装を割かないといけないのはあまりよろしくありません。
     }
-    +p{もう一つの面倒くさいポイントは「そもそもβ簡約を定義通りに実装するのがあまり直観的ではない」という点です\todo{ほんまかこれ}。}
+    +p{もう一つの問題点はη展開を適切に定義するのが面倒くさいという点です。η展開の説明でも述べたように、素朴な規則を用いると無限展開列が生じいつまで立っても正規形を得ることができません。それを防ぐためにη展開の規則を制限してやる必要がありますが、これはこの記事にわざわざ書くのが面倒くさい程度には複雑です。そういった性質のものをきちんと定義に基いてプログラムに書き起こす作業がいかに大変かは想像していただける通りと思われます。}
+    +p{このようにβ簡約、η展開の定義に基いて正規形を得るという方針は素直に見えて実は様々な困難があり、あまり実装したいものではありません。}
     >
-    
-    +section {背景: Normalization by Evaluation} <
-      +p{先程紹介したような簡約を用いた正規化以外にもλ項の正規形を得る方法はあります。それがこれから紹介する\dfn{Normalization by Evaluation}(NbE, 評価による正規化)\cite[`Lindley05`];です。基本的なアイデアは名前の通りで、λ項に対するeval関数を用いて正規形を得るというものです。}
+
+
+    +section {背景: Normalization by Evaluation / 評価による正規化} <
+      +p{このような前置きをしたからには簡約を用いた正規化以外にもλ項の正規形を得る方法はあるわけです。それがこれから紹介する\dfn{Normalization by Evaluation}(NbE, 評価による正規化)\cite[`Lindley05`];です。基本的なアイデアは名前の通りで、\emph{λ項に対するeval関数を用いて正規形を得る}というものです。}
       +p{一般的にeval(評価)関数とはプログラムのコードを受け取ってそれを実行した結果を返す関数のことです\footnote{RubyやPython、Javascriptなどのインタープリタを前提とした言語がサポートしていることが多い印象があります。あとCommon LispとかSchemeとかClojureとか。}。もう少し抽象的な解釈として、ここではeval関数を「λ項の集合からそれに対応する\dfn{意味}\footnote{要はsemanticsのことです。}の集合への関数」と考えることにしましょう。以降λ項の集合を${Term}、意味の集合を${Sem}と呼ぶことにします。
       \math-list(${| eval: Term \rightarrow Sem |});
-      eval関数に対する妥当な仮定として以下のものを考えます。}
+      eval関数に対する妥当な仮定として以下のものを考えます。
 
-      +theorem?:({evalの健全性1}){${M}と${N}が同じ正規形を持つなら${eval\paren{M} = eval\paren{N}}である。\todo{定理ではない気がする}}
+      \hypothesis{${M}と${N}が同じ正規形を持つなら${eval\paren{M} = eval\paren{N}}である。}
 
-      +theorem?:({evalの健全性2}){${M}と${N}が同じ正規形を持たないなら${eval\paren{M} \neq eval\paren{N}}である。\todo{健全性？}}
+      \hypothesis{${M}と${N}が同じ正規形を持たないなら${eval\paren{M} \neq eval\paren{N}}である。}
 
-      +p{この性質から\emph{同じ正規形を持つ項はその場合に限って同じ意味を持つ}ということが言えるはずです。とすると、ある意味${s}が与えられた時に${eval\paren{M} = s}となるようなMのうちただ一つの正規形を選んでくることができるはずです。この関数は\dfn{reify}(具象化)関数と呼ばれます。以降、正規形からなる集合を${Norm}と呼びます。
+      これらの仮定が成り立つ時、\emph{同じ正規形を持つ項はその場合に限って同じ意味を持つ}ということが言えるはずです。とすると、ある意味${s}が与えられた時に${eval\paren{M} = s}となるようなMのうちただ一つの正規形を選んでくることができるはずです。これを実現する関数をNbEの文脈では\dfn{reify}(具象化)と呼んでいます。以降、正規形からなる集合を${Norm}と呼びましょう。reifyの型は以下のようになるはずです。
+
       \math-list(${| reify: Sem \rightarrow Norm |});
-      後は簡単で、このevalとreifyを組み合わせると項の正規形を与える関数になります。
-      \math-list(${| normalize = reify \circ eval: Term \rightarrow Norm |});
-      これがNbEの基本的なアイデアです。このアイデアのキモの部分はreify関数を如何に実装するかという点にありますが、実際にReasonでNbEを実装しながらその辺りを見ていくことにしましょう。\todo{何故Reason?}\todo{図があると見栄えがする}}
 
+      そうすると後は簡単で、このevalとreifyを組み合わせることで項の正規形を得る関数を定義できます。
+
+      \math-list(${| normalize = reify \circ eval: Term \rightarrow Norm |});
+      
+      \figure ?:(`fig:nbe_in_one_pic`)
+      {NbEの基本的なアイデア(\cite[`Lindley16`];より引用)}
+      <+image-frame{\insert-image(14cm)(`../zpt/figure/nbe.jpg`);}>
+      
+      これがNbEの基本的なアイデアです(\cite[`Lindley16`];にこれを端的に表した図があったので\ref-figure(`fig:nbe_in_one_pic`);として引用しておきます)。このアイデアのキモの部分はreify関数を如何に実装するかという点にありますが、実際にReasonでNbEを実装しながらその辺りを見ていくことにしましょう。\footnote{Reasonを選んだのは代数的データ型をサポートした静的型付け言語で綺麗なコードが書けそうだったからで特に深い意味はないです:)}}
+      +p{
+\todo{適切な場所に移す}これをReasonのコードで表してみましょう。STLCの型と項は以下のような代数的データ構造として定義可能です。
+    \Code.d-code(`
+type typ =
+  | Base
+  | Arr(typ, typ);
+
+type term =
+  | Var(string)
+  | Abs(string, typ, term)
+  | App(term, term);
+    `);
+    }
+    +p{変数名はstringで表すことにしています。termは型判断とは独立して定義されているので導出できない項も表現できてしまいますが、今のところは妥当な型判断を伴う項だけを考えることにしましょう。}
     +p{最初に${Sem}に対応するものとして\Code.code(`semantics`);という型を定義します。
 
     \Code.d-code(`
@@ -311,25 +372,7 @@ LF term : tp → type =
       }
       +p{変数名を文字列で管理する方法に比べて、HOASは変数の取り扱いの面倒な部分をメタ言語に任せることができるため実装が楽になります。\todo{β簡約の例}
       }
-      +p{依存型は大変強力なので、STLCのβη正規形のためのデータ型をつくることさえ可能です。以前の章でβη簡約に基く正規形の定義をお見せしましたが、以下のような導出規則でも定義が可能です。
-      \math-list (${
-      | \bderive?:!{NVar}
-              { \judgeNeut{\Gamma}{x}{A} }
-              {| x:A \in \Gamma |}
-      | \bderive?:!{NLam}
-              { \judgeNorm{\Gamma}{\lam{x}{A}{M}}{\arr{A}{B}} }
-              {| \judgeNorm{\Gamma, x\colon A}{M}{B} |}
-      | \bderive?:!{Embed}
-              { \judgeNorm{\Gamma}{R}{\base} }
-              {| \judgeNeut{\Gamma}{R}{\base} |}
-      | \bderive?:!{RApp}
-              { \judgeNeut{\Gamma}{\app{R}{M}}{B}}
-              {| \judgeNeut{\Gamma}{R}{\arr{A}{B}}
-               | \judgeNorm{\Gamma}{M}{A}
-               |}
-      | 
-      |});
-      この導出規則においては中立項${Neut}と正規項${Norm}を相互再帰的に定義しています。この結果として得られる${Norm}がβη正規形の集合になります。この定義が簡約ベースの正規形の定義と一致していることは当然自明ではないので証明が必要ですが、とりあえずここではそういうものだと思ってください。これをBelugaのコードに落としこむと以下のようになります。
+      +p{依存型は大変強力なので、STLCのβη正規形のためのデータ型をつくることさえ可能です。以前に定義したβη正規形をBelugaのコードに落としこむと以下のようになります。
       \Code.d-code(`
 neut  : tp → type.
 norm  : tp → type.

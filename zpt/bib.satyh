@@ -1,28 +1,52 @@
 @import: ../main/book-class
 
 let zpt-bibliography = [
+    (`Barendregt93`, Article(|
+        author = {|H. P. Barendregt|};
+        title = {Lambda calculi with types};
+        journal = {Handbook of logic in computer science};
+        volume = Some(2);
+        number = None;
+        pages = (117,309);
+        year = 1993;
+    |));
+    (`JG95`, Article(|
+        author = {| C. Barry Jay | Neil Ghani |};
+        title = {The Virtues of Eta-Expansion};
+        journal = {J. Funct. Program.};
+        volume = Some(5); 
+        number = Some({2}); 
+        pages = (135,154);
+        year = 1995;
+    |));
     (`Lindley05`, Book(|
-    author = {| Sam Lindley|};
-    title = {Normalisation by evaluation in the compilation of typed functional programming languages};
-    publisher = {PhD Thesis};
-    year = 2005
+        author = {| Sam Lindley|};
+        title = {Normalisation by evaluation in the compilation of typed functional programming languages};
+        publisher = {PhD Thesis};
+        year = 2005
+    |));
+    (`Lindley16`, WebSite(|
+        author = {| Sam Lindley|};
+        title  = {Normalisation by evaluation};
+        url    = (`http://homepages.inf.ed.ac.uk/slindley/nbe/nbe-cambridge2016.pdf`);
+        year   = 2016;
     |));
     (`Harper93`, Article(|
-    author = {| Robert Harper | Furio Honsell | Gordon Plotkin|};
-    title = {A Framework For Defining Logics};
-    journal = {Journal of the Association for Computing Machinery};
-    volume = Some(40);
-    number = Some({1});
-    pages = (143, 184);
-    year = 1993;
+        author = {| Robert Harper | Furio Honsell | Gordon Plotkin|};
+        title = {A Framework For Defining Logics};
+        journal = {Journal of the Association for Computing Machinery};
+        volume = Some(40);
+        number = Some({1});
+        pages = (143, 184);
+        year = 1993;
     |));
     (`Pfenning02`, Article(|
-    author = {| Frank Pfenning |};
-    title = {Logical Frameworks—A Brief Introduction};
-    journal = {Proof and System-Reliability};
-    volume = None;
-    number = None;
-    pages = (137, 166);
-    year = 2002;
+        author = {| Frank Pfenning |};
+        title = {Logical Frameworks—A Brief Introduction};
+        journal = {Proof and System-Reliability};
+        volume = None;
+        number = None;
+        pages = (137, 166);
+        year = 2002;
     |))
 ]

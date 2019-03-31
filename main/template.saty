@@ -13,11 +13,11 @@ document (|
   venue = `技術書典6`;
   date = `2019.04.14`;
   |) '<
-  #gfn-article;
   #censored-article;
-  #maswag-article;
+  #pohe-article;
   #Wasabiz.article;
   #Zpt.article;
-  #pohe-article;
+  #gfn-article;
+  #maswag-article;
   #Postscript.article;
 >
