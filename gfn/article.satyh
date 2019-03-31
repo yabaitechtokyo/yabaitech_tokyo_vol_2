@@ -195,40 +195,260 @@ let gfn-article = '<
           はっきりと2つの弱点があります：
 
           \listing{
-            * 生成されるコードが閉じたコードとは限らない
             * 生成されるコードが型のつくコードとは限らない
+            * 生成されるコードが閉じたコードとは限らない
           }%
 
-          まず前者はすなわち\code(`run`);で下ろしたときに
-          束縛されていない変数が現れうるということです．
+          まず前者に関しては単純で，次のような例が問題になります：
+
+          \d-code(```
+            Plus(Int(1), True)
+          ```);
+
+          後者に関しても，次のような例が問題になります：
+
+          \d-code(```
+            let x = gensym () in run (Var(x))
+          ```);
+
+          要するに束縛されていないシンボルが出現するコードを走らせてしまえるのです．
+          いずれも，一応言語設計を適切に改めることで防ぐことができます．
+          前者の解決は簡単で，“生成するコード片の型もその整合性を静的に検査” すればよいです．
+          要するに
+
+          \d-code(```
+            type 'a code
+          ```);
+
+          という1つの型を引数にとる型コンストラクタ \code(`code`); でコードを扱うことにし，
+          \code(`App`);，\code(`Plus`);，\code(`Int`); \code(`True`); などの代わりに
+
+          \d-code(```
+            val genApp : ('a -> 'b) code -> 'a code -> 'b code
+            val genPlus : int code -> int code -> int code
+            val genInt : int -> int code
+            val genTrue : bool code
+            ...
+          ```);
+
+          といったインターフェイスでコード片を生成するための各種プリミティヴをプログラマに提供します．
+          これにより，型のつかないコードを生成してしまう上記のプログラムに対応する以下のようなプログラムを
+          型検査時に弾けます：
+
+          \d-code(```
+            genPlus (genInt 1) genTrue
+          ```);
+
+          後者も（可変参照や限定継続といった複雑な言語機能と共存させない限りは）そんなに難しい話ではなく，
+          “そもそもラムダ抽象のコードと同時にしかシンボルを生成しない” ことによって解決します．
+          要するにプログラマには “生の \code(`gensym`); と \code(`Abs`);” は書けないようにし，
+          代わりに
+
+          \d-code(```
+            let genAbs k =
+              let x = gensym () in Abs(x, k x)
+          ```);
+
+          なる函数 \code(`genAbs`); に相当する機構だけ言語機能として提供すれば
+          シンボルが束縛されずに使われる心配はありません．
+          こうした \code(`genApp`); や \code(`genAbs`); のようなコード生成に関する
+          （コードコンストラクタが型などに関して適切にラップされた）函数を
+          \dfnjaen{コードコンビネータ}{code combinator}と呼び，
+          これを用いたインターフェイスをもつ多段階計算の定式化を本記事では\dfn{コードコンビネータ方式}と読んでいます．
+        }
+        +p{
           \REMAINS{問題点}
         }
       >
       +subsection{\lambda-circle;・MetaML方式}<
         +p{
-          あ
+          \REMAINS{形式的に操作的意味論と型システムを書く，ただし重すぎないように}
         }
       >
       +subsection{\lambda-square;・\MetaML-square;方式}<
         +p{
-          あ
+          \REMAINS{概要程度でOK}
         }
       >
     >
     +section{多段階計算＋可変参照}<
       +subsection{可変参照による問題点の再来}<
         +p{
-          あ
+          ここまでは多段階の計算体系について紹介するとともに，
+          その過程で如何にして不適格なコードの生成を静的に防げるように構文や型システムが設計されているかについて見てきました．
+          しかし，これらの多段階の計算体系に可変参照をナイーヴに追加すると，型安全性が再び崩れ去ってしまいます．
+          多段階の計算体系に単純に
+
+          \listing{
+            * ref \REMAINS{}
+            * ! \REMAINS{}
+            * := \REMAINS{}
+          }
+
+          を追加すると，例えば次のような安全でないコードを生成するプログラムが型検査を通ってしまいます：
+
+          \d-code(```
+            let r = ref <0> in
+            let _ = <fun x -> ~(r := <x>; <1>)> in
+            !r
+          ```);
+
+          このプログラムは型検査を通りますが，評価すると \code(`<x>`);，
+          つまり束縛されていないシンボルの出現だけからなるコードが生成されてしまいます．
+          要するにシンボル \code(`x`); が可変参照\code(`r`);を通じて
+          そのシンボルのスコープではないところに “漏れ出て” しまうのです．
+          この現象を\dfnjaen{スコープ脱出}{scope extrusion}と呼びます．
+          スコープ脱出をきたす上のようなプログラムを型検査で弾けないと，
+          後のステージの評価中に実際にこのコードが使われた時に
+          自由変数の出現で計算がスタックし実行時エラーを生じてしまいます\footnote{
+            実際，OCamlをMetaMLと同様の多段階計算で拡張したMetaOCaml\NEEDSREF;の型検査器は
+            ここに挙げた問題のプログラムも受理してしまい，
+            自由変数の出現は動的にエラーを吐きます．
+          }．こういったスコープ脱出を起こすプログラムを型検査によって静的に防ぎたいというのが本記事の動機なのでした．
+          次節以降ではこの動機に関する既存研究で提案された型システムのうち2つを紹介します．
+          さらに，それらのもつ若干の弱点を挙げ，
+          形式化できているわけではないですがその弱点を克服しうる個人的着想を簡単に述べたいと思います．
         }
       >
       +subsection{既存研究1：〈NJ〉}<
         +p{
-          あ
+          \dfn{〈NJ〉}\NEEDSREF;はコードコンビネータ方式をベースとし可変参照を含む2段階計算に対する単相の型システムで，
+          前節で挙げたようなシンボルがそのスコープを漏れ出てしまうプログラムを弾くための機構が備わっています．
+          具体的には\dfnjaen{環境分類子}{environment classifier}\NEEDSREF;によく似た仕組みを応用することによって
+          スコープ脱出を防ぎます．
+          各コード部分につく型には “（シンボルの出現に関して）それが有効なスコープ” を示す分類子がつけられ，
+          スコープに関して不整合があるプログラム，
+          つまり何らかのコードが本来出現してよいスコープよりも広いスコープで使われようとしているプログラムは，
+          型検査器が弾いてくれるのです．
         }
+        +subsubsection{構文}<
+          +p{
+            まず，式，値，型の構文は以下で定義されます：
+
+            \BNFs[
+              Term.((show tme, [
+                [tmc; prim ${p} [tme; !${\ldots}; tme]; tml;
+                  !${x}; lam ${x} tme; app tme tme] |> List.map show;
+                [lamC1 ${x} tme; lamC2 ${x} tme; codeF tme] |> List.map show;
+              ]));
+              Term.((show tmv, [
+                [tmc; tml; lam ${x} tme; codeF tme] |> List.map show;
+              ]));
+              Type.((show tymtau, [
+                [tymb; tymtau --> tymtau; ref tymtau; codeS tymtau ${\gamma}] |> List.map show;
+              ]));
+            ];
+
+            型の構文に含まれるコードの型 \type(Type.(codeS tymtau ${\gamma})); の ${\gamma} が重要であり，
+            これが環境分類子に相当するのですが，型については一旦置いておき，先に式の構文と操作的意味論について触れましょう．
+            基本型のデータに対する算術演算や，
+            可変参照に対する操作
+            \term(Term.(ref tme));，\term(Term.(deref tme));，\term(Term.(assign tme tmep));
+            は
+            いずれもプリミティヴ \term(Term.(prim ${p} [tme; !${\ldots}; tme])); の構文に吸収して扱います．
+            コードコンビネータも原則としてプリミティヴ ${p} として与えられ，適切な型をもちます（後述）．
+            例外はラムダ抽象のコードを生成するコードコンビネータで，
+            シンボルのスコープを適切に制御するために特殊な仕組みが取られています．
+            \term(Term.(lamC1 ${x} tme)); がラムダ抽象のための特殊なコードコンビネータで，
+            プログラマがステージ1でのラムダ抽象として書くのはこれです．
+            \term(Term.(lamC2 ${x} tme)); は評価中にのみ現れるラムダ抽象のコード生成に関する中間生成物であり，
+            こちらはプログラマが直接書くものではありません（というか型安全性のために直接書けないようにする必要があります）．
+            \term(Term.(codeF tme)); は “既に完成しているコード片” であり，値であることに注意してください\footnote{
+              感覚的には \term(Term.(codeF tme)); はMetaMLの \term(Term.(code tme)); と同じですが，
+              \term(Term.(tme)); にはMetaMLの場合と違いエスケープが含まれておらず，
+              それゆえにもう内側が評価されない “既に完成しているコード片” の値なのです．
+              元論文\NEEDSREF;ではMetaMLと同様の \term(Term.(code tme)); で書かれていますが，
+              誤解をきたさないように記法上区別することにしました．
+            }．
+            なお，元論文\NEEDSREF;では計算体系に含めている条件分岐は簡単のため省略していますが，
+            自明な拡張で入れることができます．このほか，再帰のための不動点はプリミティヴのひとつとして扱えます．
+          }
+        >
+        +subsubsection{操作的意味論}<
+          +p{
+            さて，それでは操作的意味論を見てみます．評価文脈を使った小ステップ意味論で形式化されています：
+
+            \BNFs[
+              Term.((show tmE, [
+                [app tmE tme; app tmv tmE;
+                  prim ${p} [tmv; !${\ldots}; tmv; tmE; tme; !${\ldots}; tme]] |> List.map show;
+                [lamC2 ${x} tmE] |> List.map show;
+              ]));
+            ];
+            \eqn(${
+              \derive{|
+                \redNJ{N}{\store}!(Term.(tme)){N'}{\store'}!(Term.(tmep))
+              |}{
+                \redNJ{N}{\store}!(Term.(subst-hole tmE tme)){N'}{\store'}!(Term.(subst-hole tmE tmep))
+              }
+            });
+            \align[
+              ${||
+                \redNJ{N}{\store}!(Term.(app (lam ${x} tme) tmv)){N}{\store}!(Term.(subst tmv ${x} tme))
+              |};${||
+                \redNJ{N}{\store}!(Term.(ref tmv))%
+                  {N}{\overwrite{\store}{l}{\mterm!(Term.(tmv))}}!(Term.(tml))
+              | \paren{l \nin \dom \store}
+              |};${||
+                \redNJ{N}{\store}!(Term.(deref tml))%
+                  {N}{\store}!(Term.(tmv))
+              | \paren{\app{\store}{l} \synteq \mterm!(Term.(tmv))}
+              |};${||
+                \redNJ{N}{\store}!(Term.(assign tml tmv))%
+                  {N}{\overwrite{\store}{l}{\mterm!(Term.(tmv))}}!(Term.(tmv))
+              | \paren{l \in \dom \store}
+              |};${||
+                \redNJ{N}{\store}!(Term.(lamC1 ${x} tme))%
+                  {N \uplus \set{Y}}{\store}!(Term.(lamC2 ${Y} (subst !${Y} ${x} tme)))
+              | \paren{Y \nin N}
+              |};${||
+                \redNJ{N}{\store}!(Term.(lamC2 ${Y} (codeF tme)))%
+                  {N}{\store}!(Term.(codeF (lam ${Y} tme)))
+              |};
+            ];
+            ラムダ抽象に関する評価について簡単に述べると，\term(Term.(lamC1 ${x} tme)); はステージ0の式で，
+            評価されるとフレッシュなシンボル ${Y} を生成して変数 ${x} をそのシンボルに束縛します．
+            すなわち元の式を \term(Term.(lamC2 ${Y} (subst !${Y} ${x} tme))); という形に置き換え，
+            本体の \term(Term.(subst !${Y} ${x} tme)); を評価します．
+            評価結果が \term(Term.(codeF tmep)); という形で返ってきたら，
+            ステージ1のラムダ抽象 \term(Term.(codeF (lam ${Y} tmep))); として完成させる，という算段になっています．
+            簡単のため，シンボル（ステージ1の変数）もステージ0の変数と同一の名前集合を動くものとして扱っています．
+            \REMAINS{ストアについても簡単に言及}
+          }
+          +p{
+            コードコンビネータはプリミティヴの一部として扱うことにしていましたが，
+            操作的意味論は以下のような要領で定義します（必要になれば同様の方法で定義していくらでも足せます）：
+
+            \align[
+              ${|
+                \redNJ{N}{\store}!(Term.(prim ${Plus} [codeF (tmesub ${1}); codeF (tmesub ${2})]))%
+                  {N}{\store}!(Term.(codeF(bin ${+} (tmesub ${1}) (tmesub ${2}))))
+              |};
+            ];
+          }
+        >
+        +subsubsection{型システム}<
+          +p{
+            一番重要なのが型システムです．
+            \REMAINS{頑張る}
+          }
+        >
       >
       +subsection{既存研究2：\lambda-open-poly;}<
         +p{
-          あ
+          \dfn{\lambda-open-poly;}は，一転して
+          \MetaML-square;をベースにした可変参照を含む多段階計算に対する型システムです．
+          \REMAINS{頑張る}
+        }
+      >
+      +subsection{改善の可能性}<
+        +p{
+          \REMAINS{頑張る}
+        }
+      >
+      +subsection{まとめ}<
+        +p{
+          \REMAINS{まあ適当に}
         }
       >
     >

@@ -1,6 +1,10 @@
 @require: itemize
 @require: code
+@require: bnf
+@require: proof
 @import: bib
+@import: local-gfn-syntax
+@import: local-gfn-term
 @import: ../main/book-class
 
 
@@ -28,3 +32,30 @@ let-inline \MetaML-square = {${\text!{MetaML}^{\text!{□}}_{e}}}
 let-inline \lambda-open-poly =
 %  {${\lambda_{\mathit-token!(`open`)}^{\mathit-token!(`poly`)}}}
   {${\lambda_{open}^{poly}}}
+
+
+let-math \redNJ n1 h1 t1 n2 h2 t2 =
+  ${#n1 \mid #h1 \mid \mterm!(t1) \to #n2 \mid #h2 \mid \mterm!(t2)}
+
+
+let-math \store = ${\eta}
+
+let-math \overwrite f x v =
+  ${#f\sqbracket{#x \mapsto #v}}
+
+
+let font-size-subsubsection = 14pt
+
+let make-subsubsection-title ctx =
+    ctx |> set-font-size font-size-subsubsection
+        |> set-font Latin Book.font-latin-bold
+        |> Book.set-cjk-font Book.font-cjk-gothic
+
+let-block ctx +subsubsection it bt =
+  let ib-title =
+    let ctx-title = make-subsubsection-title ctx in
+    read-inline ctx-title it
+  in
+  let bb-title = line-break true false ctx (ib-title ++ inline-fil) in
+  let bb-main = read-block ctx bt in
+  bb-title +++ bb-main

@@ -1,0 +1,268 @@
+@require: option
+@require: math
+
+module Type : sig
+
+  type t
+  val to-math : bool -> t -> math
+  val show : t -> math
+  val of-math : math -> t
+  val (-->) : t -> t -> t
+  val base-type : inline-text -> t
+  val ctr-type : inline-text -> t list -> t
+  val product : t list -> t
+  val cmdI : t list -> t
+  val cmdB : t list -> t
+  val cmdM : t list -> t
+  val forall : math -> t -> t
+  val codeP : t -> t
+  val codeS : t -> math -> t
+  val star : t -> t
+
+  val synt-paren : t -> t
+
+  val unit : t
+  val bool : t
+  val int : t
+  val float : t
+  val length : t
+  val string : t
+  val context : t
+  val inline-text : t
+  val inline-boxes : t
+  val block-text : t
+  val block-boxes : t
+  val pre-path : t
+  val path : t
+  val point : t
+  val graphics : t
+  val color : t
+  val deco : t
+  val deco-set : t
+  val paren : t
+  val script : t
+  val image : t
+  val paddings : t
+  val cell : t
+  val page : t
+  val document : t
+  val math : t
+  val itemize : t
+  val math-class : t
+  val math-char-class : t
+
+  val list : t -> t
+  val option : t -> t
+  val ref : t -> t
+
+  % ---- metavariables --
+
+  val tymb : t
+  val tymalpha : t
+  val tymbeta : t
+  val tymsigma : t
+  val tymtau : t
+  val tymtaup : t
+  val tymtausub : math -> t
+
+end = struct
+
+  type t =
+    | Ctr    of inline-text * t list
+    | Func   of t * t
+    | Prod   of t list
+    | Cmd    of inline-text * t list
+    | Forall of math * t
+    | Paren  of t
+    | Code   of t * math option
+
+
+  type paren-mode =
+    | Normal
+    | Domain
+    | Single
+
+
+  let-math \arr-display =
+    let mbr =
+      text-in-math MathOrd (fun ctx ->
+        discretionary 100 inline-nil inline-fil inline-nil)
+    in
+      math-group MathBin MathBin (math-concat (math-char MathOrd `→`) mbr)
+
+
+  let-math \arr-inline =
+    let mbr =
+      text-in-math MathOrd (fun ctx -> (
+        let ib-space =
+          Option.from inline-nil
+            (space-between-maths ctx
+              (math-char MathOrd ` `) (math-char MathBin ` `))
+        in
+        discretionary 100 ib-space inline-nil inline-nil
+      ))
+    in
+      math-group MathBin MathOrd (math-concat (math-char MathOrd `→`) mbr)
+
+
+  let synt-paren ty = Paren(ty)
+
+
+  let to-math is-inline =
+    let-rec aux
+      | mode (Ctr(it, tyargs)) =
+          let marg =
+            tyargs |> List.map (fun ty -> (
+              let m = aux Single ty in
+              ${#m\ }
+            )) |> List.fold-left math-concat ${}
+          in
+          let mctr =
+            text-in-math MathOrd
+              (fun ctx -> read-inline ctx {\no-break{#it;}})
+          in
+          let m = ${#marg#mctr} in
+          ( match (mode, tyargs) with
+            | (Single, _ :: _) -> ${\paren{#m}}
+            | _                -> m
+          )
+
+      | mode (Func(ty1, ty2)) =
+          let m1 = aux Domain ty1 in
+          let m2 = aux Normal ty2 in
+          let m =
+            if is-inline then
+              ${#m1 \arr-inline #m2}
+            else
+              ${#m1 \arr-display #m2}
+          in
+          ( match mode with
+            | Normal -> m
+            | _      -> ${\paren{#m}}
+          )
+
+      | mode (Prod(tys)) =
+          let ms = List.map (aux Single) tys in
+          let m = Math.join ${\mathbin{\ast}} ms in
+          ( match mode with
+            | Single -> ${\paren{#m}}
+            | _      -> m
+          )
+
+      | mode (Cmd(it, tys)) =
+          let m =
+            match tys with
+            | [] ->
+                ${\ }
+
+            | _ :: _ ->
+                let ms = List.map (aux Normal) tys in
+                  Math.join ${\;\ } ms
+          in
+            ${\sqbracket{#m}\ \text!(it)}
+
+      | mode (Forall(ma, ty)) =
+          let m = aux Normal ty in
+          ${\forall #ma.\ #m}
+
+      | _ (Paren(ty)) =
+          let m = aux Normal ty in
+          ${\paren{#m}}
+
+      | _ (Code(ty, supopt)) =
+          let m = aux Normal ty in
+          ( match supopt with
+            | None      -> ${\angle-bracket{#m}}
+            | Some(sup) -> ${\angle-bracket{#m}^#sup}
+          )
+
+    in
+    aux Normal
+
+
+  let show = to-math true
+
+
+  let of-math m = Ctr({${#m}}, [])
+
+
+  let base-type it = Ctr(it, [])
+
+  let ctr-type it tys = Ctr(it, tys)
+
+  let (-->) ty1 ty2 = Func(ty1, ty2)
+
+  let product tys = Prod(tys)
+
+  let cmdI tys = Cmd({inline-cmd}, tys)
+
+  let cmdB tys = Cmd({block-cmd}, tys)
+
+  let cmdM tys = Cmd({math-cmd}, tys)
+
+  let forall ma ty = Forall(ma, ty)
+
+  let codeP ty = Code(ty, None)
+  let codeS ty m = Code(ty, Some(m))
+
+  let star t =
+    let m = show t in
+    Ctr({${\sqbracket{#m}^{\ast}}}, [])
+
+
+  let unit         = base-type {unit}
+  let bool         = base-type {bool}
+  let int          = base-type {int}
+  let float        = base-type {float}
+  let length       = base-type {length}
+  let string       = base-type {string}
+  let context      = base-type {context}
+  let inline-text  = base-type {inline-text}
+  let inline-boxes = base-type {inline-boxes}
+  let block-text   = base-type {block-text}
+  let block-boxes  = base-type {block-boxes}
+  let pre-path     = base-type {pre-path}
+  let path         = base-type {path}
+  let point        = base-type {point}
+  let graphics     = base-type {graphics}
+  let color        = base-type {color}
+  let deco         = base-type {deco}
+  let deco-set     = base-type {deco-set}
+  let paren        = base-type {paren}
+  let script       = base-type {script}
+  let image        = base-type {image}
+  let paddings     = base-type {paddings}
+  let cell         = base-type {cell}
+  let document     = base-type {document}
+  let page         = base-type {page}
+  let math         = base-type {math}
+  let itemize      = base-type {itemize}
+  let math-class   = base-type {math-class}
+  let math-char-class = base-type {math-char-class}
+
+
+  let list ty = Ctr({list}, [ty])
+  let option ty = Ctr({option}, [ty])
+  let ref ty = Ctr({ref}, [ty])
+
+
+  % ---- metavariables --
+
+  let meta m = Ctr({${#m}}, [])
+  let tymb = meta ${b}
+  let tymalpha = meta ${\alpha}
+  let tymbeta = meta ${\beta}
+  let tymsigma = meta ${\sigma}
+  let tymtau = meta ${\tau}
+  let tymtaup = meta ${\tau'}
+  let tymtausub m = meta ${\tau_{#m}}
+
+end
+
+
+let-inline ctx \type ty =
+  script-guard Latin (embed-math ctx (Type.to-math true ty))
+
+
+let-math \mtype ty =
+  ${\text!{\type(ty);}}
