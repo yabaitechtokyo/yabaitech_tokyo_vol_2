@@ -273,6 +273,7 @@ module Term : sig
   val lamC2 : var -> bool?-> t -> t
   val star : t -> t
   val cat : t -> t -> t
+  val \token : [math] math-cmd
 
 % ---- metavariables --
   val tmc : t

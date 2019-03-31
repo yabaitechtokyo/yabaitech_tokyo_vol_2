@@ -8,6 +8,9 @@
 @import: ../main/book-class
 
 
+let-math \lnot = math-char MathOrd `¬`
+
+
 let-inline ctx \dfnen it-en =
   read-inline (ctx |> Book.set-latin-font Book.font-latin-italic) {#it-en;}
 
@@ -34,16 +37,6 @@ let-inline \lambda-open-poly =
   {${\lambda_{open}^{poly}}}
 
 
-let-math \redNJ n1 h1 t1 n2 h2 t2 =
-  ${#n1 \mid #h1 \mid \mterm!(t1) \to #n2 \mid #h2 \mid \mterm!(t2)}
-
-
-let-math \store = ${\eta}
-
-let-math \overwrite f x v =
-  ${#f\sqbracket{#x \mapsto #v}}
-
-
 let font-size-subsubsection = 14pt
 
 let make-subsubsection-title ctx =
@@ -59,3 +52,32 @@ let-block ctx +subsubsection it bt =
   let bb-title = line-break true false ctx (ib-title ++ inline-fil) in
   let bb-main = read-block ctx bt in
   bb-title +++ bb-main
+
+
+let-math \redNJ n1 h1 t1 n2 h2 t2 =
+  ${#n1 \mid #h1 \mid \mterm!(t1) \to #n2 \mid #h2 \mid \mterm!(t2)}
+
+let-math \store = ${\mu}
+let-math \tyenv = ${\Gamma}
+let-math \NameHeap = ${H}
+let-math \StoreTy = ${\Sigma}
+
+let-math \overwrite f x v =
+  ${#f\sqbracket{#x \mapsto #v}}
+
+let-math \tjNJ0 mN mS mG t ty = ${#mN \mid #mS \mid #mG \vdash^0 \mterm!(t) \mathrel{:} \mtype!(ty)}
+let-math \tjNJ1 mN mG ms t ty = ${#mN \mid #mG \vdash^{1#ms} \mterm!(t) \mathrel{:} \mtype!(ty)}
+let-math \wf m = ${\vdash #m}
+let-math \wfenv mU mG = ${#mU \vdash #mG}
+
+let-math \dotsucc = ${\mathrel{\cdot\math-skip!(-5pt)\mathord{\succ}}}
+let-math \bind-scope mg1 mg2 = ${#mg1 \dotsucc #mg2}
+let-math \bind0 mx ty = ${\paren{#mx \mathrel{:} \mtype!(ty)}^0}
+let-math \bind1 mx ty mg = ${\paren{#mx \mathrel{:} \mtype!(ty)}^{1#mg}}
+
+let-math \funIn mb menv = ${\mathrm{In}\paren{#mb, #menv}}
+let-math \funNotIn mb menv = ${\lnot\mathrm{In}\paren{#mb, #menv}}
+let-math \funFind mG mU mx = ${\mathrm{Find}\paren{#mG, #mU, #mx}}
+let-math \funConstType m = ${\mathrm{ConstType}\paren{#m}}
+let-math \concat m1 m2 = ${#m1\cdot#m2}
+let-math \subscope mU mg1 mg2 = ${#mU \vDash #mg1 \succcurlyeq #mg2}

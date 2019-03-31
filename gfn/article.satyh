@@ -218,12 +218,16 @@ let gfn-article = '<
 
           \d-code(```
             type 'a code
+            type 'a symbol
           ```);
 
-          という1つの型を引数にとる型コンストラクタ \code(`code`); でコードを扱うことにし，
-          \code(`App`);，\code(`Plus`);，\code(`Int`); \code(`True`); などの代わりに
+          という1つの型を引数にとる型コンストラクタ \code(`code`); と \code(`symbol`);
+          でそれぞれコードとシンボルを扱うことにし，
+          \code(`Var`);，\code(`App`);，\code(`Plus`);，\code(`Int`); \code(`True`);
+          などの代わりに
 
           \d-code(```
+            val genVar : 'a symbol -> 'a code
             val genApp : ('a -> 'b) code -> 'a code -> 'b code
             val genPlus : int code -> int code -> int code
             val genInt : int -> int code
@@ -249,12 +253,18 @@ let gfn-article = '<
               let x = gensym () in Abs(x, k x)
           ```);
 
-          なる函数 \code(`genAbs`); に相当する機構だけ言語機能として提供すれば
+          なる函数 \code(`genAbs`); に相当する機構だけ言語機能として
+
+          \d-code(```
+            val genAbs : ('a symbol -> 'b code) -> ('a -> 'b) code
+          ```);
+
+          というインターフェイスで提供すれば
           シンボルが束縛されずに使われる心配はありません．
           こうした \code(`genApp`); や \code(`genAbs`); のようなコード生成に関する
           （コードコンストラクタが型などに関して適切にラップされた）函数を
           \dfnjaen{コードコンビネータ}{code combinator}と呼び，
-          これを用いたインターフェイスをもつ多段階計算の定式化を本記事では\dfn{コードコンビネータ方式}と読んでいます．
+          これを用いたインターフェイスをもつ多段階計算の定式化を本記事では\dfn{コードコンビネータ方式}と呼んでいます．
         }
         +p{
           \REMAINS{問題点}
@@ -328,8 +338,8 @@ let gfn-article = '<
             \BNFs[
               Term.((show tme, [
                 [tmc; prim ${p} [tme; !${\ldots}; tme]; tml;
-                  !${x}; lam ${x} tme; app tme tme] |> List.map show;
-                [lamC1 ${x} tme; lamC2 ${x} tme; codeF tme] |> List.map show;
+                  !${x}; lam ${x} tme; app tme tme;
+                  lamC1 ${x} tme; lamC2 ${x} tme; codeF tme] |> List.map show;
               ]));
               Term.((show tmv, [
                 [tmc; tml; lam ${x} tme; codeF tme] |> List.map show;
@@ -341,18 +351,35 @@ let gfn-article = '<
 
             型の構文に含まれるコードの型 \type(Type.(codeS tymtau ${\gamma})); の ${\gamma} が重要であり，
             これが環境分類子に相当するのですが，型については一旦置いておき，先に式の構文と操作的意味論について触れましょう．
+            \term(Term.(tml));は可変参照を扱うための所謂\dfnjaen{ロケーション}{location}です．
+            \term(Term.(prim ${p} [tmesub ${1}; !${\ldots}; tmesub ${m}])); は
+            アリティ ${m \paren{\geq 1}} のプリミティヴの適用であり，簡単のため部分適用はできないものとします\footnote{
+              部分適用したい場合は
+              \term(Term.(let-in ${p'}
+                (lam ${x_1} !${\ldots \mterm!(lam ${x_n}
+                  (prim ${p} [!${x_1}; !${\ldots}; !${x_n}]))}) None));
+              の要領で別の変数に束縛しなおせばよいです．
+            }．
             基本型のデータに対する算術演算や，
             可変参照に対する操作
             \term(Term.(ref tme));，\term(Term.(deref tme));，\term(Term.(assign tme tmep));
             は
-            いずれもプリミティヴ \term(Term.(prim ${p} [tme; !${\ldots}; tme])); の構文に吸収して扱います．
+            いずれもプリミティヴ \term(Term.(prim ${p} [tme; !${\ldots}; tme])); の構文に吸収して扱います\footnote{
+              記事中の記述では
+              \term(Term.(prim ${\mathord{+}} [tmesub ${1}; tmesub ${2}])); を
+              \term(Term.(bin ${+} (tmesub ${1}) (tmesub ${2}))); に，
+              \term(Term.(prim ${\Term.token{ref}} [tme])); を \term(Term.(ref tme)); に，
+              \term(Term.(prim ${\mathord{\Term.token{\coloneq}}} [tme; tmep])); を
+              \term(Term.(assign tme tmep)); に，といった具合で適宜読みやすい形に書き換えます．
+            }．
             コードコンビネータも原則としてプリミティヴ ${p} として与えられ，適切な型をもちます（後述）．
             例外はラムダ抽象のコードを生成するコードコンビネータで，
             シンボルのスコープを適切に制御するために特殊な仕組みが取られています．
             \term(Term.(lamC1 ${x} tme)); がラムダ抽象のための特殊なコードコンビネータで，
+            おおよそ \code(`genAbs (fun x -> e)`); に相当し，
             プログラマがステージ1でのラムダ抽象として書くのはこれです．
             \term(Term.(lamC2 ${x} tme)); は評価中にのみ現れるラムダ抽象のコード生成に関する中間生成物であり，
-            こちらはプログラマが直接書くものではありません（というか型安全性のために直接書けないようにする必要があります）．
+            こちらはプログラマが直接書くものではありません．
             \term(Term.(codeF tme)); は “既に完成しているコード片” であり，値であることに注意してください\footnote{
               感覚的には \term(Term.(codeF tme)); はMetaMLの \term(Term.(code tme)); と同じですが，
               \term(Term.(tme)); にはMetaMLの場合と違いエスケープが含まれておらず，
@@ -366,15 +393,22 @@ let gfn-article = '<
         >
         +subsubsection{操作的意味論}<
           +p{
-            さて，それでは操作的意味論を見てみます．評価文脈を使った小ステップ意味論で形式化されています：
+            さて，それでは操作的意味論を見てみます．評価文脈を使った小ステップ意味論で形式化されています．
+            評価文脈は次で与えられます：
 
             \BNFs[
               Term.((show tmE, [
                 [app tmE tme; app tmv tmE;
-                  prim ${p} [tmv; !${\ldots}; tmv; tmE; tme; !${\ldots}; tme]] |> List.map show;
-                [lamC2 ${x} tmE] |> List.map show;
+                  prim ${p} [tmv; !${\ldots}; tmv; tmE; tme; !${\ldots}; tme];
+                  lamC2 ${x} tmE] |> List.map show;
               ]));
             ];
+
+            評価規則は
+            ${\redNJ{N}{\store}!(Term.(tme)){N'}{\store'}!(Term.(tmep))}
+            の形で与えられ，${N} が既に使用したシンボル名を重複防止のために保持しておく集合，
+            ${\store} がいわゆる可変参照のための\dfnjaen{ストア}{store}（つまりロケーションから値への有限部分写像）です：
+
             \eqn(${
               \derive{|
                 \redNJ{N}{\store}!(Term.(tme)){N'}{\store'}!(Term.(tmep))
@@ -413,23 +447,174 @@ let gfn-article = '<
             評価結果が \term(Term.(codeF tmep)); という形で返ってきたら，
             ステージ1のラムダ抽象 \term(Term.(codeF (lam ${Y} tmep))); として完成させる，という算段になっています．
             簡単のため，シンボル（ステージ1の変数）もステージ0の変数と同一の名前集合を動くものとして扱っています．
-            \REMAINS{ストアについても簡単に言及}
           }
           +p{
-            コードコンビネータはプリミティヴの一部として扱うことにしていましたが，
+            ラムダ抽象以外のコードコンビネータはプリミティヴの一部として扱うことにしていましたが，
             操作的意味論は以下のような要領で定義します（必要になれば同様の方法で定義していくらでも足せます）：
 
             \align[
-              ${|
-                \redNJ{N}{\store}!(Term.(prim ${Plus} [codeF (tmesub ${1}); codeF (tmesub ${2})]))%
-                  {N}{\store}!(Term.(codeF(bin ${+} (tmesub ${1}) (tmesub ${2}))))
+              ${||
+                \redNJ{N}{\store}!(Term.(prim ${genInt} [!${n}])){N}{\store}!(Term.(codeF !${n}))
+              |};${||
+                \redNJ{N}{\store}!(Term.(prim ${genPlus} [codeF (tmesub ${1}); codeF (tmesub ${2})]))%
+                  {N}{\store}!(Term.(codeF (bin ${+} (tmesub ${1}) (tmesub ${2}))))
+              |};${||
+                \redNJ{N}{\store}!(Term.(prim ${genApp} [codeF (tmesub ${1}); codeF (tmesub ${2})]))%
+                  {N}{\store}!(Term.(codeF (app (tmesub ${1}) (tmesub ${2}))))
               |};
             ];
           }
         >
         +subsubsection{型システム}<
           +p{
-            一番重要なのが型システムです．
+            一番重要なのが型システムです．型判定はステージ0が
+            ${\tjNJ0{\NameHeap}{\StoreTy}{\tyenv}!(Term.(tme))!(Type.(tymtau))}，
+            ステージ1が
+            ${\tjNJ1{\NameHeap}{\tyenv}{\gamma}!(Term.(tme))!(Type.(tymtau))}
+            の形をとります．この2つの5項関係に於いて，
+            ${\tyenv} が型環境，
+            ${\StoreTy} が\dfnjaen{ストア型つけ}{store typing}
+            なのは可変参照をもつ体系の一般的な定式化で馴染みがありますが，
+            ここでは新たに ${\NameHeap} という形で
+            \dfnjaen{名前ヒープ型つけ}{name heap typing}という概念が追加されています．
+            名前ヒープ型つけと型環境は互いによく似ており，
+            名前ヒープ型つけは以下の(1)か(2)の形を，
+            型環境は以下の(1)–(3)のいずれかの形を各要素とする有限列です\footnote{
+              元論文\NEEDSREF;とは少しだけ形式化を変えています．
+              ここでの ${\bind-scope{\gamma}{\gamma'}} は元論文での
+              ${\gamma, \gamma \succ \gamma'} という2要素に相当します．
+            }：
+
+            \enumerate{
+              * ${ \bind-scope{\gamma}{\gamma'} }
+              * ${ \bind1{Y}!(Type.(tymtau)){\gamma} }
+              * ${ \bind0{x}!(Type.(tymtau)) }
+            }
+
+            ${\bind-scope{\gamma}{\gamma'}} は直観的には
+            「すでにあるスコープ ${\gamma'} の “すぐ上” に新しいスコープ ${\gamma} を設ける」
+            を指します．
+            (2)はステージ1での変数の型つけに相当し，${\gamma} はその変数が有効なスコープを表します．
+            (3)はステージ0での変数の型つけに相当します．
+            型環境と名前ヒープ型つけには，次のような規則でwell-formednessを要請します．
+            簡単に言えば，同一のスコープ名は多重に ${\bind-scope{}{}} で新設されたりしないことを表します\footnote{
+              well-formednessの定義は元論文\NEEDSREF;でもやや記述が不明瞭で，
+              正確か検証できていませんがひとまず掲載しています．
+            }：
+
+            \math-list(${
+            |
+              \derive{|}{\wf{\epsilon}}
+            |
+              \derive{
+              | \wf{\NameHeap}
+              | \funIn{\gamma'}{\NameHeap}
+              | \funNotIn{\gamma}{\NameHeap}
+              |}{
+                \wf{\concat{\NameHeap}{\paren{\bind-scope{\gamma}{\gamma'}}}}
+              }
+            |
+              \derive{
+              | \wf{\NameHeap}
+              | \funIn{\gamma}{\NameHeap}
+              | \funNotIn{Y}{\NameHeap}
+              |}{
+                \wf{\concat{\NameHeap}{\bind1{Y}!(Type.(tymtau)){\gamma}}}
+              }
+            |
+              \derive{|}{
+                \wfenv{\NameHeap}{\epsilon}
+              }
+            |
+              \derive{
+              | \wfenv{\NameHeap}{\tyenv}
+              | \funIn{\gamma'}{\tyenv, \NameHeap}
+              | \funNotIn{\gamma}{\NameHeap}
+              | \funNotIn{\gamma}{\tyenv}
+              |}{
+                \wfenv{\NameHeap}{\concat{\tyenv}{\paren{\bind-scope{\gamma}{\gamma'}}}}
+              }
+            |
+              \derive{
+              | \wfenv{\NameHeap}{\tyenv}
+              | \text!{\type(Type.(tymtau)); 中の各 ${\gamma} に対して ${\funIn{\gamma}{\tyenv, \NameHeap}}}
+              |}{
+                \wfenv{\NameHeap}{\concat{\tyenv}{\bind0{x}!(Type.(tymtau))}}
+              }
+            |
+              \derive{
+              | \wfenv{\NameHeap}{\tyenv}
+              | \funIn{\gamma}{\tyenv, \NameHeap}
+              |}{
+                \wfenv{\NameHeap}{\concat{\tyenv}{\bind1{Y}!(Type.(tymtau)){\gamma}}}
+              }
+            |});
+
+            ${\funIn{\gamma}{\tyenv}} は ${\gamma} が ${\tyenv} で新設されていることを，
+            ${\funIn{\gamma}{\tyenv, \NameHeap}} は ${\gamma} が
+            ${\tyenv} 或いは ${\NameHeap} で新設されていることを表します．
+            また，ストア型つけは特に変哲なくロケーションに型を紐づける写像です．
+          }
+          +p{
+            名前ヒープ型つけの直観を獲得するのはやや難しいですが，ひとことで言うなら
+            “既にグローバルに確定しているスコープの上下関係を保持している機構” であり，
+            主簡約定理 (subject reduction) を証明する上で本質的な役割を果たします\footnote{
+              型保存の観点で言うと，プログラムの評価が進むにつれて
+              そのプログラムの型判定に使われる名前ヒープ型つけが大きくなっていきます．
+              詳細に記述するとかなり長くなるので，
+              気になる読者は実際に元論文\NEEDSREF;の主簡約定理の証明を追うとよいかもしれません．
+            }．
+          }
+          +p{
+            ともあれ，型つけ規則を見てみましょう：
+
+            \math-list(${
+            |
+              \derive{
+              | \funConstType{c} \synteq \mtype!(Type.(tymtau))
+              |}{
+                \tjNJ0{\NameHeap}{\StoreTy}{\tyenv}!(Term.(tmc))!(Type.(tymtau))
+              }
+            |
+              \derive{
+              | \funConstType{c} \synteq \mtype!(Type.(tymtau))
+              |}{
+                \tjNJ1{\NameHeap}{\tyenv}{\gamma}!(Term.(tmc))!(Type.(tymtau))
+              }
+            |
+              \derive{
+              | \bind0{x}!(Type.(tymtau)) \text!{\ in\ } \tyenv
+              |}{
+                \tjNJ0{\NameHeap}{\StoreTy}{\tyenv}!(Term.(!${x}))!(Type.(tymtau))
+              }
+            |
+              \derive{
+              | \bind1{Y}!(Type.(tymtau)){\gamma} \text!{\ in\ } \tyenv, \NameHeap
+              |}{
+                \tjNJ1{\NameHeap}{\tyenv}{\gamma}!(Term.(!${Y}))!(Type.(tymtau))
+              }
+            |
+              \derive{
+              | \tjNJ1{\NameHeap}{\tyenv}{\gamma}!(Term.(tme))!(Type.(tymtau))
+              |}{
+                \tjNJ0{\NameHeap}{\StoreTy}{\tyenv}!(Term.(codeF tme))!(Type.(codeS tymtau ${\gamma}))
+              }
+            |
+              \derive{
+              | \tjNJ1{\NameHeap}{\tyenv}{\gamma'}!(Term.(tme))!(Type.(tymtau))
+              | \subscope{\NameHeap}{\gamma}{\gamma'}
+              |}{
+                \tjNJ1{\NameHeap}{\tyenv}{\gamma}!(Term.(tme))!(Type.(tymtau))
+              }
+            |
+              \derive{
+              | \tjNJ0{\NameHeap}{\StoreTy}{\tyenv}!(Term.(tme))!(Type.(codeS tymtau ${\gamma'}))
+              | \subscope{\NameHeap}{\gamma}{\gamma'}
+              |}{
+                \tjNJ0{\NameHeap}{\tyenv}{\gamma}!(Term.(tme))!(Type.(codeS tymtau ${\gamma}))
+              }
+            |});
+
             \REMAINS{頑張る}
           }
         >
@@ -446,11 +631,11 @@ let gfn-article = '<
           \REMAINS{頑張る}
         }
       >
-      +subsection{まとめ}<
-        +p{
-          \REMAINS{まあ適当に}
-        }
-      >
+    >
+    +section{まとめ}<
+      +p{
+        \REMAINS{まあ適当に}
+      }
     >
   >
 >
