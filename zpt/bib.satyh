@@ -48,5 +48,15 @@ let zpt-bibliography = [
         number = None;
         pages = (137, 166);
         year = 2002;
-    |))
+    |));
+    (`BA15`, InProceedings(|
+        author = {| Brigitte Pientka, Andrew Cave|};
+        title = { Inductive Beluga: Programming Proofs };
+        booktitle = { Automated Deduction - CADE-25 };
+        series = None; 
+        volume = None; 
+        number = None; 
+        pages = (272,281);
+        year = 2015;
+    |));
 ]
