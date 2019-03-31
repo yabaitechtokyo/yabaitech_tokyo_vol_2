@@ -1,5 +1,6 @@
 @require: math
 @require: color
+@require: table
 @import: bib
 @import: moreproof
 @import: ../main/book-class
@@ -39,17 +40,19 @@ let-inline ctx \todo inner =
     read-inline ctx-todo {[TODO: #inner;]}
 
 let article = '<
-  +chapter ?:(`zpt-article`)
+  +chapter ?:(`zpt-article`) ?:({面倒なことはBelugaにやらせよう})
   (|
     bibliography = zpt-bibliography;
-    title = {Belugaで楽に型システムを形式化する話};
+    title = {Belugaによる型システムの形式化};
     author = {zeptometer};
     |) <
     +section {はじめに} <
     +p {Beluga\footnote{http://complogic.cs.mcgill
     
     .ca/beluga/}はMcGill大学のBrigitte Pientkaらによって開発されている定理証明支援系というか関数型プログラミング言語というか、なんかそんなかんじのものです\footnote{Curry-Howard同型が理論的背景にあるから境目が曖昧になるんですわ、しゃーない}。公式サイトによる紹介は以下の通りです。}
+    
     +p {\> Beluga is a functional programming language designed for reasoning about formal systems. It features direct support for object-level binding constructs using higher order abstract syntax and treats contexts as first class objects.}
+    
     +p {なんかわかるようなわからないようなことが書いてありますね。これの意味するところがわかるところまで持っていくのがこの記事の目標となっております。がんばるぞー。記事の流れは以下のようになっております:
     \listing{
     * Normalization by Evaluationというテクニックについて解説をしながらReasonで実装し\footnote{Reasonを選んだのはなんとなく触ってみたかったからです!}、その実装の問題点について考える
@@ -77,6 +80,7 @@ let article = '<
                |}
     |});
     以降STLCの型は暗黙にこれらの導出規則によって導かれたものと考えることにしましょう。}
+    
     +p{一方でSTLCの\dfn{項}は\dfn{変数}${\var{x}}、\dfn{関数}${\lam{x}{A}{M}}、\dfn{関数適用}${\app{M}{N}}からなります。これらはプログラムに相当するものです。
     さて、\dfn{環境}${\Gamma}を変数と型の対の集合とするときに、型判断${\judgeStlc{\Gamma}{M}{A}}を定義できます。これは「環境${\Gamma}の下で項${M}が型${A}を持つ」ことを表す判断で、以下の規則に従って導出されます。
 
@@ -94,6 +98,7 @@ let article = '<
                |}
     |});
     }
+    
     +p{λ計算で重要な概念としてβ簡約があります。これは関数適用を実行することでプログラムが進んでいく過程を抽象化した概念です。項の集合を${Term}をするとき、β簡約${\br}は${Term}上の二項関係で以下のような性質を満たすものと定義します。
     \align [
     ${| \app{\paren{\lam{x}{A}{M}}}{N} | \br \subst{M}{x}{N} | |};
@@ -109,6 +114,7 @@ let article = '<
     +definition{
     ${\br}が\dfn{強正規化性}を満たす ${\Leftrightarrow} 無限簡約列 ${M_1 \br M_2 \br \ldots}が存在しない
     β簡約の合流性と強正規化性の帰結として、「STLC上で導出可能な任意の項\footnote{厳密には「STLCの導出規則によって導出された型判断を伴う項」ですかね}はβ正規形をただ一つもつ」ということが言えます。}
+    
     +p{もう一つ重要な概念として\dfn{η正規形}があります。ふんわりとした説明になってしまいますが、これは「関数型を持つ項はλ項の形をしていてほしい」という気持ちに基いた概念です。これは形式的は\dfn{η展開}よって記述されますが、素朴なη展開${\er}は以下のような二項関係として定義できます。
     \align [
     ${| M | \er \lam{x}{A}{\app{M}{x}} || \text!{when ${M} has type ${\arr{A}{B}}} |};
@@ -120,6 +126,7 @@ let article = '<
     \math-list(${| M \er \lam{x}{A}{\app{M}{x}} \er \lam{x}{A}{\app{\paren{\lam{x}{A}{\app{M}{x}}}}{x}} \er \cdots |});
     この例の場合、二つ目の項で欲しいものは得られているためここでη展開を止めるように定義を制限してやる必要があります。若干ややこしい話になってしまうためここでは詳しく述べませんが\footnote{wasabizの記事で言及があります。興味のある方はそちらを参照してください。}、うまく制限したη展開はβ簡約と同様の合流性と強正規化性を満たすことが知られています\cite[`JG95`];。
     }
+    
     +p{ある項がβ正規形かつη正規形である時、その項は\dfn{βη正規形}と呼ばれます。STLCにおける任意のβη正規形の項は以下の導出規則によって導かれることが知られています。
       \math-list (${
       | \bderive?:!{NVar}
@@ -140,6 +147,7 @@ let article = '<
       |});
       この導出規則においては中立項${Neut}と正規項${Norm}を相互再帰的に定義しています。この結果として得られる${Norm}がβη正規形の項の集合になります。この定義がβ簡約とη展開の定義に基く正規形と一致していることは当然自明ではないので証明が必要ですが、とりあえずここではそういうものだと思ってください。\todo{cite}
     }
+    
     +p{さて、これまでの話をふまえるとSTLCの項が与えられた時にそれに対応するβη正規形の項を得たい、というのはごく自然な考えであると思われます。
     \listing {
     * プログラム
@@ -148,6 +156,7 @@ let article = '<
     ** 実装: ??
     }
     この問題に対する実装方針としてまず最初に思いつくのは「正規形を得るまで項にβ簡約とη展開を繰り返し適用する」という素朴なアルゴリズムでしょう。しかしながらこれにはいくつか困難な点が存在します。}
+    
     +p{一つ目の問題点は変数束縛の管理です。例えば以下のような型判断を考えてみましょう。
     \math-list(${| \judgeStlc{y \colon \arr{A}{B}}{\app{\paren{\lam{x}{\arr{A}{B}}{\lam{y}{A}{\app{\var{x}}{\var{y}}}}}}{y}}{\arr{A}{B}} |});
     定義によるとこの項は以下のようにβ簡約できます。
@@ -161,19 +170,21 @@ let article = '<
     ];
     このようにちゃんとした置換を実装するためには意図しない変数補足が起きないように確認しつつ必要であれば束縛変数の名前を書き換えていく必要があるわけです\footnote{この束縛変数の名前の書き換えのことを\dfn{α変換}と呼びます。詳細は\cite[`Barendregt93`];をご参照ください。}。これをきちんと実装するのがなかなか面倒です。β簡約に関してあまり本質的でない部分に実装を割かないといけないのはあまりよろしくありません。
     }
+    
     +p{もう一つの問題点はη展開を適切に定義するのが面倒くさいという点です。η展開の説明でも述べたように、素朴な規則を用いると無限展開列が生じいつまで立っても正規形を得ることができません。それを防ぐためにη展開の規則を制限してやる必要がありますが、これはこの記事にわざわざ書くのが面倒くさい程度には複雑です。そういった性質のものをきちんと定義に基いてプログラムに書き起こす作業がいかに大変かは想像していただける通りと思われます。}
+    
     +p{このようにβ簡約、η展開の定義に基いて正規形を得るという方針は素直に見えて実は様々な困難があり、あまり実装したいものではありません。}
     >
 
 
     +section {背景: Normalization by Evaluation / 評価による正規化} <
       +p{このような前置きをしたからには簡約を用いた正規化以外にもλ項の正規形を得る方法はあるわけです。それがこれから紹介する\dfn{Normalization by Evaluation}(NbE, 評価による正規化)\cite[`Lindley05`];です。基本的なアイデアは名前の通りで、\emph{λ項に対するeval関数を用いて正規形を得る}というものです。}
+    
       +p{一般的にeval(評価)関数とはプログラムのコードを受け取ってそれを実行した結果を返す関数のことです\footnote{RubyやPython、Javascriptなどのインタープリタを前提とした言語がサポートしていることが多い印象があります。あとCommon LispとかSchemeとかClojureとか。}。もう少し抽象的な解釈として、ここではeval関数を「λ項の集合からそれに対応する\dfn{意味}\footnote{要はsemanticsのことです。}の集合への関数」と考えることにしましょう。以降λ項の集合を${Term}、意味の集合を${Sem}と呼ぶことにします。
       \math-list(${| eval: Term \rightarrow Sem |});
       eval関数に対する妥当な仮定として以下のものを考えます。
 
       \hypothesis{${M}と${N}が同じ正規形を持つなら${eval\paren{M} = eval\paren{N}}である。}
-
       \hypothesis{${M}と${N}が同じ正規形を持たないなら${eval\paren{M} \neq eval\paren{N}}である。}
 
       これらの仮定が成り立つ時、\emph{同じ正規形を持つ項はその場合に限って同じ意味を持つ}ということが言えるはずです。とすると、ある意味${s}が与えられた時に${eval\paren{M} = s}となるようなMのうちただ一つの正規形を選んでくることができるはずです。これを実現する関数をNbEの文脈では\dfn{reify}(具象化)と呼んでいます。以降、正規形からなる集合を${Norm}と呼びましょう。reifyの型は以下のようになるはずです。
@@ -183,14 +194,15 @@ let article = '<
       そうすると後は簡単で、このevalとreifyを組み合わせることで項の正規形を得る関数を定義できます。
 
       \math-list(${| normalize = reify \circ eval: Term \rightarrow Norm |});
-      
+
       \figure ?:(`fig:nbe_in_one_pic`)
-      {NbEの基本的なアイデア(\cite[`Lindley16`];より引用)}
-      <+image-frame{\insert-image(14cm)(`../zpt/figure/nbe.jpg`);}>
+        {NbEの基本的なアイデア(\cite[`Lindley16`];より引用)}
+        <+image-frame{\insert-image(14cm)(`../zpt/figure/nbe.jpg`);}>
       
       これがNbEの基本的なアイデアです(\cite[`Lindley16`];にこれを端的に表した図があったので\ref-figure(`fig:nbe_in_one_pic`);として引用しておきます)。}
 
       +p{NbEのキモの部分はreify関数を如何に実装するかという点にあります。これを実際にReasonでNbEを実装しながら見ていくことにしましょう。\footnote{Reasonを選んだのは代数的データ型をサポートした静的型付け言語で綺麗なコードが書けそうだったからで特に深い意味はないです:)}。最初にすることはSTLCの型と項をReasonのデータ型として定義することです。
+    
     \Code.d-code(`
 type typ =
   | Base
@@ -201,6 +213,7 @@ type term =
   | Abs(string, typ, term)
   | App(term, term);
     `);
+    
     変数名はstringで表すことにしています。termは型判断とは独立して定義されているので導出できない項も表現できてしまいますが、今のところは妥当な型判断を伴う項だけを考えることにしましょう。}
     
     +p{次に${Sem}に対応するものとして\Code.code(`semantics`);という型を定義します。
@@ -212,6 +225,7 @@ type semantics =
 
     基底型の項に対応する意味が\Code.code(`MBase`);で、これは正規形の項をそのまま持ちます。型に\Code.code(`term`);を使っているのはReasonの型システムでは正規形を表現できないためです。また、関数型の項に対応する意味が\Code.code(`MAbs`);で、これは意味から意味への関数から成ります。}
     +p{STLCの項を評価するためには評価される項の他に自由変数に対応する意味を持つ\dfn{環境}が必要です。これを\Code.code(`env`);という型として定義しましょう。これは変数名を与えた時に対応する\Code.code(`semantics`);を返す関数として実装できます。空の環境\Code.code(`envEmpty`);は必ず\Code.code(`Undefined_variable`);を例外として投げます。また\Code.code(`envExt`);は変数名と\Code.code(`semantics`);のペアを受け取って既存の環境を拡張します。
+   
    \Code.d-code(`
 type env = string => semantics;
 
@@ -238,7 +252,9 @@ let envExt: (string, semantics, env) => env =
       env(name2);
     };
     `);
+   
     然る後に\Code.code(`eval`);の本体を書くことができます。項の構造に関する再帰を用いて素直に実装できます。変数の場合は環境から変数名に対応する意味を返す。λ抽象の場合は意味を受け取ってそれを環境に追加した上でλ抽象の本体を評価する関数を返す。適用の場合はそれぞれを評価した上で一つ目の意味が\Code.code(`MAbs`);になっているはずなのでこの関数に二つ目の意味を渡す。
+   
     \Code.d-code(`
 type exn +=
   | Wrong_application;
@@ -260,7 +276,9 @@ let rec eval: (term, environment) => semantics =
   };
     `);
     というわけですんなりと\Code.code(`eval`);を実装することができました。いいですね。人生もこうすんなりといってほしいものです。}
+   
     +p{最後に本題のreify関数を実装します。まず補助関数として新しい変数名を生成する関数を定義しておきます。
+   
     \Code.d-code(`
 let varCount = ref(0)
 let gensym: unit => string =
@@ -270,7 +288,9 @@ let gensym: unit => string =
     "x" ++ Js.Int.toString(num)
   }
     `);
+   
     reify本体は以下のように定義できます。
+   
     \Code.d-code(`
 type exn +=
   | Illegal_type;
@@ -299,8 +319,10 @@ and reflect: (term, typ) => semantics =
     `);
     \todo{何が起こっているかを説明する}
     }
+   
     +p{以上がReasonによるNbEの実装です。\todo{SKIコンビネータとかで簡単な例を示す}}
     >
+   
     +section {BelugaによるNormalization by Evaluationの定式化} <
       +p{さて、先ほどの実装にはいくつか問題点があります。\footnote{Reasonの型システムでもこれらの問題点をある程度解決することは可能です。Belugaがどのような問題を解決したいかを説明するためあえて改善の余地のある実装にしています、ご了承ください。}
       \listing{
@@ -313,10 +335,12 @@ and reflect: (term, typ) => semantics =
       を指すのですが、この章ではこれらがどういうものかを実際にコードを書いていきながら解説します。
       }
       
+
       +subsection {Belugaの概要} <
         +p{
           冒頭でも説明したように、BelugaはMcGill大のBrigitte Pientkaらによって開発されている定理証明支援系あるいはプログラミング言語です。定理証明支援系というとCoqやAgda,Isabelleなどが有名ですが、Belugaがそれらと異なるのは「プログラミング言語\footnote{もう少し抽象的に言うと「束縛構造を持つような構造」一般のことを指しますが、プログラミング言語はこれに含まれると考えて差し支えないでしょう。}の形式化とその性質の証明」に特化している点です。
         }
+        
         +p{
           Belugaでは「プログラミング言語を形式化する部分」と「形式化されたプログラミング言語についての性質を記述する部分を」異なるレイヤに分離しています。
           前者のレイヤは\dfn{LF}と呼ばれる言語によって記述され、一方で後者のレイヤはLFに対する\emph{メタプログラミング}として記述されます(\ref-figure(`fig:overview_twolayer`);)。これらの概念がどういうものかを実際にコードを書きながら示すことがこの章の目標です。
@@ -327,30 +351,39 @@ and reflect: (term, typ) => semantics =
           >
         }        
       >
+      
+      
       +subsection {LFによるSTLCの形式化} <
         +p{
           NbEをBelugaで記述する上で最初にすることはSTLCの形式化です。Belugaではこれを\dfn{LF}\cite[`Harper93`; `Pfenning02`];によって実現します。LFは依存型理論をベースとした言語で、論理体系やプログラミング言語を形式化するのに用いられます。この章では実際にコードを書きながらLFのエッセンスを理解していくことにしましょう。
         }
+        
         +p{まずは型の定義をしましょう。STLCの型は基底型と関数型から成るのでした。型に関する判断をLFにエンコードすると、以下のようなコードになります。
+      
       \Code.d-code(`
 LF tp : type =
 | base : tp
 | arr  : tp → tp → tp
 ;
   `);
+      
       このコードでは3つの新しい定数\Code.code(`tp`);, \Code.code(`base`);, \Code.code(`arr`);を定義しています。\Code.code(`LF`);は新しいLF定数を定義するためのキーワードです。まず最初の行で\Code.code(`tp`);というSTLCの型を表す型を定義しています。その後に\Code.code(`tp`);に関係する定数として\Code.code(`base`);と\Code.code(`arr`);を定義します。これらはそれぞれSTLCの基底型と関数型に対応します。\Code.code(`arr`);の型は\Code.code(`tp → tp → tp`);となっていますが、これは関数型に関する導出規則が判断を二つとって判断を一つ返すことに対応しています。例えば${\arr{A}{B}}が\Code.code(`arr A B`);に対応するわけです。なお、\Code.code(`LF`);で定義する定数名は\emph{全て小文字である必要があります}。これはBelugaが多くの種類の変数を扱っているが故の制限です。ちなみに\Code.code(`LF`);は糖衣構文で、以下のように1行ずつLF定数の定義を行うこともできます。
-            \Code.d-code(`
+      
+      \Code.d-code(`
 tp   : type.
 base : tp.
 arr  : tp → tp → tp.
   `);}
+      
       +p{次にSTLCの項を定義します。LFは依存型に基くため、「STLCにおいて正しい型判断を伴う項」を表現することが可能です。見てみましょう、定義はたったの4行です。
+      
       \Code.d-code(`
 LF term : tp → type =
 | app : term (arr a b) → term a → term b
 | lam : (term a → term b) → term (arr a b)
 ;
       `);
+      
       1行目で\Code.code(`term`);という型を定義しています。これは\Code.code(`tp`);の項を一つとります。たとえば\Code.code(`tp`);の型を持つ項\Code.code(`A`);があったときに、\Code.code(`term A`);で「STLCにおいてAという型を持つλ項」を表します。このように型の中に項の出現を許すのが依存型の特色です。\Code.code(`app`);は関数適用の項に対応する定数で、型\Code.code(`arr a b`);の項と型\Code.code(`a`);の項から型\Code.code(`b`);の項をつくります。以下のSTLCの導出規則に素直に対応していることがわかります。
       \math-list (${
       | \bderive?:!{App}
@@ -379,6 +412,7 @@ LF term : tp → type =
       ];
       このようにエンコードの対象の言語(ここではSTLC)の変数をエンコードする側の言語(ここではLF)の変数で表わすテクニックを\dfn{Higher Order Abstract Syntax}(HOAS)と呼びます。変数名を文字列で管理する方法に比べて、HOASは変数の取り扱いの面倒な部分をエンコードする側の言語に任せることができ実装が大幅に楽になる利点があります。
       }
+
       +p{依存型は大変強力なので、STLCのβη正規形を表現することも可能です。以前に定義したβη正規形の導出規則をBelugaのコードに落としこむと以下のようになります。
       \Code.d-code(`
 neut  : tp → type.
@@ -391,19 +425,66 @@ embed : neut base → norm base.
       正規形の定義は${Neut}と${Norm}の相互再帰的なっているため\Code.code(`LF`);文では定義できません。変わりに一行ずつ新しいLF定数を定義しています。
       }
       >
+      
+      
       +subsection {計算の階層からNormalization by Evaluationを定義する} <
-        +p{先ほどLFで定義したSTLCの項と正規項を用いてNormalization by Evaluationを実装していきましょう。ただここで問題がでてきます。例えばCoqであればSTLCの項を代数的データ構造として定義して、それに対するプログラムないし証明を書くことでSTLCの性質を書くことができます。しかしながら今回我々がSTLCを表現するために定義したLF定数はあくまでただの定数でパターンマッチができるようなデータ構造ではありません。
-        これらを解決するためにBelugaではメタプログラミングの階層を提供して、そこから\emph{LFのコードをオブジェクトとして扱って}、それに対して計算することができるようになっています。Belugaではこれを\dfn{計算の階層}と呼んでいます。}
-        +p{
-          \Code.d-code(`
+        +p{先ほどLFで定義したSTLCの項と正規項を用いてNbEを実装していきましょう。ただここで問題がでてきます。例えばCoqであればSTLCの項を代数的データ構造として定義して、それに対するプログラムないし証明を書くことでSTLCの性質を書くことができます。しかしながら今回我々がSTLCを表現するために定義したLF定数はあくまでただの定数でパターンマッチができるようなデータ構造ではありません。
+        この問題を解決するためにBelugaではメタプログラミングの階層を提供して、そこから\emph{LFのコードをオブジェクトとして扱って}、それに対して計算することができるようになっています。Belugaではこれを\dfn{計算の階層}と呼んでいます。名前の通りBelugaで実際に計算できるのはこちらの階層になるので、こちらがBelugaのメインの言語だと言って差し支えないでしょう。}
+      
+        +p{計算の階層がどのようにLFのコードを扱うのか実際にNbEを定義しながら見てみましょう。まず意味を表すデータ型として\Code.code(`Sem`);を定義します。
+        \Code.d-code(`
 schema ctx = some [a:tp] block x:neut a;
 
 stratified Sem : {g : ctx} [ ⊢ tp] -> ctype =
 | Base : [g ⊢ norm base] → Sem [g] [ ⊢ base]
-| Arr : {g : ctx} ({h : ctx} {#S: [h ⊢ g]} Sem [h] [ ⊢ A] → Sem [h] [ ⊢ B])
-                  → Sem [g] [ ⊢ arr A B]
+| Arr  : {g : ctx} ({h : ctx} {#S: [h ⊢ g]} Sem [h] [ ⊢ A] → Sem [h] [ ⊢ B])
+                   → Sem [g] [ ⊢ arr A B]
 ;
+        `);
+        いきなりこんなの見せられてもなんのこっちゃわかりませんな\footnote{ここらへんの文章を書く段階になってBelugaを説明する上でNbEはあまり適切ではないんじゃないのかと気付いた次第です。許してほしい。}。大丈夫です、これからこれが何を意味しているのかを説明していきますから。BelugaではLFの階層のオブジェクトを\Code.code(`[]`);で囲んで表記します。これらのオブジェクトの中で一番重要なのは\dfn{LFのコード}でしょう。\Code.code(`g`);がLFの環境、\Code.code(`T`);がLFの型を表す時に\Code.code(`[g ⊢ T]`);は「環境\Code.code(`g`);の下で型\Code.code(`T`);を持つようなLFのコード」の型を表します。先に定義したSTLCのエンコードを用いると以下のような型を考えることができます。}
+        
+        +p{
+          \tabular(fun t -> (
+            let (c, l, r) = (t#c, t#l, t#r) in
+            let m = t#m in
+            let e = t#e in
+            [
+              [l {Belugaの型}; l {意味} ];
+              [l {\Code.code(`[ ⊢ tp]`);}; l {空の環境におけるSTLCの型}];
+              [l {\Code.code(`[x:term base ⊢ term base]`);}; l {環境\Code.code(`x:term a`);の下で基底型を持つSTLCのl項}];
+              [l {\Code.code(`[g ⊢ norm (arr a b)]`);}; l {何らかの環境\Code.code(`g`);の下で型\Code.code(`arr a b`);の型を持つSTLCの項}];
+            ]
+            )) (fun xs ys -> []);
+        }
 
+        +p{最後の例にあるように、Belugaでは環境を表す変数を使うことができます。これを\dfn{文脈変数}(context variable)と呼びます。環境変数を使う際にはその環境がどのような型を伴うかについての情報が必要です。これを実際に与えるのが\dfn{schema}で、\Code.code(`schema`);文によって定義されます。先ほどのコードの一行目を見てみましょう。
+        \Code.d-code(`schema ctx = some [a:tp] block x:neut a;`);
+        ここでは\Code.code(`ctx`);というschemaを定義しています。\Code.code(`block`);以降が環境がどのような型を持つかを表わしていて、この例だと\Code.code(`ctx`);のschemaを持つ環境に出てくる変数はSTLCの中立項であると定義しています。ただし\Code.code(`neut a`);の\Code.code(`a`);の部分がSTLCの型であることを明示してやる必要があるので、それを\Code.code(`some [a:tp]`);の部分で与えています。
+        }
+        +p{続く行で実際に意味を表わすデータ型\code(`Sem`);を定義しています。
+        
+        \d-code(`stratified Sem : {g : ctx} [ ⊢ tp] -> ctype =`);
+        \code(`stratified`);は代数的データ構造を定義するための文です\footnote{厳密には代数的データ構造を定義する構文は別に\code(`inductive`);というのがあります。ただ通常の代数的データ構造ではnegativeな位置に再帰することができないため、ここではより強力な\code(`stratified`);を用いています。詳しいことは\cite[`BA15`];に書いてありそう。}。なお、\code(`stratified`);で定義するデータ型の名前は全て\emph{大文字から始まる必要がある}のでご注意ください。\code(`Sem`);は
+        \code(`ctx`);の文脈変数\code(`g`);とSTLCの型(のコード)をパラメータとして持ち、\code(`g`);の環境の下で第二引数で与えられたSTLCの型を持つ項に対応する意味を表わしています。なお、\code(`ctype`);は計算の階層における型を表わす型です。
+        
+        \d-code(`| Base : [g ⊢ norm base] → Sem [g] [ ⊢ base]`);
+        基底型の意味\code(`Base`);はReasonの場合と同じくその正規項をそのまま使って与えます。\code(`[g ⊢ norm base]`);が何らかの環境\code(`g`);の下で基底型を持つSTLCの正規項の型で、それを第一引数にとって対応する型\code(`Sem [g] [ ⊢ base]`);の意味としています。
+
+        \d-code(`
+| Arr  : {g : ctx} ({h : ctx} {#S: [h ⊢ g]} Sem [h] [ ⊢ A] → Sem [h] [ ⊢ B])
+                   → Sem [g] [ ⊢ arr A B]
+        `);
+        関数型の意味\code(`Arr`);もReasonの場合と同じく意味から意味への関数によって定義します。ただしBelugaではReasonの場合よりもかなり厳密に記述することができます。第一引数に\code(`ctx`);の環境\code(`g`);をとるのは\code(`Base`);の場合と同じです。次の引数にとるのが意味から意味への関数ですがこの部分の型だけに注目してみましょう。
+        \d-code(`{h : ctx} {#S: [h ⊢ g]} Sem [h] [ ⊢ A] → Sem [h] [ ⊢ B]`);
+        ここで新たに二つの概念、\dfn{置換変数}と\dfn{メタ変数}が出てきます。それぞれ見ていきましょう。}
+        
+        +p{置換は計算の階層の概念で、これは\emph{ある環境のLF項をより弱い他の環境のLF項に変換するものです}\footnote{ここで言う弱いとは環境のweakeningの意味です。}。置換はBelugaにおいて特別扱いされるオブジェクトで、それゆえ置換変数という独立した変数を用意されているわけです。ちなみに\code(`#S`);のように\emph{先頭が\code(`#`);で残りが大文字になっている必要があります}。第二引数の\code(`{#S: [h ⊢ g]}`);がまさにそれですね。この置換変数の型\code(`[h ⊢ g]`);は環境\code(`g`);から環境\code(`[h]`);へ変換する置換を表しています。この置換変数を与えることで、新しく導入された文脈変数\code(`h`);ともとの文脈変数\code(`g`);との関係を明示していています。}
+        +p{メタ変数も計算の階層の概念で、これは\emph{LFのコードを他のLFのコードに埋め込む際に使われます}。また、メタ変数は\emph{名前が全て大文字である必要があります}。ここでは\code(`[ ⊢ A]`);のような形で「まだ型推論で解決されていないLF項のコード」を表わしているだけですが、後に置換と一緒に用いる例をお見せします。}
+
+        +p{若干説明が長くなってしまいましたが、これらを踏まえると先ほどの型は「もとの環境\code(`g`);よりも弱い任意の環境\code(`h`);について、その環境における型\code(`A`);の意味から型\code(`B`);の意味への関数を与えるもの」ということになります。これを\code(`Arr`);に与えることで関数型の項の意味を与えることができます。}
+        
+        +p{
+  \Code.d-code(`
 rec sem_wkn : {h : ctx} {g : ctx} {#S : [h ⊢ g]} Sem [g] [ ⊢ A] → Sem [h] [ ⊢ A]  =
   mlam h ⇒ mlam g ⇒ mlam S ⇒ fn e ⇒ case e of 
   | Base [g ⊢ R] ⇒ Base [h ⊢ R[#S]]
