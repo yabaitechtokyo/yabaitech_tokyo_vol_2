@@ -24,6 +24,14 @@ let-math \er = ${\rightarrow_{\eta}}
 let-math \erm = ${\rightarrow_{\eta}^{*}}
 let-math \subst m x n = ${#m \sqbracket{#x \coloneq #n}}
 
+let-inline ctx \insert-image w path =
+  let img = load-image path in
+    use-image-by-width img w
+
+let-inline ctx \insert-pdf-image w path page =
+  let img = load-pdf-image path page in
+    use-image-by-width img w
+
 let-inline ctx \todo inner =
   let ctx-todo =
     ctx |> set-text-color Color.red
@@ -158,7 +166,7 @@ let article = '<
     >
 
 
-    +section {背景: Normalization by Evaluation} <
+    +section {背景: Normalization by Evaluation / 評価による正規化} <
       +p{このような前置きをしたからには簡約を用いた正規化以外にもλ項の正規形を得る方法はあるわけです。それがこれから紹介する\dfn{Normalization by Evaluation}(NbE, 評価による正規化)\cite[`Lindley05`];です。基本的なアイデアは名前の通りで、\emph{λ項に対するeval関数を用いて正規形を得る}というものです。}
       +p{一般的にeval(評価)関数とはプログラムのコードを受け取ってそれを実行した結果を返す関数のことです\footnote{RubyやPython、Javascriptなどのインタープリタを前提とした言語がサポートしていることが多い印象があります。あとCommon LispとかSchemeとかClojureとか。}。もう少し抽象的な解釈として、ここではeval関数を「λ項の集合からそれに対応する\dfn{意味}\footnote{要はsemanticsのことです。}の集合への関数」と考えることにしましょう。以降λ項の集合を${Term}、意味の集合を${Sem}と呼ぶことにします。
       \math-list(${| eval: Term \rightarrow Sem |});
@@ -168,11 +176,19 @@ let article = '<
 
       \hypothesis{${M}と${N}が同じ正規形を持たないなら${eval\paren{M} \neq eval\paren{N}}である。}
 
-      これらの仮定が成り立つ時、\emph{同じ正規形を持つ項はその場合に限って同じ意味を持つ}ということが言えるはずです。とすると、ある意味${s}が与えられた時に${eval\paren{M} = s}となるようなMのうちただ一つの正規形を選んでくることができるはずです。この関数は\dfn{reify}(具象化)関数と呼ばれます。以降、正規形からなる集合を${Norm}と呼びます。
+      これらの仮定が成り立つ時、\emph{同じ正規形を持つ項はその場合に限って同じ意味を持つ}ということが言えるはずです。とすると、ある意味${s}が与えられた時に${eval\paren{M} = s}となるようなMのうちただ一つの正規形を選んでくることができるはずです。これを実現する関数をNbEの文脈では\dfn{reify}(具象化)と呼んでいます。以降、正規形からなる集合を${Norm}と呼びましょう。reifyの型は以下のようになるはずです。
+
       \math-list(${| reify: Sem \rightarrow Norm |});
-      後は簡単で、このevalとreifyを組み合わせると項の正規形を与える関数になります。
+
+      そうすると後は簡単で、このevalとreifyを組み合わせることで項の正規形を得る関数を定義できます。
+
       \math-list(${| normalize = reify \circ eval: Term \rightarrow Norm |});
-      これがNbEの基本的なアイデアです。このアイデアのキモの部分はreify関数を如何に実装するかという点にありますが、実際にReasonでNbEを実装しながらその辺りを見ていくことにしましょう。\todo{何故Reason?}\todo{図があると見栄えがする}}
+      
+      \figure ?:(`fig:nbe_in_one_pic`)
+      {NbEの基本的なアイデア(\cite[`Lindley16`];より引用)}
+      <+image-frame{\insert-image(14cm)(`../zpt/figure/nbe.jpg`);}>
+      
+      これがNbEの基本的なアイデアです(\cite[`Lindley16`];にこれを端的に表した図があったので\ref-figure(`fig:nbe_in_one_pic`);として引用しておきます)。このアイデアのキモの部分はreify関数を如何に実装するかという点にありますが、実際にReasonでNbEを実装しながらその辺りを見ていくことにしましょう。\footnote{Reasonを選んだのは代数的データ型をサポートした静的型付け言語で綺麗なコードが書けそうだったからで特に深い意味はないです:)}}
       +p{
 \todo{適切な場所に移す}これをReasonのコードで表してみましょう。STLCの型と項は以下のような代数的データ構造として定義可能です。
     \Code.d-code(`

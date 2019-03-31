@@ -25,6 +25,12 @@ let zpt-bibliography = [
         publisher = {PhD Thesis};
         year = 2005
     |));
+    (`Lindley16`, WebSite(|
+        author = {| Sam Lindley|};
+        title  = {Normalisation by evaluation};
+        url    = (`http://homepages.inf.ed.ac.uk/slindley/nbe/nbe-cambridge2016.pdf`);
+        year   = 2016;
+    |));
     (`Harper93`, Article(|
         author = {| Robert Harper | Furio Honsell | Gordon Plotkin|};
         title = {A Framework For Defining Logics};
