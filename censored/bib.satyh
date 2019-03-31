@@ -4,14 +4,14 @@ let censored-bibliography = [
   (`kemofrewiki`, WebSite(|
     author = {|フリー百科事典　ウィキペディア日本語版|};
     title  = {けものフレンズ};
-    url    = `https://ja.wikipedia.org/wiki/%E3%81%91%E3%82%82%E3%81%AE%E3%83%95%E3%83%AC%E3%83%B3%E3%82%BA`;
+    url    = `https://ja.wikipedia.org/wiki/けものフレンズ`;
     year   = 2019;
   |));
 
   (`kemofreanimewiki`, WebSite(|
     author = {|フリー百科事典　ウィキペディア日本語版|};
     title  = {けものフレンズ (アニメ)};
-    url    = `https://ja.wikipedia.org/wiki/%E3%81%91%E3%82%82%E3%81%AE%E3%83%95%E3%83%AC%E3%83%B3%E3%82%BA_(%E3%82%A2%E3%83%8B%E3%83%A1)`;
+    url    = `https://ja.wikipedia.org/wiki/けものフレンズ_(アニメ)`;
     year   = 2019;
   |));
 
@@ -69,13 +69,6 @@ let censored-bibliography = [
     title  = {AWS Lambda で MeCab + NEologd 辞書を Node.js で動かす – Qiita};
     url    = `https://qiita.com/carrotflakes/items/d3bab5a81817c7e7edc0`;
     year   = 2018;
-  |));
-
-  (`kemofrewiki`, WebSite(|
-    author = {|フリー百科事典　ウィキペディア日本語版|};
-    title  = {けものフレンズ};
-    url    = `https://ja.wikipedia.org/wiki/%E3%81%91%E3%82%82%E3%81%AE%E3%83%95%E3%83%AC%E3%83%B3%E3%82%BA`;
-    year   = 2019;
   |));
   
   (`qiita2015`, WebSite(|
