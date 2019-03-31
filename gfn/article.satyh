@@ -566,7 +566,7 @@ let gfn-article = '<
             }．
           }
           +p{
-            ともあれ，型つけ規則を見てみましょう：
+            ともあれ，型つけ規則を見てみましょう（一部省略）：
 
             \math-list(${
             |
@@ -613,17 +613,62 @@ let gfn-article = '<
               |}{
                 \tjNJ0{\NameHeap}{\tyenv}{\gamma}!(Term.(tme))!(Type.(codeS tymtau ${\gamma}))
               }
+            |
+              \derive{
+              | \tjNJ0{\NameHeap}{\StoreTy}{\concat{\tyenv}{\bind0{x}!(Type.(tymtaup))}}!(Term.(tme))!(Type.(tymtaup))
+              |}{
+                \tjNJ0{\NameHeap}{\StoreTy}{\tyenv}!(Term.(lam ${x} tme))!(Type.(tymtaup --> tymtau))
+              }
+            |
+              \derive{
+              | \tjNJ1{\NameHeap}{\concat{\tyenv}{\bind1{Y}!(Type.(tymtaup)){\gamma}}}{\gamma}!(Term.(tme))!(Type.(tymtaup))
+              |}{
+                \tjNJ1{\NameHeap}{\tyenv}{\gamma}!(Term.(lam ${Y} tme))!(Type.(tymtaup --> tymtau))
+              }
+            |
+              \derive{
+              | \tjNJ0{\NameHeap}{\StoreTy}{
+                  \concats{|\tyenv|\paren{\bind-scope{\gamma}{\gamma'}}|\bind0{x}!(Type.(codeS tymtaup ${\gamma}))|}
+                }!(Term.(tme))!(Type.(codeS tymtau ${\gamma}))
+              |}{
+                \tjNJ0{\NameHeap}{\StoreTy}{\tyenv}!(Term.(lamC1 ${Y} tme))!(Type.(codeS (tymtaup --> tymtau) ${\gamma'}))
+              }
+            |
+              \derive-multi!(11cm){
+              | \NameHeap \synteq \concats{|\NameHeap_1|\paren{\bind-scope{\gamma}{\gamma'}}|\bind0{Y}!(Type.(codeS tymtaup ${\gamma}))|\NameHeap_2|}
+              | \forall \gamma''.\ \paren{\subscope{\NameHeap}{\gamma}{\gamma''} \ \text!{and}\ \gamma \nsynteq \gamma'' \Rightarrow \subscope{\NameHeap}{\gamma'}{\gamma''}}
+              | \tjNJ0{\NameHeap}{\StoreTy}{\epsilon}!(Term.(tme))!(Type.(codeS tymtau ${\gamma}))
+              |}{
+                \tjNJ0{\NameHeap}{\StoreTy}{\epsilon}!(Term.(lamC2 ${Y} tme))!(Type.(codeS (tymtaup --> tymtau) ${\gamma'}))
+              }
             |});
 
+            やはりラムダ抽象とそのコードコンビネータが重要です．
             \REMAINS{頑張る}
           }
         >
       >
       +subsection{既存研究2：\lambda-open-poly;}<
         +p{
-          \dfn{\lambda-open-poly;}は，一転して
+          \dfn{\lambda-open-poly;}\NEEDSREF;は，一転して
           \MetaML-square;をベースにした可変参照を含む多段階計算に対する型システムです．
-          \REMAINS{頑張る}
+          執筆時間の都合であまり詳しく触れることはできませんが，
+          Lisp諸方言のようにシンボルを陽に名前で扱うことに特徴があり，
+          環境分類子のかわりに「どんな名前でどんな型をもつシンボルの集合が出現しうるか」の情報を
+          レコード型のような形式でコード型にくっつけて持ち回ります．
+          詳しくは論文を参照されたいのですが，特に次のような望ましい性質を満たしていることが大きな有用性です：
+
+          \listing{
+            * 安全な局所的\code(`run`);ができる
+            * 主要型が存在し，型推論可能
+          }
+
+          型推論に関しては，\dfnjaen{列多相}{row polymorphism}の知見を利用することで実現しています．
+          弱点となりうる点としては，シンボル名を変えると型も変わるので
+          複雑なプログラムの読み書きをしていると変数名を変更してよいのかがすぐにはわからないであろうこと，
+          型エラーがかなり煩雑になるであろうことが挙げられます\footnote{
+            あくまで可能性です．定性的な話なので，実際に型推論器を実装して使ってみないと実感としてはわかりません．
+          }．
         }
       >
       +subsection{改善の可能性}<
