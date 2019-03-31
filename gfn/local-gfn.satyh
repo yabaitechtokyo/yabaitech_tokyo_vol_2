@@ -1,5 +1,5 @@
 @require: itemize
-@require: code
+@import: ../lib/code
 @require: bnf
 @require: proof
 @import: bib
