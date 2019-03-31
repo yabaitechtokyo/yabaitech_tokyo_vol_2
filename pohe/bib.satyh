@@ -31,4 +31,34 @@ let pohe-bibliography = [
         url = `https://www.gnu.org/software/hurd/`;
         year = 2016;
     |));
+    (`l4`, Article(|
+        author = {| Jochen Liedtke |};
+        title = {Improving IPC by kernel design};
+        journal = {14th ACM Symposium on Operating System Principles};
+        volume = None;
+        number = None;
+        pages = (175, 188);
+        year = 1993;
+    |));
+    (`l4_wikipedia`, WebSite(|
+        author = {| ウィキペディアの執筆者 |};
+        title = {L4マイクロカーネルファミリー};
+        url = `https://ja.wikipedia.org/wiki/L4マイクロカーネルファミリー`;
+        year = 2019;
+    |));
+    (`mach_wikipedia`, WebSite(|
+        author = {| ウィキペディアの執筆者 |};
+        title = {Mach};
+        url = `https://ja.wikipedia.org/wiki/Mach`;
+        year = 2019;
+    |));
+    (`l4_lessons`, Article(|
+        author = {| Kevin Elphinstone and Gernot Heiser |};
+        title = {From L3 to seL4 What Have We Learnt in 20 Years of L4 Microkernels?};
+        journal = {SOSP’13};
+        volume = None;
+        number = None;
+        pages = (0, 0);
+        year = 1993;
+    |));
 ]
