@@ -1,2 +1,121 @@
+@import: ../main/book-class
+
+let abbrev-LICS = {IEEE Symposium on Logic in Computer Science}
+let abbrev-JFP = {J. Funct. Program.}
+let abbrev-JACM = {JACM}
+let abbrev-ICALP = {International Colloquium on Automata, Languages and Programming}
+let abbrev-LMCS = {Logical Methods in Computer Science}
+let abbrev-PPDP = {ACM SIGPLAM Symposium on Principles and Practice of Declarative Programming}
+let abbrev-GPCE = {International Conference on Generative Programming and Component Engineering}
+
+let abbrev-proc-PEPM = {Proceedings of Workshop on Partial Evaluation and Program manipulation}
+let abbrev-proc-ICFP = {Proceedings of the ACM SIGPLAN International Conference on Functional Programming}
+let abbrev-proc-POPL = {Proc. of POPL}
+let abbrev-proc-PLDI = {Proc. of PLDI}
+
 let gfn-bibliography = [
+  (`Calcagno03GPCE`, InProceedings(|
+    author = {| Cristiano Calcagno | Walid Taha | Liwen Huang | Xavier Leroy |};
+    title = {Implementing multi-stage languages using ASTs, gensym, and reflection};
+    booktitle = abbrev-GPCE;
+    series = None; volume = None; number = None;
+    pages = (57, 76);
+    year = 2003;
+  |));
+  (`Davies96LICS`, InProceedings(|
+    author = {| Rowan Davies |};
+    title = {A temporal-logic approach to binding-time analysis};
+    booktitle = {#abbrev-LICS; (LICS’96)};
+    series = None; volume = None; number = None;
+    pages = (184, 195);
+    year = 1996;
+  |));
+  (`DaviesPfenning01JACM`, Article(|
+    author = {| Rowan Davies | Frank Pfenning |};
+    title = {A modal analysis of staged computation};
+    journal = abbrev-JACM;
+    volume = Some(48);
+    number = Some({3});
+    pages = (555, 604);
+    year = 2001;
+  |));
+  (`Kim06POPL`, InProceedings(|
+    author = {| Ik-Soon Kim | Kwangkeun Yi | Cristiano Calcagno|};
+    title = {A polymorphic modal type system for Lisp-like multi-staged languages};
+    booktitle = {#abbrev-proc-POPL; (POPL’06)};
+    series = None; volume = None; number = None;
+    pages = (257, 269);
+    year = 2006;
+%    month =  jan,
+  |));
+  (`MetaOCaml`, Article(|
+    author = {| Oleg Kiselyov |};
+    title = {The design and implementation of BER MetaOCaml – system description};
+    journal = {LNCS};
+    number = Some({8475});
+    volume = None;
+    pages = (86, 102);
+    year = 2014;
+  |));
+  (`KiselyovKameyamaSudo16APLAS`, InProceedings(|
+    author = {| Oleg Kiselyov | Yukiyoshi Kameyama | Yuto Sudo |};
+    title = {Refined environment classifiers: type- and scope-safe code generation with mutable cells};
+    booktitle = {APLAS’16};
+    series = None; volume = None; number = None;
+    pages = (271, 291);
+    year = 2016;
+  |));
+  (`TaPL`, Book(|
+    author = {| Benjamin C. Pierce |};
+    title = {Types and Programming Languages};
+    publisher = {The MIT Press};
+    year = 2002;
+  |));
+  (`TaPL-ja`, Book(|
+    author = {| Benjamin C. Pierce
+      （住井 英二郎 監訳，遠藤 侑介 訳，酒井 政裕 訳，今井 敬吾 訳，黒木 裕介 訳，今井 宜洋 訳，才川 隆文 訳，今井 健男 訳）
+    |};
+    title = {型システム入門};
+    publisher = {オーム社};
+    year = 2013;
+  |));
+  (`Taha00PEPM`, InProceedings(|
+    author = {| Walid Taha |};
+    title = {A sound reduction semantics for untyped CBN multi-stage computation. Or, the theory of MetaML is non-trivial};
+    booktitle = {#abbrev-proc-PEPM; (PEPM2000)};
+    series = None;
+    volume = None;
+    number = None;
+    pages = (34, 43);
+    year = 2000;
+  |));
+  (`TahaNielsen03POPL`, InProceedings(|
+    author = {| Walid Taha | Michael Florentin Nielsen |};
+    title = {Environment classifiers};
+    booktitle = {#abbrev-proc-POPL; (POPL’03)};
+    series = None;
+    volume = None;
+    number = None;
+    pages = (26, 37);
+    year = 2003;
+  |));
+  (`Taha97PEPM`, InProceedings(|
+    author = {| Walid Taha | Tim Sheard |};
+    title = {Multi-stage programming with explicit annotations};
+    booktitle = {#abbrev-proc-PEPM; (PEPM2000)};
+    series = None;
+    volume = None;
+    number = None;
+    pages = (203, 217);
+    year = 1997;
+  |));
+  (`WadlerThiemann03`, Article(|
+     author = {| Philip Wadler | Peter Thiemann |};
+     title = {The marriage of effects and monads};
+     journal = {ACM Trans. Comput. Logic};
+     volume = Some(4);
+     number = Some({1});
+     pages = (1, 32);
+     year = 2003;
+  |));
 ]
