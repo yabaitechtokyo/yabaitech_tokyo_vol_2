@@ -13,8 +13,8 @@ let article = '<
   ?:({視聴編})
   (|
     bibliography = ib-bibliography;
-    title = {忙しいエンジニアのための Twitch 紹介};
-    author = {irnbru};
+    title = {忙しいエンジニアのための Twitch ゲーム配信観戦ガイド};
+    author = {IrnBru};
     |) <
         +section{はじめに} <
 +p {
