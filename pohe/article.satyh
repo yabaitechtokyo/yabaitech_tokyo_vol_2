@@ -104,7 +104,7 @@ let pohe-article = '<
       }
       そこで1日目では、具体的な目標であるL4の仕様についての話を始める前に、マイクロカーネルの概念についても整理しようと思う。
       そして最後に、実際にL4 X.2の実装であるPistachioカーネルをビルドして、Qemu上で動かしてみる。
-      そうすれば、明日以降私達が何を作ればいいのかがはっきりするだろう。
+      そうすれば、明日以降私が何を作ればいいのかがはっきりするだろう。
     }
 
     +subsection{What is Microkernel?} <
@@ -290,7 +290,16 @@ let pohe-article = '<
       +p {
         少しおしゃべりが過ぎたようだ。
         そろそろ作業の方に入った方がいいだろうね！
+        私はこれからL4の互換マイクロカーネルをRustで書いていくわけだが、今の話で分かるようにL4と一言で言ってみてもまぁ色々なやつがいるわけだ。
+        じゃあ何を作ろうかと考えて決めた結論は、\ref-figure(`fig:l4family`);のど真ん中あたりに陣取っている\code(`Pistachio`);だ！
       }
+      +subsubsection {L4 API 仕様} <
+        +p {
+          Pistachioを選んだ理由は、一言でいって、短期間で自作するのにぴったりだから、だ。
+          L4には実装がたくさんあるのだけど、さらにいくつかの実装に対しては、「L4マイクロカーネルの標準仕様」というものが策定されている。
+
+        }
+      >
       +listing{
         *  Write that I assume we're in a Linux environment. Especially, that I'm in WSL environment.
       }
