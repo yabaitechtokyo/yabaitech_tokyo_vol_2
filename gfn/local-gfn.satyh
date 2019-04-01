@@ -29,9 +29,10 @@ let-inline ctx \NEEDSREF =
 let-inline ctx \REMAINS it =
   read-inline (red-letters ctx) {［要加筆： #it;］}
 
+let-math \Box = math-char MathOrd `□`
 let-inline \lambda-circle = {${\lambda^{\bigcirc}}}
-let-inline \lambda-square = {${\lambda^{\text!{□}}}}
-let-inline \MetaML-square = {${\text!{MetaML}^{\text!{□}}_{e}}}
+let-inline \lambda-square = {${\lambda^{\Box}}}
+let-inline \MetaML-square = {${\text!{MetaML}^{\Box}_{e}}}
 let-inline \lambda-open-poly =
 %  {${\lambda_{\mathit-token!(`open`)}^{\mathit-token!(`poly`)}}}
   {${\lambda_{open}^{poly}}}
