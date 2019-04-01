@@ -50,7 +50,7 @@ let article = '<
     author = {zeptometer};
     |) <
     +section {はじめに} <
-    +p {意味ありげなタイトルですがこの記事の主旨はBeluga\footnote{http://complogic.cs.mcgill.ca/beluga/}というプログラミング言語あるいは定理証明系\footnote{Curry-Howard同型が理論的背景にあるから境目が曖昧になるんですわ、しゃーない}。を紹介することです。Belugaはプログラミング言語を形式化してその性質を証明することを目的としている変わり種の定理証明系で、現在McGill大学のBrigitte Pientkaらにより活発に開発されています。公式サイトによる紹介は以下の通りです。}
+    +p {意味ありげなタイトルですがこの記事の主旨はBeluga\footnote{http://complogic.cs.mcgill.ca/beluga/}というプログラミング言語あるいは定理証明系\footnote{Curry-Howard同型が理論的背景にあるから境目が曖昧になるんですわ、しゃーない}を紹介することです。Belugaはプログラミング言語を形式化してその性質を証明することを目的としている変わり種の定理証明系で、現在McGill大学のBrigitte Pientkaらにより活発に開発されています。公式サイトによる紹介は以下の通りです。}
     
     +p {\> Beluga is a functional programming language designed for reasoning about formal systems. It features direct support for object-level binding constructs using higher order abstract syntax and treats contexts as first class objects.}
     
