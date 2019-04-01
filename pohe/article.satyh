@@ -227,7 +227,10 @@ let pohe-article = '<
         論文 "From L3 to seL4 - What Have We Learnt in 20 Years of L4 Microkernels?"\cite[`l4_lessons`];は、
         L4の重要な概念がよくまとまっているうえに、この系譜図上のL4からseL4にいたるまでにL4ファミリーが解決してきた問題や、
         設計の変遷をまとめたとても良い読み物だ。
-        L4についてより詳しい資料を読みたくなったらまずはこれを参照してほしい。(http://sigops.org/s/conferences/sosp/2013/papers/p133-elphinstone.pdf)
+        L4についてより詳しい資料を読みたくなったら初めにこれを参照してほしい。(http://sigops.org/s/conferences/sosp/2013/papers/p133-elphinstone.pdf)
+        他のL4の重要な情報源といえばずばり公式サイトであるhttp://l4hq.orgだ。
+        各種L4のドキュメントや仕様がまとめられているので、こちらも初めに参照してほしい。
+        つまり、両方とも外せない情報源なのでぜひ目を通してくれ。
 
 
         \figure ?:(`fig:l4family`)
