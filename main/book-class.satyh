@@ -124,6 +124,7 @@ module Book : sig
 
   direct +section : [string?; inline-text; block-text] block-cmd
   direct +subsection : [string?; inline-text; block-text] block-cmd
+  direct +subsubsection : [inline-text; block-text] block-cmd
   direct +definition : [inline-text?; string?; inline-text] block-cmd
   direct \definition : [inline-text?; string?; inline-text] inline-cmd
   direct +theorem : [inline-text?; string?; inline-text] block-cmd
@@ -859,6 +860,24 @@ end = struct
       | Some(label) -> label
     in
       subsection-scheme ctx label title inner
+
+
+  let font-size-subsubsection = 14pt
+
+  let make-subsubsection-title ctx =
+      ctx |> set-font-size font-size-subsubsection
+          |> set-font Latin font-latin-bold
+          |> set-cjk-font font-cjk-gothic
+
+
+  let-block ctx +subsubsection it bt =
+    let ib-title =
+      let ctx-title = make-subsubsection-title ctx in
+      read-inline ctx-title it
+    in
+    let bb-title = line-break true false ctx (ib-title ++ inline-fil) in
+    let bb-main = read-block ctx bt in
+    bb-title +++ bb-main
 
 
   let-inline ctx \emph inner =
