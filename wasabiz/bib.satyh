@@ -3,7 +3,7 @@
 let wasabiz-bibliography = [
 
   (`Barendregt93`, Article(|
-    author = {|H. P. Barendregt|};
+    author = {|Henk P. Barendregt|};
     title = {Lambda calculi with types};
     journal = {Handbook of logic in computer science};
     volume = Some(2);
@@ -187,7 +187,7 @@ let wasabiz-bibliography = [
   |));
 
   (`haskhol`, WebSite(|
-    author = {|E. Austin|};
+    author = {|Evan Austin|};
     title  = {HaskHOL};
     url    = `http://ecaustin.github.io/haskhol/`;
     year   = 2019;
@@ -221,7 +221,7 @@ let wasabiz-bibliography = [
   |));
 
   (`LambekS86`, Book(|
-    author = {| J. Lambek | P. J. Scott |};
+    author = {| Joachim Lambek | Philip J. Scott |};
     title  = {Introduction to Higher Order Categorical Logic};
     publisher = {Cambridge University Press};
     year   = 1986;
@@ -245,7 +245,7 @@ let wasabiz-bibliography = [
   |));
 
   (`Jacobs99`, Book(|
-  author = {| B. Jacobs |};
+  author = {| Bart Jacobs |};
   title = {Categorical Logic and Type Theory};
   publisher = {North Holland};
   year = 1999;
