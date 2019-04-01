@@ -76,6 +76,12 @@ let pohe-bibliography = [
         url = `https://www.networkworld.com/article/3236064/minix-the-most-popular-os-in-the-world-thanks-to-intel.html`;
         year = 2017;
     |));
+    (`multiboot1`, WebSite(|
+        author = {| Free Software Foundation, Inc. |};
+        title = {Multiboot Specification version 0.6.96};
+        url = `https://www.gnu.org/software/grub/manual/multiboot/multiboot.html`;
+        year = 2010;
+    |));
     (`l4_lessons`, Article(|
         author = {| Kevin Elphinstone and Gernot Heiser |};
         title = {From L3 to seL4 What Have We Learnt in 20 Years of L4 Microkernels?};
