@@ -1,2 +1,18 @@
+@import: ../main/book-class
+
 let gfn-bibliography = [
+  (`TaPL`, Book(|
+    author = {| Benjamin C. Pierce |};
+    title = {Types and Programming Languages};
+    publisher = {The MIT Press};
+    year = 2002;
+  |));
+  (`TaPL-ja`, Book(|
+    author = {| Benjamin C. Pierce
+      （住井 英二郎 監訳，遠藤 侑介 訳，酒井 政裕 訳，今井 敬吾 訳，黒木 裕介 訳，今井 宜洋 訳，才川 隆文 訳，今井 健男 訳）
+    |};
+    title = {型システム入門};
+    publisher = {オーム社};
+    year = 2013;
+  |));
 ]
