@@ -13,6 +13,10 @@ document (|
   title = `yabaitech.tokyo vol.2`;
   venue = `技術書典6`;
   date = `2019.04.14`;
+  author = `yabaitech.tokyo`;
+  email = `admin@yabaitech.tokyo`;
+  website = `http://yabaitech.tokyo`;
+  publisher = `有限会社 ねこのしっぽ`
   |) '<
   #censored-article;
   #pohe-article;
