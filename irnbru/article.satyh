@@ -10,7 +10,6 @@ let-inline ctx \br = mandatory-break ctx
 
 let article = '<
   +chapter ?:(`ib-article`)
-  ?:({視聴編})
   (|
     bibliography = ib-bibliography;
     title = {忙しいエンジニアのための Twitch ゲーム配信観戦ガイド};
