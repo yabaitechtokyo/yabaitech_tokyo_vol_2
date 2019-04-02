@@ -1,22 +1,25 @@
 @import: ../main/book-class
+@require: pervasives
+
+let-inline ctx \breakline = mandatory-break ctx
 
 let pohe-bibliography = [
     (`microkernel_wikipedia`, WebSite(|
         author = {| ウィキペディアの執筆者 |};
         title = {マイクロカーネル};
-        url = `https://ja.wikipedia.org/wiki/%E3%83%9E%E3%82%A4%E3%82%AF%E3%83%AD%E3%82%AB%E3%83%BC%E3%83%8D%E3%83%AB`;
+        url = `http://bit.ly/2FS4h4M`;
         year = 2019;
     |));
     (`l4linux`, WebSite(|
         author = {| Operating Systems Group Dresden |};
         title = {L4 Linux};
-        url = `https://l4linux.org/overview.shtml`;
+        url = `http://bit.ly/2FS4g0I`;
         year = 2019;
     |));
     (`l4minix`, WebSite(|
         author = {| Kazuya Kodama |};
         title = {L4/Minix WWW Page};
-        url = `http://research.nii.ac.jp/~kazuya/L4.Minix/index.html`;
+        url = `http://bit.ly/2FQPNlN`;
         year = 2005;
     |));
     (`mklinux`, WebSite(|
@@ -54,8 +57,8 @@ let pohe-bibliography = [
     |));
     (`l4_wikipedia`, WebSite(|
         author = {| ウィキペディアの執筆者 |};
-        title = {L4マイクロカーネルファミリー};
-        url = `https://ja.wikipedia.org/wiki/L4マイクロカーネルファミリー`;
+        title = {L4マイクロカーネルファミリー\breakline;};
+        url = `http://bit.ly/2FPwAAF`;
         year = 2019;
     |));
     (`mach_wikipedia`, WebSite(|
@@ -67,19 +70,19 @@ let pohe-bibliography = [
     (`linus_tan`, WebSite(|
         author = {| ウィキペディアの執筆者 |};
         title = {アンドリュー・タネンバウムとリーヌス・トーヴァルズの議論};
-        url = `https://ja.wikipedia.org/wiki/%E3%82%A2%E3%83%B3%E3%83%89%E3%83%AA%E3%83%A5%E3%83%BC%E3%83%BB%E3%82%BF%E3%83%8D%E3%83%B3%E3%83%90%E3%82%A6%E3%83%A0%E3%81%A8%E3%83%AA%E3%83%BC%E3%83%8C%E3%82%B9%E3%83%BB%E3%83%88%E3%83%BC%E3%83%B4%E3%82%A1%E3%83%AB%E3%82%BA%E3%81%AE%E8%AD%B0%E8%AB%96`;
+        url = `http://bit.ly/2FPDTIJ`;
         year = 2019;
     |));
     (`intel_minix`, WebSite(|
         author = {| NETWORK WORLD |};
         title = {What is MINIX? The most popular OS in the world, thanks to Intel};
-        url = `https://www.networkworld.com/article/3236064/minix-the-most-popular-os-in-the-world-thanks-to-intel.html`;
+        url = `http://bit.ly/2FPEbzj`;
         year = 2017;
     |));
     (`multiboot1`, WebSite(|
         author = {| Free Software Foundation, Inc. |};
         title = {Multiboot Specification version 0.6.96};
-        url = `https://www.gnu.org/software/grub/manual/multiboot/multiboot.html`;
+        url = `http://bit.ly/2FPTQPg`;
         year = 2010;
     |));
     (`l4_lessons`, Article(|
