@@ -268,12 +268,12 @@ let gfn-article = '<
       >
       +subsection{\lambda-circle;・MetaML方式}<
         +p{
-          \REMAINS{形式的に操作的意味論と型システムを書く，ただし重すぎないように}
+          （すみません，執筆時間が足りなかったため元論文を参照されたいです…… 一応，以降の話には理解しておく必要はありません）
         }
       >
       +subsection{\lambda-square;・\MetaML-square;方式}<
         +p{
-          \REMAINS{概要程度でOK}
+          （すみません，執筆時間が足りなかったため元論文を参照されたいです…… 一応，以降の話には理解しておく必要はありません）
         }
       >
     >
@@ -560,6 +560,8 @@ let gfn-article = '<
               詳細に記述するとかなり長くなるので，
               気になる読者は実際に元論文 \cite[`KiselyovKameyamaSudo16APLAS`];の主簡約定理の証明を追うとよいかもしれません．
             }．
+            なお，“最も外側のスコープ” は ${\gamma_0} という名前で固定され，
+            必ず名前ヒープ型つけに入っている（${\epsilon} でも ${\gamma_0} は設けられて入っている）という特別な扱いをします．
           }
           +p{
             ともあれ，型つけ規則を見てみましょう（一部省略）：
@@ -639,8 +641,42 @@ let gfn-article = '<
               }
             |});
 
-            やはりラムダ抽象とそのコードコンビネータが重要です．
-            \REMAINS{頑張る}
+            スコープの “弱化” に相当する規則（要するに “狭いスコープで有効なシンボルはより広いスコープでも有効” という規則）
+            が両ステージにあるほか，
+            やはりラムダ抽象とそのコードコンビネータが重要です．\term(Term.(lamC1 ${x} tme)); の型検査では
+            ${x} に束縛されるシンボルのために新しいスコープ ${\gamma} が外のスコープ ${\gamma'} のすぐ上に新設されて
+            \term(Term.(tme)); が走査されます．\term(Term.(lamC2 ${Y} tme));は中間表現なので
+            プログラマにはあまり関係がなく，主簡約定理を証明するためにある規則です．
+            ${\NameHeap} はどの規則でも上下で変わっていませんが，
+            これも主簡約定理で簡約に従って適切に大きく取れるようにするための機構です．
+          }
+          +theorem?:({主簡約}){
+            ${\tjNJ0{\NameHeap}{\StoreTy}{\epsilon}!(Term.(tme))!(Type.(tymtau))}，
+            ${\wfenv{\NameHeap}{\tyenv}}，およびストア型つけ
+            ${\StoreTy} が適切に ${\NameHeap} と ${\tyenv} に整合しているとき
+            \footnote{ストア型つけの整合性はわりと一般的な定義どおりです．}，
+            或る ${\NameHeap'}，${\tyenv'}，${\StoreTy' \supseteq \StoreTy} が存在して
+            ${\tjNJ1{\concat{\NameHeap}{\NameHeap'}}{\StoreTy'}{\concat{\tyenv}{\tyenv'}}!(Term.(tme))!(Type.(tymtau))}
+            かつ ${\wfenv{\NameHeap}{\tyenv}} を満たし， ${\StoreTy'} が ${\concat{\NameHeap}{\NameHeap'}} と
+            ${\concat{\tyenv}{\tyenv'}} に整合する．
+          }
+          +corollary{
+            ${\tjNJ0{\epsilon}{\emptyset}{\epsilon}!(Term.(tme))!(Type.(codeS tymtau ${\gamma_0}))}
+            および ${\redNJstar{\emptyset}{\emptyset}!(Term.(tme)){N}{\store}!(Term.(tmv))} ならば，
+            \term(Term.(tmv));は \term(Term.(codeF tmep)); の形であり，
+            ${\tjNJ1{\epsilon}{\emptyset}{\emptyset}!(Term.(tmep))!(Type.(tymtau))} が成り立つ．
+          }
+          +p{
+            以上の定理により型検査を通ったプログラムはスコープ脱出を起こさないことが保証されています．
+            実際に最初に掲げたスコープ脱出をしてしまう例に相当するプログラム：
+
+            \display-term(Term.(
+              app (lam ${r} (app (lam ${a} (deref !${r})) (lamC1 ${x} (assign !${r} !${x})))) (ref (prim ${genInt} [!${0}]))
+            ));
+
+            を型検査すると，\term(Term.(assign !${r} !${x}));の下りの時点でスコープに不整合が起きて弾かれます．
+            \term(Term.(deref !${r}));で使っている箇所が原因となって型エラーが出るわけではないことも重要なのですが，
+            詳しく触れる執筆時間がなかったので元論文を参照されたいです，すみません．
           }
         >
       >
@@ -681,9 +717,12 @@ let gfn-article = '<
           しかし，これが型検査に通らないのも或る程度うなずけることではあります．
           というのは，次のようなよく似た例がスコープ脱出を引き起こしてしまうためです：
 
-          \d-code(```
-            (fun k -> )
-          ```);
+          \display-term(
+            Term.(
+            app (lam ${r} (app (lam ${k} (lamC1 ${x} (app !${k} !${x}))) (lam ${y} (assign !${r} !${y}))))
+                (prim ${genInt} [!${0}])
+            )
+          );
 
           〈NJ〉の厳しすぎる型検査を或る程度まともに緩和するには，上に掲げた前者のプログラムは通すが後者のプログラムは弾かないといけなさそうなわけです．これを実現するには，単なる函数の型ではなく，
           所謂 “副作用” を引き起こす函数であるかどうかまで型レヴェルで区別する必要がありそうです．したがって
