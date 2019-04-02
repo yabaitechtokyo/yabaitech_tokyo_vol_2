@@ -1,3 +1,4 @@
+@require: pervasives
 @import: bib
 @import: ../main/book-class
 @import: ../lib/code
@@ -5,10 +6,12 @@
 let-block ctx +line-break it =
   line-break true true ctx (read-inline ctx it)
 
+let-inline ctx \breakline = mandatory-break ctx
+
 let pohe-article = '<
   +chapter ?:(`pohe-article`) (|
     bibliography = pohe-bibliography;
-    title = {Writing a (micro)kernel in Rust in 12 days};
+    title = {Writing a (micro)kernel in Rust in 12 days \breakline; - The first 3 days -};
     author = {nullpo_head};
     |) <
 
