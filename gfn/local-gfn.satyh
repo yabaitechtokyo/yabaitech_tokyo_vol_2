@@ -40,6 +40,8 @@ let-inline \lambda-open-poly =
 
 let-math \redNJ n1 h1 t1 n2 h2 t2 =
   ${#n1 \mid #h1 \mid \mterm!(t1) \to #n2 \mid #h2 \mid \mterm!(t2)}
+let-math \redNJstar n1 h1 t1 n2 h2 t2 =
+  ${#n1 \mid #h1 \mid \mterm!(t1) \to^{\ast} #n2 \mid #h2 \mid \mterm!(t2)}
 
 let-math \store = ${\mu}
 let-math \tyenv = ${\Gamma}
