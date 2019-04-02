@@ -9,7 +9,7 @@ let pohe-article = '<
   +chapter ?:(`pohe-article`) (|
     bibliography = pohe-bibliography;
     title = {Writing a (micro)kernel in Rust in 12 days};
-    author = {pohe};
+    author = {nullpo_head};
     |) <
 
   +section{Introduction} <
@@ -30,8 +30,8 @@ let pohe-article = '<
     +p {
       一方カーネルは、ご存知オペレーティングシステムの中核コンポーネントだ。
       CPUのもっとも権限の高い空間で動作し、コンピュータのすべてを支配しなければならない。
-      それを0から自分で書くというのはとてもエキサイティングな体験だ。
-      プログラマーの3大作ってみたいもの、コンパイラ・CPU・オペレーティングシステムのまさに3つ目にあたるからね。
+      それを0から自分で書くというのはとてもエキサイティングな体験だと思う。
+      プログラマーの「3大作ってみたいもの」によくあがる、コンパイラ・CPU・オペレーティングシステムのまさに3つ目にもあたるしね。
       そして今回書いていくカーネルはただのカーネルではなくマイクロカーネルだ。
     }
     +p {
@@ -663,7 +663,7 @@ let pohe-article = '<
       +p {
         ここまでで、Rustでベアメタルプログラミングに挑戦してみて、C言語との違いについて述べてきた。
         いまのところ、いくつか違いはあるけれど、Cでもできたことがよりイマドキな書き方でできるんだな、というくらいの感想を持っているかもしれない。
-        むしろ、色々とベアメタルでは使えなくなってしまう言語機能の穴埋めに奔走させられた気すらしているかもしれないね。
+        むしろ、色々とベアメタルでは使えなくなってしまう言語機能の穴埋めに奔走させられた気すらしているかも。
         しかし、イマドキの言語でベアメタルプログラミングをする便利さを実感させられたのはここからだった。
         急に開発スピードが加速していくから注意してついてきてほしい。
       }
@@ -705,55 +705,398 @@ let pohe-article = '<
         +p {
           さて、次に、このコマンドを走らせる。
           \d-code(`$ cargo install cargo-xbuild`);
+        }
+        +p {
           これはRustでカーネルを書き始めての初めてのcargo installだ。
+          パッケージのエコシステムが整っているということは、必ずしもRustの特徴だというわけではない。
+          RubyみたいなLL言語しかし、Goのようなコンパイル言語しかり、最近の言語は程度の差こそあれパッケージの管理機構を
+          言語ランタイム自体と結び付けて提供している。
+          しかし、カーネル開発だという文脈だと、このエコシステムは間違いなくRustの強みだ。
+          CやC++言語ではこのエコシステムはきちんと育っていない。
+          私は、時間の（特に締め切りの）都合でRustのcrateをどんどん使用していったのだが、
+          結果としてカーネル開発がいかに楽になるかということが体感できた気がする。
+        }
+        +p {
+          さて、\code(`cargo-xbuild`);は、Rustの標準ライブラリのサブセットである\code(`core`);ライブラリや\code(`compiler_builtins`);を
+          Cargoで指定したターゲット向けにクロスコンパイルしてくれるcrateだ。
+          \code(`core`);ライブラリと\code(`compiler_builtins`);ライブラリには、Rustの標準ライブラリのうち、
+          ベアメタル環境でも使える機能が含まれている。
+          cargo-xbuildを使わない場合、自分でこれらのライブラリをクロスコンパイルしないと、Rustらしい色々な機能が使えなくなってしまう。
+          これがないと、カーネル開発が非常に不便になるというくらい、必要性が高いcrateだ。
+          そしてこのcrateはPhilipp氏自身によって開発されている。
+          cargo-xbuild以外に多くのcrateが出てくることになるが、そのうち大半のcrateがPhilipp氏によるものであったりする。
+          カーネル開発を便利にしてくれるcrateを整備していった上で、ブログまで書いてるんだから、まるでブルドーザーみたいな人だ。
+          cargo-xbuildを用いてビルドをするためには、次のコマンドでビルドを行おう。
+          \d-code(`$ cargo xbuild --target x86_64-rusty_l4.json`);
+        }
+      >
+      +subsubsection{VGAへの表示とBootimage} <
+        +p {
+          Philipp'sに従って、次はVGAを使って画面に文字を書く機能をmain.rsに加えてみよう。
+          _start周辺を、下のコードのように書き換えよう。
 
-    \listing{
-          * パッケージシステムのエコシステムが整っているということは、必ずしもRustの特徴だというわけではないが、
-            カーネル開発だという文脈だとこれは間違いなくRustの強みだ。
-          * CやC++ではこのエコシステムは育っていない。
-          * これからもつかっていく
-          * cargo-xbuildは、オペレーティングシステムが無くても動く、Rustの標準ライブラリのサブセットであるcoreライブラリやcompiler_builtinsを指定した
-          　ターゲット向けにクロスコンパイルしてくれるcrateだ。
-          * これがないとカーネル開発が非常に不便になるというくらい必要性が高いcrateだ。そしてこのcrateはPhilipp氏によって開発されている。
-          * これ以外に出てくる多くのcrateがPhilipp氏によるものであることがある。
-          * 1人でカーネル開発を便利にするcrateを整備していった上で、ブログまで書いてるんだから全くまるでブルドーザーみたいな人だ。
-          * Philipp'sに従って、次はVGAを用いて画面に文字を書くようにmain.rsを書き換えてみよう。
-          * 今回このコードにはunsafeが出現している。適当な値のポインタに書込みを行うから当然だ。
-          * さて、これをいったいどうやって起動するのだろう？
-          * bootimage crateの出番だ
-          * この状態でビルドしてみよう。
-          * なんとブータブルイメージが出力されている！
-          * 起動してみる。
-          * crateをインストールしただけなのにこんなことが！
-          * createでカーネル開発が加速していく。どんどんPhilipp'sの実装を終わらせよう。
-          * VGAのプリントtraitを作ることがつぎの目標だ。
-          * いまさらだが、VGAとは何か、どのような仕様かということは詳しく説明しない。Philipp'sの記事かWikipediaを参考にしてほしい。
-          * Volatileをインストール。お次はspin lock。
-          * Lazy Staticsをインストールする。これはRustでの開発ではだいぶ大事になる。
-          * IDTやGDTなど、定数式で初期化はできないが、基本的にはmutableでなくて良いものの初期化に多用することになる。
-          * printlnマクロを加えよう
-          * main.rsをそろえてrunしてみる
-          * Hello, World!
-    }
+          \d-code(`
+            static HELLO: &[u8] = b"Hello World!";
 
+            #[no_mangle]
+            pub extern "C" fn _start() -> ! {
+                let vga_buffer = 0xb8000 as *mut u8;
+
+                for (i, &byte) in HELLO.iter().enumerate() {
+                    unsafe {
+                        *vga_buffer.offset(i as isize * 2) = byte;
+                        *vga_buffer.offset(i as isize * 2 + 1) = 0xb;
+                    }
+                }
+
+                loop {}
+            }
+          `);
+          今回、コード中にunsafeが出現している。適当な値のポインタに書込みを行うんだから当然だ。
+          これは、VGAのテキストバッファに文字を書き込むことで、Qemuのエミュレータ画面にHello Worldを表示させている。
+          VGAの詳しい仕様についはPhilipp'sの解説やWikipediaを参考にしてほしい。
+        }
+        +p {
+          さて、これをいったいどうやってQemu上で起動するのだろう？
+          ただELFファイルを作るだけでは、エミュレータ上でOSとしてブートさせることはできない。
+          PistachioがやっていたようにMultibootに対応するか、もしくは自前でブートローダーを作る必要があるのだ。
+          そこで\code(`bootloader`); createと\code(`bootimage`);ツールの出番だ。
+          このcrateは後者、Phillip氏によってピュアRust(とインラインアセンブリ)で書かれたブートローダーで、\code(`bootimage`);と組み合わせて使用する。
+          bootloader crateをインストールすると、私のカーネルがbootloaderでブートできる形になり、
+          bootimageツールはcargoのラッパーツールとして働いて、実際にブート可能なディスクイメージを作成してくれる。
+          bootimageをインストールしよう
+          \d-code(`$ cargo install bootimage --verion "^0.5.0"`);
+          このコマンドはセマンティックバージョニングでの、0.5.xの最新のバージョンのbootimageをインストールする。
+          そして、Cargo.tomlにbootloader crateへの依存を追加する。
+          \d-code(`
+            [dependencies]
+            bootloader = "0.4.0"
+          `);
+          もっと新しいバージョンももうPublishされているのだけど、これで大丈夫だ。
+          ではさっそく、bootimageコマンドを使ってカーネルをビルドしよう。
+          \d-code(`$ bootimage build --target x86_64-rusty_l4.json`);
+          bootimageは内部でcargo-xbuildを使ってビルドしてくれるから、coreライブラリの心配は引き続きしなくて大丈夫だ。
+        }
+        +p {
+          さて、いったい何が起きたのか確認してみよう。
+          これだけで、ブート可能なディスクイメージが生成されている。
+          \d-code(`
+            $ cd target/x86_64-rusty_l4/debug/
+            $ ls
+            bootimage-rusty_l4.bin  build/  deps/  examples/  incremental/  native/  rusty_l4*  rusty_l4.d
+            $ file bootimage-rusty_l4.bin
+            bootimage-rusty_l4.bin: DOS/MBR boot sector
+          `);
+          なんとブータブルイメージが出力されている！
+          この\code(`bootimage-rusty_l4.bin`);がお目当てのものだ！
+          Philipp'sでも説明されているように、bootloader + bootimageでは、
+          ブートローダーのバイナリファイルの後ろに、rusty_l4のELFバイナリがくっついたものが、スタンドアローンバイナリとして生成される。
+          それがBIOSによって起動され、ブートローダーはrusty_l4バイナリを適切にメモリ上に配置してブートするようになる。
+          いくつかのコマンドをたたいて、crateをインストールしただけなのに！
+          起動してみよう。
+          \d-code(`
+            $ qemu-system-x86_64 -drive format=raw,file=bootimage-rusty_l4.bin
+          `);
+          すると、\ref-figure(`fig:bootimage`);のように、Qemuの画面上にHello, World!が表示された。
+
+          \figure ?:(`fig:bootimage`)
+            {bootimage + bootloaderで、何も書かなくてもカーネルが起動する}
+            <+image-frame{\insert-image(14cm)(`../pohe/figure/bootimage.JPG`);}>
+
+          createにより、カーネル開発の速度がすごいぐらいに加速されている。
+          OSのブートからVGA表示までがこんなに早いのは素晴らしいことだ。というか何かプログラムを書いた気がしないくらいだ。
+        }
+        +p {
+          どんどんPhilipp'sの実装を進めていこう。
+          VGAプリントのモジュールを作ることが次の目標だ。そのために必要なcrateをそろえていく。
+          \code(`volatile`); crateと\code(`spin`); crateをCargo.tomlに加えよう。
+          \d-code(`
+            [dependencies]
+            spin = "0.4.9"
+            volatile = "0.2.3"
+          `);
+          volatileは、Cのvolatileを知っている人にとっては話が早いだろう。
+          これはたとえば、
+          \d-code(`
+            struct Buffer {
+              chars: [[Volatile<ScreenChar>; BUFFER_WIDTH]; BUFFER_HEIGHT],
+            }
+          `);
+          のように使用する。カーネル開発では、まさにVGAのような、メモリ上の特別なアドレスへの読み書きを行って何かハードウェアとやりとりすることがある。
+          しかし、これはコンパイラから見れば、意味もなくメモリを読み書きしているようにみえるので、最適化の過程でコードが消されてしまう。
+          それを防ぐために、このアドレスのメモリデータは、その読み書きに外部との相互副作用がありますよ、というのを明示するのがvolatileだ。
+          Rustにもこのvolatieの仕組みがあり、そしてこのvolatile crateは、それを使いやすいラッパーで隠ぺいしたPhilipp氏のcrateだ。
+          一方のspinは、スピンロックによるロックを提供するためのcreateだ。
+          ベアメタル環境では、標準ライブラリのMutexなどが基本的に使えない。
+          しかし、このspin crateは、スピンロックを同期プリミティブとして使用したMutexを提供してくれる。
+          ちなみにこちらはPhilipp氏のcrateではない。
+        }
+        +p {
+          次に\code(`lazy_static`);をインストールしよう。これはかなり重要なcrateだ。
+          Cargo.tomlに次の記述を加える。
+          \d-code(`
+            [dependencies.lazy_static]
+            version = "1.0"
+            features = ["spin_no_std"]
+          `);
+          Rustでは、Cのようなグローバルにアクセスできるにもかかわらず、mutableであるような変数は基本的に使えない。
+          staticスコープで、かつmutableであるようなものはborrow checkerのルールを満たせない。
+          このような変数は、mutableではないためにしばしば初期化が難しくなる。
+          lazy staticは、そんな問題を解決する\code(`lazy_static!`);マクロを提供してくれる。
+          lazy staticを使うと、staticな変数を、初めてアクセスがあったときに任意の非定数式で初期化できるようになる。
+          IDTやGDTのようなプロセッサ構造体の定義に、lazy staticは多用することになる。
+        }
+        +p {
+          さて、準備は完了した。VGAへのプリント機能を提供する、\code(`vga_buffer.rs`);をかきあげよう。
+          \d-code(`
+            #[allow(dead_code)]
+            #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+            #[repr(u8)]
+            pub enum Color {
+                Black = 0,
+                Blue = 1,
+                Green = 2,
+                Cyan = 3,
+                Red = 4,
+                Magenta = 5,
+                Brown = 6,
+                LightGray = 7,
+                DarkGray = 8,
+                LightBlue = 9,
+                LightGreen = 10,
+                LightCyan = 11,
+                LightRed = 12,
+                Pink = 13,
+                Yellow = 14,
+                White = 15,
+            }
+          `);
+          Color enumを定義する。Debugをderiveするだけで、のちのちデバッグプリントができるようになる。
+          このまま一気に完成形まで進めてしまおう。
+          \d-code(`
+            use volatile::Volatile;
+            use core::fmt;
+            use lazy_static::lazy_static;
+            use spin::Mutex;
+
+            #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+            #[repr(transparent)]
+            struct ColorCode(u8);
+
+            impl ColorCode {
+                fn new(foreground: Color, background: Color) -> ColorCode {
+                    ColorCode((background as u8) << 4 | (foreground as u8))
+                }
+            }
+
+            #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+            #[repr(C)]
+            struct ScreenChar {
+                ascii_character: u8,
+                color_code: ColorCode,
+            }
+            
+            const BUFFER_HEIGHT: usize = 25;
+            const BUFFER_WIDTH: usize = 80;
+            
+            #[repr(transparent)]
+            struct Buffer {
+                chars: [[ScreenChar; BUFFER_WIDTH]; BUFFER_HEIGHT],
+            }
+
+            pub struct Writer {
+              column_position: usize,
+              color_code: ColorCode,
+              buffer: &'static mut Buffer,
+            }
+
+            lazy_static! {
+                pub static ref WRITER: Mutex<Writer> = Mutex::new(Writer {
+                    column_position: 0,
+                    color_code: ColorCode::new(Color::Yellow, Color::Black),
+                    buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
+                });
+            }
+
+            impl Writer {
+                pub fn write_string(&mut self, s: &str) {
+                    for byte in s.bytes() {
+                        match byte {
+                            0x20...0x7e | b'\n' => self.write_byte(byte),
+                            _ => self.write_byte(0xfe),
+                        }
+                    }
+                }
+
+                pub fn write_byte(&mut self, byte: u8) {
+                    match byte {
+                        b'\n' => self.new_line(),
+                        byte => {
+                            if self.column_position >= BUFFER_WIDTH {
+                                self.new_line();
+                            }
+
+                            let row = BUFFER_HEIGHT - 1;
+                            let col = self.column_position;
+
+                            let color_code = self.color_code;
+                            self.buffer.chars[row][col].write(ScreenChar {
+                                ascii_character: byte,
+                                color_code,
+                            });
+                            self.column_position += 1;
+                        }
+                    }
+                }
+
+                fn new_line(&mut self) {
+                    for row in 1..BUFFER_HEIGHT {
+                        for col in 0..BUFFER_WIDTH {
+                            let character = self.buffer.chars[row][col].read();
+                            self.buffer.chars[row - 1][col].write(character);
+                        }
+                    }
+                    self.clear_row(BUFFER_HEIGHT - 1);
+                    self.column_position = 0;
+                }
+
+                fn clear_row(&mut self, row: usize) {
+                    let blank = ScreenChar {
+                        ascii_character: b' ',
+                        color_code: self.color_code,
+                    };
+                    for col in 0..BUFFER_WIDTH {
+                        self.buffer.chars[row][col].write(blank);
+                    }
+                }
+            }
+
+            impl fmt::Write for Writer {
+                fn write_str(&mut self, s: &str) -> fmt::Result {
+                    self.write_string(s);
+                    Ok(())
+                }
+            }    
+            
+          `);
+
+          これにさらに、\code(`println!`);マクロを、標準ライブラリからまねしながらコピーしてくる。
+
+          \d-code(`
+            #[macro_export]
+            macro_rules! print {
+                ($($arg:tt)*) => ($crate::vga_buffer::_print(format_args!($($arg)*)));
+            }
+
+            #[macro_export]
+            macro_rules! println {
+                () => ($crate::print!("\n"));
+                ($($arg:tt)*) => ($crate::print!("{}\n", format_args!($($arg)*)));
+            }
+
+            #[doc(hidden)]
+            pub fn _print(args: fmt::Arguments) {
+                use core::fmt::Write;
+                WRITER.lock().write_fmt(args).unwrap();
+            }
+          `);
+          
+          これで完成だ！するとmain.rsで、次みたいなことができる。
+
+          \d-code(`
+            pub mod vga_buffer;
+
+            #[no_mangle]
+            pub extern "C" fn _start() -> ! {
+                println!("Hello Hello, World!\nsome numbers: {} {}", 42, 1.337);
+
+                loop {}
+            }
+          `);
+
+          注目してほしいのは、もうフォーマットが動いていることだ。
+          printfにあたるものがこんなにスムーズに使えるのはすごい。
+          これをビルドして起動すると、無事に\ref-figure(`fig:println`);のように、Qemuの画面上に新たなHello, World!が表示された。
+
+          \figure ?:(`fig:println`)
+            {Hello World 2}
+            <+image-frame{\insert-image(14cm)(`../pohe/figure/println.JPG`);}>
         }
       >
     >
 
-    +subsection{Multiboot Header by Myself} <
+    +subsection{No Magic with Multiboot Header} <
       +p {
         さて、先ほどまではPhilipp'sの2nd editionに基づいてRustでカーネルを書いてきた。
         Philipp氏が用意してきたCrateの手軽さもあいまって、
         あまりベアメタルプログラミングらしいことをせずともあれよあれよという間にHello, World!が無事画面に躍り出ることになった。
-
+        でも、正直に言おう。ちょっとこれじゃ高級すぎてよくわからない！
+        込み入ったことをしてくると、リンカスクリプトを書いたりブートプロセスを工夫したりするシーンがすぐにやってくるだろうから、
+        もう少し、地に足のついた方法でブートについては試したい。
+        また、bootimage + bootloaderは、マイクロカーネル方式と相性が悪いという現実的な問題もある。
+        Multibootの説明の際に話したように、マイクロカーネルではブートローダーに複数の独立したバイナリモジュールをメモリ空間に読み込んでもらう必要があるからだ。
+        そういうわけで、古き良きMultiboot Headerをスクラッチでアセンブリで書いていこう。
+        その後、自分で書いたスタックやレジスタの初期化、それにロングモードへのジャンプなんかと合わせてと、Rustで書いたバイナリとリンクしていくことにする。
       }
+      +p {
+        ...
+      }
+      +p {
+        ...
+      }
+      +p {
+        ...
+      }
+      +p {
+        ...
+      }
+    >
 
+    +subsection{Welcome} <
+      +code(`
+        　　　　∧＿∧　やあ
+        　　　（´・ω・｀)　　　　　　/　　　　　　　ようこそ、バーボンハウスへ。 
+        　　／∇y:::::::＼　　　[￣￣]　　　　　　このテキーラはサービスだから、まず飲んで落ち着いて欲しい。
+        　　|:::⊃:|:::::|　　　|──|　　　　　　
+        ￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|　うん、「未完」なんだ。済まない。だいたいここで尻切れトンボに
+        ￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|￣　なってる。仏の顔もって言うしね、謝って許してもらおうとも思ってない。
+        ￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|
+        　　　　∇　∇　∇　∇　　　|　　　でも、この記事の目次を見たとき、君は、きっと言葉では
+        　　　　┴　┴　┴　┴　　　|　　　言い表せない「ときめき」みたいなものを感じてくれたと思う。 
+        ￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|　　　殺伐とした世の中で、そういう気持ちを忘れないで欲しい 
+        ￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|　　　そう思って、この記事を書いたんだ。
+        　　　　　　　　　　　　　　　|
+        　　　　　　　　　　　　　　　|　　　じゃあ、注文を聞こうか。
+      `);
+      
+      +subsubsection {nullpo_headはどうして締め切りに間に合わない？原因は？対策は？調べてみました！} <
+        +p {
+          はい、ここで締め切りです。いかがでしたか？
+          いよいよ本番始まったな？ってところで尻切れトンボになったら「いかがでしたか？」もくそもないですね。
+          とても反省しています。ちなみに原因と対策を考えると「仕事を辞める」が最善策になります。平日何もできなさすぎる。
+        }
+        +p {
+          一応、この記事では、導入部分とPhilippさんのcrateを使いまくったうえでのRustでのカーネル開発の導入までは完結しました。
+          これ以降はヤバイテックトーキョーの次号連載をお楽しみにしてください。
+          この後は、上にちらっと書いてあるように、Multibootを使って、static libraryとしてビルドしたカーネルと色々リンクさせて頑張っていく感じになります。
+          記事が完成しなかったので先にいうとスタックは深く初期化しておけ、Rustはデバッグビルドだとlazy_staticともあわさってアホ程スタック食う。
+          何かの役に立つかもしれないから、以降の続きの筋書も、予告編としてメモ書き程度に残しておきます。
+          また、コード自体はもう少し先まで進んでいるので、解説は間に合っていませんが、参考にはできるかもしれません。
+          https://github.com/nullpo-head/rusty-l4 なので、生暖かく見守りたい人はwatchでもしといてください。
+          ところでこの連載記事は、Webで公開するときは、勝手に英語になってくれてたらうれしいなという願望があります。
+          Peddle OS (https://pebble-os.github.io/) とかいうもろかぶりネタが進行中ですし。
+          そんなことを考えていたら本文をなんとなく翻訳調の文章で書いてみたくなった感じです。このノリの源流ってどこなんでしょうね。
+        }
+        +p {
+          そんなわけで、2日目の途中で今回での記事は終了ですが、次回の連載を楽しみにしてくれたら幸いです。
+          いかがでしたか？以降、次号の予告編です。
+        }
+      >
+    >
+
+    +subsection{予告編} <
       +listing{
-        * 正直に言おう。ちょっとこれじゃ高級すぎてよくわからない！
-        * また、マイクロカーネル方式と相性が悪いという現実的な問題もある。
-        * ブートローダーが複数のモジュールをメモリ空間によんで、その情報をブート時に渡してもらう必要がある。
 
-        * 古き良きMultiboot Headerをスクラッチから書いていこう。
         * multibootヘッダーを書こう
         * まず、startup.Sを書いて、Qemuのシリアル機能を使って無事'A'という文字を出力！無事ブートできたみたいだ。
         * 急になるが環境を一気に用意する
@@ -774,8 +1117,7 @@ let pohe-article = '<
     >
   >
 
-
-    +section{3rd Day: Write a Microkernel Server for L4 Pistachio} <
+    +section{予告編\; 3rd Day: Write a Microkernel Server for L4 Pistachio} <
       +p {
         さて、この挑戦も今日も3日目だ。
         もっとも、開発をし終わったあとにこの文章を編集して、こまぎれの記録を一つにまとめて皆さんにはお見せしているから、
@@ -791,42 +1133,13 @@ let pohe-article = '<
         おっと！Rustに関する話に少し脱線してしまったようだ。
         そろそろ今日、3日目にやることについて話そう。
         今日は一旦フルスクラッチのベアメタルプログラミングの世界から離れて、L4マイクロカーネル上での世界に戻ってみる。
-      }
-      +listing{
-        * L4マイクロカーネル用の簡単なサーバーを書いてみる
-        * VGAのメモリ領域をたたいて、Hello, World!と表示させるだけのサーバーだ。
-        * 明日以降、これを自分で書いたカーネルの上で走らせることを目標とするためだ。
-        * 今回書こうとしているサーバーは、1番目に起動することを想定する特殊なサーバーであることには留意してほしい。
-          多分普通にサーバーを書く分にはもっと苦労しないはずだ。
-
-        * とはいえ、今だいぶ苦労しているところだ。
-          L4マイクロカーネルは、大学の講義での詳細な技術情報や1アプリケーションが必要とするユーザーランドのAPIのドキュメントは
-          たくさん見つかるかと思いきや、今まさに私が必要としている、
-          「最初に起動するサーバーは、どうやってカーネルと通信するのか？」
-          「最初に起動するサーバーは何をすることが期待されているのか？」というユーザーランドをゼロから書くための情報がなかなか見つからない
-
-        * 今回のこの作業を通して、一般にCPU上でOSのカーネルがメモリ空間をどう管理するかについても触れるかもしれない。
+        まずは、VGAのメモリ領域をたたいて、Hello, World!と表示させるだけのサーバーから始めよう。
+        明日以降、これを自分で書いたカーネルの上で走らせることを目標とするためだ。
+        今回書こうとしているサーバーは、1番目に起動することを想定する特殊なサーバーであることには留意してほしい。
+        多分普通にサーバーを書く分にはもっと苦労しないはずだ。
+        今回のこの作業を通して、一般にCPU上でOSのカーネルがメモリ空間をどう管理するかについても触れるかもしれない。
       }
     >
-
-
-  +section{Welcome} <
-    +code(`
-      　　　　∧＿∧　やあ
-      　　　（´・ω・｀)　　　　　　/　　　　　　　ようこそ、バーボンハウスへ。 
-      　　／∇y:::::::＼　　　[￣￣]　　　　　　このテキーラはサービスだから、まず飲んで落ち着いて欲しい。
-      　　|:::⊃:|:::::|　　　|──|　　　　　　
-      ￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|　うん、「未完」なんだ。済まない。だいたい4分の1で尻切れトンボに
-      ￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|￣　なってる。仏の顔もって言うしね、謝って許してもらおうとも思ってない。
-      ￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|
-      　　　　∇　∇　∇　∇　　　|　　　でも、この記事の目次を見たとき、君は、きっと言葉では
-      　　　　┴　┴　┴　┴　　　|　　　言い表せない「ときめき」みたいなものを感じてくれたと思う。 
-      ￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|　　　殺伐とした世の中で、そういう気持ちを忘れないで欲しい 
-      ￣￣￣￣￣￣￣￣￣￣￣￣￣￣￣|　　　そう思って、この記事を書いたんだ。
-      　　　　　　　　　　　　　　　|
-      　　　　　　　　　　　　　　　|　　　じゃあ、注文を聞こうか。
-    `);
-  >
 
   >
 >
