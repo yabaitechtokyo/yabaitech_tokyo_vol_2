@@ -394,7 +394,7 @@ let pohe-article = '<
         +listing{
           * kickstart
             これはL4のためのブートローダのようなものだ。
-            Grubなどのブートローダは一旦このkickstartを起動し、そのkickstartがx86-kernelを起動する。
+            GRUBなどのブートローダは一旦このkickstartを起動し、そのkickstartがx86-kernelを起動する。
             どうしてそんなことになっているかはあとでmultibootと一緒に説明しよう。
           * x86-kernel
             これがPistachioマイクロカーネルの本体だ。
@@ -434,7 +434,7 @@ let pohe-article = '<
           OS側としてMultibootに準拠するのに必要なことは、Multibootヘッダと呼ばれるものをカーネルの先頭にくっつけ、カーネルバイナリのフォーマットをELFにするだけなので実に簡単だ。
         }
         +p {
-          n_kaneさんの記事ではGrubを使ってPistachioをブートしていたが、実はQemuにはMultibootのバージョン1仕様のブートローダーが組み込まれている。
+          n_kaneさんの記事ではGRUBを使ってPistachioをブートしていたが、実はQemuにはMultibootのバージョン1仕様のブートローダーが組み込まれている。
           だから、Qemuで直接Pisachioを起動することができる。やっていこう。
           \d-code(`
           $ qemu-system-x86_64 -kernel kickstart -initrd x86-kernel,sigma0,pingpong
@@ -509,7 +509,8 @@ let pohe-article = '<
       この記事では基本的な低レイヤプログラミングの基礎知識を1ステップずつ網羅していくようなことは、できない。
       \footnote{締切の都合で}
       しかし、実際に手を動かして試してみて、低レイヤプログラミングの楽しさを知ってもらえたとしたらこれほど嬉しいことはない。
-
+    }
+    +p {
       一方、ここまで読んでいるような読者の方は、おおよそ、この手のプログラミングにはもう慣れっこだろう。
       私自身、こういうプログラムを書くのは初めてではない。
       Xv6という小さなUNIXライクなオペレーティングシステムをMIPSアーキテクチャに移植したことがあるし、
@@ -518,12 +519,8 @@ let pohe-article = '<
       このマイクロカーネルと似たような話の開発では、かなりの時間を仮想環境内のベアメタルプログラミングに費やした。
       だけどこのような低レイヤプログラミングに慣れっこだというのは、あくまで「C言語を使う限りにおいては」だ。
       だから、Rustでカーネルを書くと何が楽になり、何が独特の難しさかといった点が重要なポイントだろう。
-      私と同じようにC言語でならこの手のプログラミングに慣れているという方は、
+      C言語でならこの手のプログラミングに慣れているという方は、
       いつもの慣れた手順がRustの世界ではどのように様変わりするのかということを楽しんでもらえると嬉しい。
-    }
-
-    +p {
-      -----------------------
     }
 
     +subsection{Bare Metal Programming} <
@@ -557,15 +554,14 @@ let pohe-article = '<
         \d-code(`$ rustup install nightly`);
 
         これでRustツールチェインの準備は完了だ。シンプル！
-        さて、ここでこれから自分がカーネルを書いていくことになるRustプロジェクトを初期化しておく。
+        さて、ここでこれから、自分がカーネルを書いていくことになるRustプロジェクトを初期化しておく。
         これはこのプロジェクトに名前を付けるということでもある。
-        これから作っていくカーネルは最終的にはL4マイクロカーネルファミリーのマイクロカーネルになる。
+        これから作っていくカーネルは、最終的にはL4マイクロカーネルファミリーのマイクロカーネルになる。
         Rust製のL4カーネル実装はたぶん私のものが初めてになるだろうから、それにふさわしい名前として、
         私は自分のカーネルを\code(`Rusty L4`);と呼ぶことにした。
-        だからここで私が走らせたコマンドはこうだ。
+        だから、ここで私が走らせるコマンドはこうだ。
 
         \d-code(`
-          $ cd ~/dropbox/develop/rust
           $ cargo new rusty_l4 --bin --edition 2018
         `);
       }
@@ -577,40 +573,171 @@ let pohe-article = '<
         これは2018年ギリギリにリリースされたばかりのRust 2018の機能を有効にするためのオプションである。
         Rust 2018は多くの便利な新機能が導入されたエキサイティングなバージョンだ。
         特にこだわりがなければこれを使わない手はない。
-        \code(`async`); / \code(`await`); 構文が2018に間に合わなかったのは残念だけどね。
       }
 
       +p {
-        さらに、Philipp'sにしたがって、Rust L4のプロジェクトではnightlyコンパイラをデフォルトで使用するように設定する。
+        さらに、Philipp'sにしたがって、Rusty L4のプロジェクトではnightlyコンパイラをデフォルトで使用するように設定する。
+
+        \d-code(`$ rustup override add nightly`);
       }
 
-      +code(`$ rustup override add nightly`);
+      +subsubsection {no_std} <
+        +p {
+          C言語では、以下のコードに対して、
+          \d-code(`
+            int _start() {
+              for(;;);
+            }
+          `);
+          \d-code(`gcc loop.c -nostdlib`);
+          のようなコマンドをたたくと、OSに依存しない、起動後ひたすら無限ループをするELF実行ファイルを作成することができる。
+          ELFが正しくロードされる環境なら、大抵の場所で動くだろう。
+          \code(`_start`);は、ELF実行ファイル、つまりLinuxでの標準的な実行ファイルがOSから初めて起動されるときに読み込まれるエントリーポイントだ。
+          通常のCプログラムでは、_startは標準ライブラリによって実装されていて、初期化処理を経た後\code(`main`);が呼ばれることになる。
+          こういうレイヤの低いことを簡単にできるのがCの強みだ。
+        }
+        +p {
+          これをRustで実現するにはどうすればいいだろうか？
+          Philipp'sによれば、\code(`#![no_std]`);アトリビュートの出番だ。
+          これは、C言語での\code(`-nostdlib`);オプションに相当する概念だ。
+          ただし、単にこのアトリビュートをファイルの先頭に書くだけではうまくいかない。
+          Philipp'sに従って開発を進めると、先ほどのCプログラムにあたるコードは次のようになる。
 
+          \d-code(`
+            // main.rs
+
+            #![no_std] // don't link the Rust standard library
+            #![no_main] // disable all Rust-level entry points
+
+            use core::panic::PanicInfo;
+
+            #[no_mangle] // don't mangle the name of this function
+            pub extern "C" fn _start() -> ! {
+                loop {}
+            }
+
+            /// This function is called on panic.
+            #[panic_handler]
+            fn panic(_info: &PanicInfo) -> ! {
+              loop {}
+            }
+          `);
+
+          そして、\code(`Cargo.toml`);にはこう記述しよう。
+
+          \d-code(`
+            [package]
+            name = "rusty_l4"
+            version = "0.1.0"
+            authors = ["FOO BAR <foo@bar.com>"]
+            edition = "2018"
+
+            [profile.dev]
+            panic = "abort"
+
+            [profile.release]
+            panic = "abort"
+          `);
+
+          この状態から、Linux上では以下のコマンドでビルドが成功する。
+          \d-code(`$ cargo rustc -- -C link-arg=-nostartfiles`);
+          macOS上では別のコマンドが必要なのでPhilipp'sを参照してほしい。
+          もっともmacOS上ではstaticバイナリの実現は難しいのだけれど。
+
+          C言語に比べて増えたことは、だいたい次の二つだった。
+          \listing {
+            * panicの処理を自分で書いたこと、そしてpanicのためのstack unwindingを無効にしたこと。
+              Rustでは、ベアメタル環境でも配列の境界チェックなどでpanicが発生する。そのためのハンドラを与えてやる必要がある。
+              それにC++の例外のようにstack unwindingが存在するから、それを無効化する必要がある。
+              でもこれは、tomlにpanicの設定を書くだけで無効化ができるんだから、かなり簡単な方だと思う。
+            * \code(`#[no_mangle]`);を与える必要があること。これまたC++と同じで、Rustでも関数名がバイナリレベルではソースコード上と一致しない。
+              同じ名前のシンボルでも、名前空間が違えば区別する必要があるから、その手の情報を名前に埋め込むのだ。これをmanglingと呼ぶ。
+              \code(`#[no_mangle]`);で\code(`_start`);に対してマングリングを無効化している。
+          }
+        }
+      >
+
+    >
+
+    +subsection{Minimal Rust Kernel} <
       +p {
-        // TODO: About Freestanding binary
+        ここまでで、Rustでベアメタルプログラミングに挑戦してみて、C言語との違いについて述べてきた。
+        いまのところ、いくつか違いはあるけれど、Cでもできたことがよりイマドキな書き方でできるんだな、というくらいの感想を持っているかもしれない。
+        むしろ、色々とベアメタルでは使えなくなってしまう言語機能の穴埋めに奔走させられた気すらしているかもしれないね。
+        しかし、イマドキの言語でベアメタルプログラミングをする便利さを実感させられたのはここからだった。
+        急に開発スピードが加速していくから注意してついてきてほしい。
       }
 
-    >
+      +subsubsection{ビルド設定} <
+        +p {
+          ただのno_stdプログラムをビルドするのではなく、今からはオペレーティングシステムがなくても動くようなプログラムをビルドすることになる。
+          そのために、Target Specificationというものを書く必要がある。
+          これはjsonファイル形式のファイルで、cargoのビルドを細かく制御することができる。
 
-    +subsection{Write a Bare Metal Program in Rust} <
-      +listing{
-        *  Write a target file for Rust
-        *  Sooo rich crates
-        *  Neeed to be extended to Multiboot
-      }
-    >
+          \d-code(`
+            {
+              "llvm-target": "x86_64-unknown-none",
+              "data-layout": "e-m:e-i64:64-f80:128-n8:16:32:64-S128",
+              "arch": "x86_64",
+              "target-endian": "little",
+              "target-pointer-width": "64",
+              "target-c-int-width": "32",
+              "os": "none",
+              "executables": true,
+              "linker-flavor": "ld.lld",
+              "linker": "rust-lld",
+              "panic-strategy": "abort",
+              "disable-redzone": true,
+              "features": "-mmx,-sse,+soft-float"
+            }
+          `);
 
-    +subsection{Booting: How a Kernel Boots} <
-    >
+          これを\code(`x86_64-rusty_l4.json`);という名前で保存した。
+          各フィールドの意味はなんとなく類推できるんじゃないだろうか。注目すべきはosがnoneになっていること。
+          あと、若干脇にそれるけれど、\code(`"disabel-redzone": true,`);を指定していること。
+          redzoneはx64で初めて登場した、32 bit時代にはなかった概念だ。
+          コンパイラの最適化のために、一定の大きさのスタックポインタの先をふれてもいいという規約のことを指す。
+          これは割り込みハンドラの処理と相性が悪いから、カーネルのコード中ではこのredzoneを無効化する必要がある。
+        }
+      >
 
-    +subsection{Boot it!} <
-    >
+      +subsubsection{cargo xbuildによるクロスコンパイル} <
+        +p {
+          さて、次に、このコマンドを走らせる。
+          \d-code(`$ cargo install cargo-xbuild`);
+          これはRustでカーネルを書き始めての初めてのcargo installだ。
 
-    +subsection{VGA Text Mode} <
-      +p {
-        動いたね。
+    \listing{
+          * パッケージシステムのエコシステムが整っているということは、必ずしもRustの特徴だというわけではないが、
+            カーネル開発だという文脈だとこれは間違いなくRustの強みだ。
+          * CやC++ではこのエコシステムは育っていない。
+          * これからもつかっていく
+          * cargo-xbuildは、オペレーティングシステムが無くても動く、Rustの標準ライブラリのサブセットであるcoreライブラリやcompiler_builtinsを指定した
+          　ターゲット向けにクロスコンパイルしてくれるcrateだ。
+          * これがないとカーネル開発が非常に不便になるというくらい必要性が高いcrateだ。そしてこのcrateはPhilipp氏によって開発されている。
+          * これ以外に出てくる多くのcrateがPhilipp氏によるものであることがある。
+          * 1人でカーネル開発を便利にするcrateを整備していった上で、ブログまで書いてるんだから全くまるでブルドーザーみたいな人だ。
+          * Philipp'sに従って、次はVGAを用いて画面に文字を書くようにmain.rsを書き換えてみよう。
+          * 今回このコードにはunsafeが出現している。適当な値のポインタに書込みを行うから当然だ。
+          * さて、これをいったいどうやって起動するのだろう？
+          * bootimage crateの出番だ
+          * この状態でビルドしてみよう。
+          * なんとブータブルイメージが出力されている！
+          * 起動してみる。
+          * crateをインストールしただけなのにこんなことが！
+          * createでカーネル開発が加速していく。どんどんPhilipp'sの実装を終わらせよう。
+          * VGAのプリントtraitを作ることがつぎの目標だ。
+          * いまさらだが、VGAとは何か、どのような仕様かということは詳しく説明しない。Philipp'sの記事かWikipediaを参考にしてほしい。
+          * Volatileをインストール。お次はspin lock。
+          * Lazy Staticsをインストールする。これはRustでの開発ではだいぶ大事になる。
+          * IDTやGDTなど、定数式で初期化はできないが、基本的にはmutableでなくて良いものの初期化に多用することになる。
+          * printlnマクロを加えよう
+          * main.rsをそろえてrunしてみる
+          * Hello, World!
+    }
 
-      }
+        }
+      >
     >
 
     +subsection{Multiboot Header by Myself} <
@@ -624,17 +751,23 @@ let pohe-article = '<
       +listing{
         * 正直に言おう。ちょっとこれじゃ高級すぎてよくわからない！
         * また、マイクロカーネル方式と相性が悪いという現実的な問題もある。
+        * ブートローダーが複数のモジュールをメモリ空間によんで、その情報をブート時に渡してもらう必要がある。
 
         * 古き良きMultiboot Headerをスクラッチから書いていこう。
+        * multibootヘッダーを書こう
         * まず、startup.Sを書いて、Qemuのシリアル機能を使って無事'A'という文字を出力！無事ブートできたみたいだ。
+        * 急になるが環境を一気に用意する
+        * リンカスクリプトを書こう
+        * multiboot v1に別れを告げる
+        * grub2用の起動ディスクを用意
+        * WSL上だと（というかおそらく実際にgrubで起動していない環境だと）grub-mkrescueでうまくブートデバイスが作れない。
+          \code(`grub-pc-bin`);をインストールするとうまくブータブルISOが作られるようになる。
+           See https://github.com/Microsoft/WSL/issues/807
 
         * ロングモードまで入ってさっさとRustの世界に帰ることにしよう。
 
         * 個人的にはこの部分を書くのがいつも一番面倒だ！1GBページとGDTをさっさと用意してしまおう
          
-        * WSL上だと（というかおそらく実際にgrubで起動していない環境だと）grub-mkrescueでうまくブートデバイスが作れない。
-          \code(`grub-pc-bin`);をインストールするとうまくブータブルISOが作られるようになる。
-           See https://github.com/Microsoft/WSL/issues/807
         * Rustとは関係ない、Multibootの部分で随分と苦労したが、Philippの高級なcrateを使ってブートした時と同じHello, Worldを無事表示できた。
           これでRusty L4の最小カーネルは完成だ！
       }
@@ -649,19 +782,19 @@ let pohe-article = '<
         私としては実際にはだいぶ日数が経っているのだけど。
         ともあれ、昨日で私は、Rustでのベアメタルプログラミングの世界を体験してきた。
         最終的には、Qemuの画面上に、無事に"Hello, World!"を表示できたわけだ。
-        何度も目にするものではあるが、自分で表示させる機会は意外とそう多くはない例の文字列だね。
         ベアメタルプログラミングをしているにもかかわらず、Cでの開発のときと違い、crateを使って簡単にブートができてしまったことや、
         \code(`println!`);マクロが使えるまでの道のりの簡単さは本当に驚異的だった。
         ベアメタルプログラミングをやっているにもかかわらず、Traitなんていう普段Web開発をしているときに使うような高級な概念を普通に使える感覚も新鮮だ。
-        Rustはベアメタルプログラミングをもっと簡単に、そして楽しくしてくれそうだというのは間違いないね。
+        Rustはベアメタルプログラミングをもっと簡単に、そして楽しくしてくれそうだというのは間違いない。
       }
       +p {
         おっと！Rustに関する話に少し脱線してしまったようだ。
-        そろそろ今日、3日目にやることについて話そうじゃないか。
+        そろそろ今日、3日目にやることについて話そう。
         今日は一旦フルスクラッチのベアメタルプログラミングの世界から離れて、L4マイクロカーネル上での世界に戻ってみる。
       }
       +listing{
         * L4マイクロカーネル用の簡単なサーバーを書いてみる
+        * VGAのメモリ領域をたたいて、Hello, World!と表示させるだけのサーバーだ。
         * 明日以降、これを自分で書いたカーネルの上で走らせることを目標とするためだ。
         * 今回書こうとしているサーバーは、1番目に起動することを想定する特殊なサーバーであることには留意してほしい。
           多分普通にサーバーを書く分にはもっと苦労しないはずだ。
@@ -674,21 +807,6 @@ let pohe-article = '<
 
         * 今回のこの作業を通して、一般にCPU上でOSのカーネルがメモリ空間をどう管理するかについても触れるかもしれない。
       }
-    >
-
-    +subsection{Yet Memos for Draft...} <
-      +subsection{Sigma0} <
-        +listing{
-          * Nontheless, I have to understand how sigma0 interacts with kernel.
-            I wanna know how kernel boots sigma0, and what is the duty of sigma0.
-            Basically, all what I want to do in the pseudo Sigma0 I'm writing now is just printing "Hello, World!", as I did in the 2nd day.
-            So, I want to do some cheating for the simplicty if possible.
-            I do only the least duty expected by the kernel in Sigma0, and after it,
-            printing the glorious greeting by writing constants to the specific memory addresses.
-            That's all!
-          * To understand the duty, and of course how I can communicate with the kernel by IPC, I started reading the source code of Sigma0 of Pistachio.
-        }
-      >
     >
 
 
