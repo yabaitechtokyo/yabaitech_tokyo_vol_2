@@ -1,6 +1,7 @@
 @import: bib
 @import: ../main/book-class
 @require: pervasives
+@import: ../MasWag/local
 
 module IB : sig
   val article : block-text
@@ -12,7 +13,7 @@ let article = '<
   +chapter ?:(`ib-article`)
   (|
     bibliography = ib-bibliography;
-    title = {忙しいエンジニアのための Twitch ゲーム配信観戦ガイド};
+    title = {\no-break{忙しいエンジニアのための}\fil; \no-break{Twitch ゲーム配信観戦ガイド}};
     author = {IrnBru};
     |) <
         +section{はじめに} <

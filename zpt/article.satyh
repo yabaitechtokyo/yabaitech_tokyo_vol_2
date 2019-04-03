@@ -46,7 +46,7 @@ let article = '<
   +chapter ?:(`zpt-article`)
   (|
     bibliography = zpt-bibliography;
-    title = {プログラミング言語を形式化するもう一つの方法について};
+    title = {\no-break{プログラミング言語を形式化する}\fil;\no-break{もう一つの方法について}};
     author = {zeptometer};
     |) <
     +section {はじめに} <
