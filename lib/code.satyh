@@ -73,6 +73,15 @@ end = struct
         |> set-hyphen-penalty 100000
 
 
+  let string-explode s =
+    let l = string-length s in
+    let-rec go i acc =
+      match i with
+      | 0 -> acc
+      | _ -> go (i - 1) (string-sub s (i - 1) 1 :: acc)
+    in
+      go l []
+
   let scheme decoset txtcolor ctx code =
     let pads = (5pt, 5pt, 5pt, 5pt) in
     block-frame-breakable ctx pads decoset (fun ctx -> (
@@ -98,9 +107,18 @@ end = struct
             | Some(_) -> inline-fil ++ discretionary 0 (inline-skip ((get-text-width ctx) *' 2.)) inline-nil inline-nil
             | None    -> inline-fil
           in
+          let ib-main =
+            let ss = string-explode s in
+            let ibs = ss |> List.map (fun s ->
+              (if string-same s ` `
+              then inline-skip charwid
+              else read-inline ctx-code (embed-string s)))
+            in
+              ibs |> List.fold-left (fun ib1 ib2 -> (ib1 ++ ib2)) inline-nil
+          in 
           let ib =
             inline-skip (charwid *' (float i))
-              ++ read-inline ctx-code (embed-string s)
+              ++ ib-main
               ++ ib-last
           in
             ibacc ++ ib
