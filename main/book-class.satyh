@@ -655,7 +655,7 @@ end = struct
         block-skip 15cm;
         leftf ctx-title (embed-string title);
         okutsuke;
-        clear-page;
+%        clear-page;
       ] |> List.fold-left (+++) block-nil
 
   let document record inner =
