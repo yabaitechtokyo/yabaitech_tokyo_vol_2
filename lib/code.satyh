@@ -81,6 +81,12 @@ end = struct
       | _ -> go (i - 1) (string-sub s (i - 1) 1 :: acc)
     in
       go l []
+  
+  let intersperse s xs =
+    match xs with
+    | [] -> []
+    | (x :: xs) ->
+      List.concat (xs |> List.map (fun x -> [s; x]))
 
   let scheme decoset txtcolor ctx code =
     let pads = (5pt, 5pt, 5pt, 5pt) in
@@ -110,9 +116,10 @@ end = struct
           let ib-main =
             let ss = string-explode s in
             let ibs = ss |> List.map (fun s ->
-              (if string-same s ` `
+              (if string-same s #` `#
               then inline-skip charwid
-              else read-inline ctx-code (embed-string s)))
+              else read-inline ctx-code (embed-string s))) in
+            let ibs-breakable = intersperse (discretionary (0-100000) inline-nil inline-nil inline-nil) ibs
             in
               ibs |> List.fold-left (fun ib1 ib2 -> (ib1 ++ ib2)) inline-nil
           in 
