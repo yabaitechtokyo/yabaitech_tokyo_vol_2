@@ -86,7 +86,7 @@ end = struct
     match xs with
     | [] -> []
     | (x :: xs) ->
-      List.concat (xs |> List.map (fun x -> [s; x]))
+      x :: List.concat (xs |> List.map (fun x -> [s; x]))
 
   let scheme decoset txtcolor ctx code =
     let pads = (5pt, 5pt, 5pt, 5pt) in
