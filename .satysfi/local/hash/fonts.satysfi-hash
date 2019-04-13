@@ -1,8 +1,8 @@
 {
-  "cmuntt" : <Single: {"src": "local/fonts/CMU/cmuntt.otf"}>,
-  "cmunrm" : <Single: {"src": "local/fonts/CMU/cmunrm.otf"}>,
-  "cmunit" : <Single: {"src": "local/fonts/CMU/cmunit.otf"}>,
-  "cmunmono" : <Single: {"src": "local/fonts/CMU/cmunmono.otf"}>,
+  "cmuntt" : <Single: {"src": "local/fonts/CMU/cmuntt.ttf"}>,
+  "cmunrm" : <Single: {"src": "local/fonts/CMU/cmunrm.ttf"}>,
+  "cmunit" : <Single: {"src": "local/fonts/CMU/cmunit.ttf"}>,
+  "cmunmono" : <Single: {"src": "local/fonts/CMU/cmunmono.ttf"}>,
   "Inconsolata-Regular" : <Single: {"src": "local/fonts/Inconsolata/Inconsolata-Regular.ttf"}>,
   "Inconsolata-Bold" : <Single: {"src": "local/fonts/Inconsolata/Inconsolata-Bold.ttf"}>,
   "NotoSerif-Regular" : <Single: {"src": "local/fonts/NotoSerif/NotoSerif-Regular.ttf"}>,
