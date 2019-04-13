@@ -2,3 +2,4 @@
 *.satysfi-aux
 .satysfi/local/fonts/*
 template.pdf
+!.gitkeep
